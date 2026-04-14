@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using MyFitnessCoach_Server.Models.EfModels;
+using MyFitnessCoach_Server.Models.Services;
+using MyFitnessCoach_Server.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,12 @@ builder.Services.AddCors(options => {
 	});
 });
 
+
+// Register Repositories & Services
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<CategoryService>();
 
 // Add services to the container.
 
