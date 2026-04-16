@@ -35,8 +35,16 @@ namespace MyFitnessCoach_Server.Controllers
 			}
 			return Ok(instructor);
 		}
-[HttpGet("Image/{id}")]
-public async Task<IActionResult> GetImage(int id)
+
+		[HttpGet("Availability/{id}")]
+		public async Task<ActionResult<IEnumerable<AvailabilityDto>>> GetAvailability(int id)
+		{
+			var availability = await _service.GetAvailabilityAsync(id);
+			return Ok(availability);
+		}
+
+		[HttpGet("Image/{id}")]
+		public async Task<IActionResult> GetImage(int id)
 {
 	try
 	{

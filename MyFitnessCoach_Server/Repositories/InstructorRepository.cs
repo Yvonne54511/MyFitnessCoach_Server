@@ -8,6 +8,7 @@ namespace MyFitnessCoach_Server.Repositories
 	{
 		Task<IQueryable<InstructorDto>> GetAllQueryableAsync();
 		Task<InstructorDto?> GetByIdAsync(int id);
+		Task<IEnumerable<AvailabilityDto>> GetAvailabilityByInstructorIdAsync(int instructorId);
 	}
 	public class InstructorRepository: IInstructorRepository
 	{
@@ -50,6 +51,22 @@ namespace MyFitnessCoach_Server.Repositories
 					HourWage = i.HourWage,
 					IsActive = i.IsActive
 				}).FirstOrDefaultAsync();
+		}
+
+		public async Task<IEnumerable<AvailabilityDto>> GetAvailabilityByInstructorIdAsync(int instructorId)
+		{
+			return await _context.Shifts
+				.Where(s => s.InstructorId == instructorId)
+				.AsNoTracking()
+				.Select(s => new AvailabilityDto
+				{
+					ShiftId = s.Id,
+					Date = s.ScheduleDate.ToDateTime(TimeOnly.MinValue),
+					TimeSlot = s.TimeSlot,
+					// 直接使用實體中的 IsBooked 欄位
+					IsReserved = s.IsBooked
+				})
+				.ToListAsync();
 		}
 	}
 }
