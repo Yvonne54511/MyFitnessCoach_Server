@@ -18,7 +18,10 @@ namespace MyFitnessCoach_Server.Models.Services
 
 			if (!string.IsNullOrEmpty(name))
 			{
-				instructorsQuery = instructorsQuery.Where(i => i.UserName.Contains(name));
+				// 同時搜尋名稱 (UserName) 與 專業領域 (Title)
+				instructorsQuery = instructorsQuery.Where(i => 
+					i.UserName.Contains(name) || 
+					i.Title.Contains(name));
 			}
 
 			return instructorsQuery.ToList();

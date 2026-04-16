@@ -70,7 +70,8 @@ namespace MyFitnessCoach_Server.Repositories
 					Description = i.Description,
 					HourWage = i.HourWage,
 					IsActive = i.IsActive,
-					TotalScore = totalScore
+					TotalScore = totalScore,
+					AverageRating = i.Reviews.Any() ? i.Reviews.Average(r => (double)r.Rating) : 0
 				};
 			}).OrderByDescending(i => i.TotalScore);
 
