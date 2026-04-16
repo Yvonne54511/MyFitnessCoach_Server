@@ -25,6 +25,9 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<CategoryService>();
 
+builder.Services.AddScoped<ITopUpPlanRepository, TopUpPlanRepository>();
+builder.Services.AddScoped<TopUpPlanService>();
+
 // Add services to the container.
 
 builder.Services.AddControllers();
