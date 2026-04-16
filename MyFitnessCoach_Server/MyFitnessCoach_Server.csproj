@@ -21,4 +21,8 @@
     <Folder Include="SqlCodes\Schema\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="efpt.config.json.user" />
+  </ItemGroup>
+
 </Project>
