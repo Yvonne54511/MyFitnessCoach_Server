@@ -1,0 +1,63 @@
+USE [MyFitnessCoachDb]
+GO
+
+PRINT '開始執行：將所有相關時間往後平移一個月...';
+
+BEGIN TRANSACTION;
+
+BEGIN TRY
+    -- 1. 平移 Employees (員工到職日)
+    -- 注意：這裡加上條件，只平移 2025 年之後的資料，避免把 2016~2023 年早期的老員工到職日也移走。若需全移可將 WHERE 拿掉。
+    UPDATE [dbo].[Employees]
+    SET [HiredDate] = DATEADD(month, 1, [HiredDate])
+    WHERE YEAR([HiredDate]) >= 2025;
+
+    -- 2. 平移 InstructorWalletDetails (SalaryDate 為 nvarchar 字串，轉換後平移再轉回字串；CreatedAt 直接平移)
+    UPDATE [dbo].[InstructorWalletDetails]
+    SET [SalaryDate] = CONVERT(nvarchar(10), DATEADD(month, 1, CAST([SalaryDate] AS date)), 120),
+        [CreatedAt] = DATEADD(month, 1, [CreatedAt]);
+
+    -- 3. 平移 InstructorWallets (最後更新時間)
+    UPDATE [dbo].[InstructorWallets]
+    SET [LastUpdated] = DATEADD(month, 1, [LastUpdated]);
+
+    -- 4. 平移 MemberViolations (最後警告與停權時間)
+    UPDATE [dbo].[MemberViolations]
+    SET [LastWarningAt] = DATEADD(month, 1, [LastWarningAt]),
+        [SuspendedAt] = DATEADD(month, 1, [SuspendedAt]);
+
+    -- 5. 平移 ReserveOrders (預約訂單建立時間)
+    UPDATE [dbo].[ReserveOrders]
+    SET [CreateAt] = DATEADD(month, 1, [CreateAt]);
+
+    -- 6. 平移 Reviews (評論建立時間)
+    UPDATE [dbo].[Reviews]
+    SET [CreatedAt] = DATEADD(month, 1, [CreatedAt]);
+
+    -- 7. 平移 Shifts (教練排班表日期)
+    UPDATE [dbo].[Shifts]
+    SET [ScheduleDate] = DATEADD(month, 1, [ScheduleDate]);
+
+    -- 8. 平移 Users (驗證碼到期日)
+    UPDATE [dbo].[Users]
+    SET [NewMemberConfirmCodeExpiry] = DATEADD(month, 1, [NewMemberConfirmCodeExpiry]),
+        [ResetPasswordConfirmCodeExpiry] = DATEADD(month, 1, [ResetPasswordConfirmCodeExpiry]);
+
+    /* -- 補充說明：Members 資料表中的 DateOfBirth (生日) 通常不該跟著測試資料的時間平移（這會改變人物的邏輯年齡）。
+    -- 因此我將此段暫時註解跳過。若您連會員生日也想平移，請取消下列註解即可：
+    UPDATE [dbo].[Members]
+    SET [DateOfBirth] = DATEADD(month, 1, [DateOfBirth])
+    WHERE [DateOfBirth] IS NOT NULL;
+    */
+
+    COMMIT TRANSACTION;
+    PRINT '所有時間已成功往後平移一個月！';
+    
+END TRY
+BEGIN CATCH
+    -- 發生錯誤則還原所有變更
+    ROLLBACK TRANSACTION;
+    PRINT '執行發生錯誤，已復原變更：';
+    PRINT ERROR_MESSAGE();
+END CATCH
+GO
