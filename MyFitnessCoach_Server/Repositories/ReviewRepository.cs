@@ -17,6 +17,8 @@ namespace MyFitnessCoach_Server.Repositories
             return await _context.Reviews
                 .Include(r => r.Member)
                 .ThenInclude(m => m.User)
+                .Include(r => r.Instructor)
+                .ThenInclude(i => i.User)
                 .Where(r => !r.IsBanned)
                 .OrderByDescending(r => r.CreatedAt)
                 .Take(6)
@@ -28,8 +30,19 @@ namespace MyFitnessCoach_Server.Repositories
             return await _context.Reviews
                 .Include(r => r.Member)
                 .ThenInclude(m => m.User)
+                .Include(r => r.Instructor)
+                .ThenInclude(i => i.User)
                 .Where(r => !r.IsBanned)
                 .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<string>> GetKeywordsAsync()
+        {
+            // 獲取負向關鍵字 (Category = -1)
+            return await _context.KeyWords
+                .Where(k => k.Category == -1 && !string.IsNullOrEmpty(k.Word))
+                .Select(k => k.Word)
                 .ToListAsync();
         }
     }

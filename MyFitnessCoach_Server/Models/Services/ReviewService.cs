@@ -24,17 +24,28 @@ namespace MyFitnessCoach_Server.Models.Services
             return reviews.Select(MapToDto);
         }
 
+        public async Task<IEnumerable<string>> GetKeywordsAsync()
+        {
+            return await _repo.GetKeywordsAsync();
+        }
+
         private ReviewDto MapToDto(EfModels.Review r)
         {
             return new ReviewDto
             {
-                Name = r.Member.User.UserName,
+                Name = r.Member?.User?.UserName ?? "匿名學員",
                 Title = GetMemberTitle(r.Member),
-                Avatar = string.IsNullOrEmpty(r.Member.ImageUrl) 
+                Avatar = string.IsNullOrEmpty(r.Member?.ImageUrl) 
                     ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" 
                     : r.Member.ImageUrl,
                 Stars = new string('★', r.Rating).PadRight(5, '☆'),
-                Text = r.Comment
+                Text = r.Comment,
+                InstructorId = r.InstructorId,
+                InstructorName = r.Instructor?.User?.UserName ?? "未知營養師",
+                // 統一使用 API 路徑獲取圖片
+                InstructorAvatar = $"/api/Instructor/Image/{r.InstructorId}",
+                InstructorTitle = r.Instructor?.Title ?? "專業營養師",
+                CreatedAt = r.CreatedAt
             };
         }
 

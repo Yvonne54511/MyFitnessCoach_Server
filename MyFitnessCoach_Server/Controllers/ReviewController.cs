@@ -28,5 +28,12 @@ namespace MyFitnessCoach_Server.Controllers
             var reviews = await _service.GetAllReviewsAsync();
             return Ok(reviews);
         }
+
+        [HttpGet("Keywords")]
+        public async Task<ActionResult<IEnumerable<string>>> GetKeywords()
+        {
+            var keywords = await _service.GetKeywordsAsync();
+            return Ok(keywords);
+        }
     }
 }
