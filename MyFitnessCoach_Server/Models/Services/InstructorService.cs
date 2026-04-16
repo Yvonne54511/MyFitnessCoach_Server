@@ -12,17 +12,16 @@ namespace MyFitnessCoach_Server.Models.Services
 			_repository = repository;
 		}
 
-		public async Task<IEnumerable<InstructorDto>> GetInstructorsAsync(string? name = null)
+		public async Task<IEnumerable<InstructorDto>> GetInstructorsAsync(string? name = null, int? year = null, int? month = null)
 		{
-			var query = await _repository.GetAllQueryableAsync();
+			var instructorsQuery = await _repository.GetAllQueryableAsync(year, month);
 
 			if (!string.IsNullOrEmpty(name))
 			{
-				query = query.Where(i => i.UserName.Contains(name));
+				instructorsQuery = instructorsQuery.Where(i => i.UserName.Contains(name));
 			}
 
-			// 這裡因為 IQueryable 需要執行，我們轉成 List
-			return query.ToList();
+			return instructorsQuery.ToList();
 		}
 
 		public async Task<InstructorDto?> GetInstructorByIdAsync(int id)

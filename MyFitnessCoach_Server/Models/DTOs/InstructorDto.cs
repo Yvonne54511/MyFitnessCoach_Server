@@ -10,5 +10,6 @@ namespace MyFitnessCoach_Server.Models.DTOs
 		public string Description { get; set; }
 		public int HourWage { get; set; }
 		public bool IsActive { get; set; }
+		public int TotalScore { get; set; }
 	}
 }

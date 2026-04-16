@@ -19,9 +19,9 @@ namespace MyFitnessCoach_Server.Controllers
 		}
 
 		[HttpGet]
-		public async Task<ActionResult<IEnumerable<InstructorDto>>> GetAll([FromQuery] string? name)
+		public async Task<ActionResult<IEnumerable<InstructorDto>>> GetAll([FromQuery] string? name, [FromQuery] int? year, [FromQuery] int? month)
 		{
-			var instructors = await _service.GetInstructorsAsync(name);
+			var instructors = await _service.GetInstructorsAsync(name, year, month);
 			return Ok(instructors);
 		}
 
