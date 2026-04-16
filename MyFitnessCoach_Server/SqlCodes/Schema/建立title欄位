@@ -1,0 +1,17 @@
+USE [MyFitnessCoachDb]
+GO
+
+-- =========================================================================
+-- 步驟一：建立欄位 (獨立批次執行，避免後續編譯錯誤)
+-- =========================================================================
+PRINT '開始步驟一：新增 Title 欄位...';
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Instructors]') AND name = 'Title')
+BEGIN
+    ALTER TABLE [dbo].[Instructors] ADD [Title] [nvarchar](200) NULL;
+    PRINT '-> Title 欄位新增完成。';
+END
+ELSE
+BEGIN
+    PRINT '-> Title 欄位已存在，略過新增。';
+END

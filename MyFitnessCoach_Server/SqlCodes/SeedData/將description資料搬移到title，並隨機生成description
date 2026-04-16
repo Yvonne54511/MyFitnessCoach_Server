@@ -1,0 +1,38 @@
+USE [MyFitnessCoachDb]
+GO
+-- 步驟二：更新資料與修改屬性
+-- =========================================================================
+PRINT '開始步驟二：搬移資料與更新介紹文字...';
+
+BEGIN TRANSACTION;
+
+BEGIN TRY
+    -- 1. 把原本 Description 的文字搬移到 Title 
+    -- (此時 SQL 已經知道有 Title 這個欄位了)
+    UPDATE [dbo].[Instructors]
+    SET [Title] = [Description];
+
+    -- 2. 將 Title 欄位修改為 NOT NULL (確保資料完整性)
+    ALTER TABLE [dbo].[Instructors] 
+    ALTER COLUMN [Title] [nvarchar](200) NOT NULL;
+
+    -- 3. 更新 Description 欄位為新的介紹文字
+    UPDATE [dbo].[Instructors]
+    SET [Description] = 
+        CHOOSE( (Id % 3) + 1, 
+            N'擁有 8 年臨床經驗，專精於體重控制與代謝調理。曾輔導超過 500 位學員成功達標，擅長為外食族設計實際可執行的飲食方案。',
+            N'具備 5 年以上專業營養諮詢資歷，專長為運動營養與增肌減脂。致力於推廣均衡飲食，讓學員在不挨餓的情況下達到理想體態。',
+            N'擁有國家級營養師執照，擅長慢性病飲食衛教與孕期營養規劃。秉持著「飲食生活化」的理念，為客戶打造專屬的健康藍圖。'
+        );
+
+    COMMIT TRANSACTION;
+    PRINT '-> 步驟二執行完畢：資料更新與結構修改成功！';
+    
+END TRY
+BEGIN CATCH
+    -- 若發生錯誤則復原所有動作
+    ROLLBACK TRANSACTION;
+    PRINT '-> 發生錯誤，已自動復原。';
+    PRINT ERROR_MESSAGE();
+END CATCH
+GO
