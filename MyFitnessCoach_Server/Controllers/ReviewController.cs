@@ -21,5 +21,12 @@ namespace MyFitnessCoach_Server.Controllers
             var reviews = await _service.GetLandingPageReviewsAsync();
             return Ok(reviews);
         }
+
+        [HttpGet("All")]
+        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetAllReviews()
+        {
+            var reviews = await _service.GetAllReviewsAsync();
+            return Ok(reviews);
+        }
     }
 }

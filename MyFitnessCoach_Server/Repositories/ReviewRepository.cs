@@ -22,5 +22,15 @@ namespace MyFitnessCoach_Server.Repositories
                 .Take(6)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Review>> GetAllReviewsAsync()
+        {
+            return await _context.Reviews
+                .Include(r => r.Member)
+                .ThenInclude(m => m.User)
+                .Where(r => !r.IsBanned)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+        }
     }
 }

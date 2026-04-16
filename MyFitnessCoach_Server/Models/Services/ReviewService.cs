@@ -15,7 +15,18 @@ namespace MyFitnessCoach_Server.Models.Services
         public async Task<IEnumerable<ReviewDto>> GetLandingPageReviewsAsync()
         {
             var reviews = await _repo.GetLandingPageReviewsAsync();
-            return reviews.Select(r => new ReviewDto
+            return reviews.Select(MapToDto);
+        }
+
+        public async Task<IEnumerable<ReviewDto>> GetAllReviewsAsync()
+        {
+            var reviews = await _repo.GetAllReviewsAsync();
+            return reviews.Select(MapToDto);
+        }
+
+        private ReviewDto MapToDto(EfModels.Review r)
+        {
+            return new ReviewDto
             {
                 Name = r.Member.User.UserName,
                 Title = GetMemberTitle(r.Member),
@@ -24,7 +35,7 @@ namespace MyFitnessCoach_Server.Models.Services
                     : r.Member.ImageUrl,
                 Stars = new string('★', r.Rating).PadRight(5, '☆'),
                 Text = r.Comment
-            });
+            };
         }
 
         private string GetMemberTitle(EfModels.Member member)
