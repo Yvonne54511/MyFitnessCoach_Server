@@ -19,6 +19,7 @@
   <ItemGroup>
     <Folder Include="Models\DTOs\" />
     <Folder Include="Models\Services\" />
+    <Folder Include="StaticFiles\images\NewFolder\" />
   </ItemGroup>
 
 </Project>

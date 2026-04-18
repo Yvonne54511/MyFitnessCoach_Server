@@ -36,7 +36,8 @@ public class AccountController : ControllerBase
         {
             Token    = result.Token!,
             UserId   = result.UserId,
-            UserName = result.UserName!
+            UserName = result.UserName!,
+            ImageUrl = result.ImageUrl
         });
     }
 }

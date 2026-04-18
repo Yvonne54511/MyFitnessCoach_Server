@@ -33,4 +33,11 @@ public class AccountRepository : IAccountRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.UserId == userId);
     }
+
+    public async Task<Member?> GetMemberByUserIdAsync(int userId)
+    {
+        return await _db.Members
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.UserId == userId);
+    }
 }

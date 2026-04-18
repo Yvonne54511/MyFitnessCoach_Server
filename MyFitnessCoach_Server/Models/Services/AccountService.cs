@@ -44,6 +44,7 @@ public class AccountService : IAccountService
 
         var instructor = await _accountRepository.GetInstructorByUserIdAsync(user.Id);
         var employee   = await _accountRepository.GetEmployeeByUserIdAsync(user.Id);
+        var member     = await _accountRepository.GetMemberByUserIdAsync(user.Id);
 
         var roles     = user.UserRoles.Select(ur => ur.Role.RoleName).ToList();
         var functions = user.UserRoles
@@ -93,7 +94,8 @@ public class AccountService : IAccountService
             Message   = "登入成功",
             Token     = new JwtSecurityTokenHandler().WriteToken(token),
             UserId    = user.Id,
-            UserName  = user.UserName ?? user.Account
+            UserName  = user.UserName ?? user.Account,
+            ImageUrl  = member?.ImageUrl ?? "/images/members/default.jpg"
         };
     }
 }
