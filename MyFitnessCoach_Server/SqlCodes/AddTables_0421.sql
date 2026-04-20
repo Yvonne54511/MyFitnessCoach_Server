@@ -38,7 +38,21 @@ GO
 
 
 -- ============================================================
--- 2. RateLimitLogs
+-- 3. Users 新增欄位 IsResetPasswordConfirmCodeUsed
+-- ============================================================
+ALTER TABLE [dbo].[Users]
+    ADD [IsResetPasswordConfirmCodeUsed] [bit] NULL
+GO
+
+-- 有 ResetPasswordConfirmCode 的設為 1，其他維持 NULL
+UPDATE [dbo].[Users]
+SET [IsResetPasswordConfirmCodeUsed] = 1
+WHERE [ResetPasswordConfirmCode] IS NOT NULL
+GO
+
+
+-- ============================================================
+-- 4. RateLimitLogs
 -- ============================================================
 SET ANSI_NULLS ON
 GO
