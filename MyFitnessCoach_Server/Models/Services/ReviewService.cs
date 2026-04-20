@@ -29,6 +29,11 @@ namespace MyFitnessCoach_Server.Models.Services
             return await _repo.GetKeywordsAsync();
         }
 
+        public async Task<bool> CreateReviewAsync(int memberId, CreateReviewDto dto)
+        {
+            return await _repo.CreateReviewAsync(memberId, dto);
+        }
+
         private ReviewDto MapToDto(EfModels.Review r)
         {
             return new ReviewDto

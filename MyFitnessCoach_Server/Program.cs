@@ -23,11 +23,13 @@ builder.Services.AddCors(options => {
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IInstructorRepository, InstructorRepository>();
+builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<ReviewRepository>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<InstructorService>();
 builder.Services.AddScoped<ReviewService>();
+builder.Services.AddScoped<ReservationService>();
 
 // Add services to the container.
 

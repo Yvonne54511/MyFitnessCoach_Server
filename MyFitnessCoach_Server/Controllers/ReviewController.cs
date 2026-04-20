@@ -35,5 +35,19 @@ namespace MyFitnessCoach_Server.Controllers
             var keywords = await _service.GetKeywordsAsync();
             return Ok(keywords);
         }
+
+        [HttpPost]
+        public async Task<ActionResult> CreateReview(CreateReviewDto dto)
+        {
+            var memberIdClaim = User.FindFirst("MemberId")?.Value;
+            int memberId = (!string.IsNullOrEmpty(memberIdClaim) && int.TryParse(memberIdClaim, out int id)) ? id : 1;
+
+            var success = await _service.CreateReviewAsync(memberId, dto);
+            if (success)
+            {
+                return Ok(new { message = "評論提交成功" });
+            }
+            return BadRequest(new { message = "評論提交失敗，可能預約紀錄不存在" });
+        }
     }
 }
