@@ -34,6 +34,17 @@ namespace MyFitnessCoach_Server.Models.Services
             return await _repo.CreateReviewAsync(memberId, dto);
         }
 
+        public async Task<ReviewDto?> GetReviewByReservationIdAsync(int memberId, int reservationId)
+        {
+            var review = await _repo.GetReviewByReservationIdAsync(reservationId, memberId);
+            return review == null ? null : MapToDto(review);
+        }
+
+        public async Task<bool> UpdateReviewAsync(int memberId, CreateReviewDto dto)
+        {
+            return await _repo.UpdateReviewAsync(memberId, dto);
+        }
+
         private ReviewDto MapToDto(EfModels.Review r)
         {
             return new ReviewDto
@@ -44,6 +55,7 @@ namespace MyFitnessCoach_Server.Models.Services
                     ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" 
                     : r.Member.ImageUrl,
                 Stars = new string('★', r.Rating).PadRight(5, '☆'),
+                Rating = r.Rating,
                 Text = r.Comment,
                 InstructorId = r.InstructorId,
                 InstructorName = r.Instructor?.User?.UserName ?? "未知營養師",
@@ -54,9 +66,9 @@ namespace MyFitnessCoach_Server.Models.Services
             };
         }
 
-        private string GetMemberTitle(EfModels.Member member)
+        private string GetMemberTitle(EfModels.Member? member)
         {
-            if (member.DateOfBirth.HasValue)
+            if (member?.DateOfBirth.HasValue == true)
             {
                 var age = DateTime.Today.Year - member.DateOfBirth.Value.Year;
                 if (member.DateOfBirth.Value.Date > DateTime.Today.AddYears(-age)) age--;
