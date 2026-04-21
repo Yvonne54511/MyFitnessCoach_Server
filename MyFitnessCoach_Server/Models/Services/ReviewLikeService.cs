@@ -21,7 +21,11 @@ namespace MyFitnessCoach_Server.Models.Services
                     var json = File.ReadAllText(_filePath);
                     var data = JsonSerializer.Deserialize<Dictionary<int, List<int>>>(json);
                     if (data != null) {
-                        foreach(var k in data) _likes[k.Key] = new HashSet<int>(k.Value);
+                        var freshLikes = new ConcurrentDictionary<int, HashSet<int>>();
+                        foreach(var k in data) {
+                            freshLikes[k.Key] = new HashSet<int>(k.Value);
+                        }
+                        _likes = freshLikes;
                     }
                 }
             } catch { }
@@ -37,12 +41,21 @@ namespace MyFitnessCoach_Server.Models.Services
             } catch { }
         }
 
-        public int GetLikeCount(int id) => _likes.TryGetValue(id, out var m) ? m.Count : 0;
+        public int GetLikeCount(int id) 
+        {
+            Load();
+            return _likes.TryGetValue(id, out var m) ? m.Count : 0;
+        }
         
-        public bool IsLiked(int id, int mid) => _likes.TryGetValue(id, out var m) && m.Contains(mid);
+        public bool IsLiked(int id, int mid) 
+        {
+            Load();
+            return _likes.TryGetValue(id, out var m) && m.Contains(mid);
+        }
 
         public (int count, bool isLiked) ToggleLike(int id, int mid)
         {
+            Load();
             var m = _likes.GetOrAdd(id, _ => new HashSet<int>());
             bool liked;
             lock(m) {
