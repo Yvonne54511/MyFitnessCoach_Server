@@ -56,12 +56,12 @@ namespace MyFitnessCoach_Server.Controllers
             var memberIdClaim = User.FindFirst("MemberId")?.Value;
             int memberId = (!string.IsNullOrEmpty(memberIdClaim) && int.TryParse(memberIdClaim, out int mid)) ? mid : 1;
 
-            var success = await _service.CancelReservationAsync(memberId, id);
-            if (success)
+            var result = await _service.CancelReservationAsync(memberId, id);
+            if (result.Success)
             {
-                return Ok(new { message = "預約已成功取消" });
+                return Ok(new { message = result.Message });
             }
-            return NotFound(new { message = "找不到該預約紀錄或您無權限取消" });
+            return BadRequest(new { message = result.Message });
         }
     }
 }

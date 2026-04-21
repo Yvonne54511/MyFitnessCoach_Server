@@ -38,6 +38,26 @@ namespace MyFitnessCoach_Server.Repositories
                 .ToListAsync();
         }
 
+        public async Task<(IEnumerable<Review> Reviews, int TotalCount)> GetPagedReviewsAsync(int page, int pageSize)
+        {
+            var query = _context.Reviews
+                .Include(r => r.Member)
+                .ThenInclude(m => m.User)
+                .Include(r => r.Instructor)
+                .ThenInclude(i => i.User)
+                .Where(r => !r.IsBanned);
+
+            int totalCount = await query.CountAsync();
+
+            var reviews = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (reviews, totalCount);
+        }
+
         public async Task<IEnumerable<string>> GetKeywordsAsync()
         {
             // 獲取負向關鍵字 (Category = -1)

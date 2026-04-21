@@ -35,7 +35,8 @@ namespace MyFitnessCoach_Server.Controllers
                 Id = member.Id,
                 Name = member.User?.UserName ?? "測試用戶",
                 Avatar = member.ImageUrl, // 使用 Member 表中的 ImageUrl
-                Points = member.UserWallet?.CurrentBalance ?? 0
+                Points = member.UserWallet?.CurrentBalance ?? 0,
+                Phone = member.User?.Mobile
             });
         }
     }

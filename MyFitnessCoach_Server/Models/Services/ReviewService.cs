@@ -6,22 +6,38 @@ namespace MyFitnessCoach_Server.Models.Services
     public class ReviewService
     {
         private readonly ReviewRepository _repo;
+        private readonly ReviewLikeService _likeService;
 
-        public ReviewService(ReviewRepository repo)
+        public ReviewService(ReviewRepository repo, ReviewLikeService likeService)
         {
             _repo = repo;
+            _likeService = likeService;
         }
 
-        public async Task<IEnumerable<ReviewDto>> GetLandingPageReviewsAsync()
+        public async Task<IEnumerable<ReviewDto>> GetLandingPageReviewsAsync(int memberId = 0)
         {
             var reviews = await _repo.GetLandingPageReviewsAsync();
-            return reviews.Select(MapToDto);
+            return reviews.Select(r => MapToDto(r, memberId));
         }
 
-        public async Task<IEnumerable<ReviewDto>> GetAllReviewsAsync()
+        public async Task<IEnumerable<ReviewDto>> GetAllReviewsAsync(int memberId = 0)
         {
             var reviews = await _repo.GetAllReviewsAsync();
-            return reviews.Select(MapToDto);
+            return reviews.Select(r => MapToDto(r, memberId));
+        }
+
+        public async Task<PagedReviewDto> GetPagedReviewsAsync(int page, int pageSize, int memberId = 0)
+        {
+            var (reviews, totalCount) = await _repo.GetPagedReviewsAsync(page, pageSize);
+            
+            return new PagedReviewDto
+            {
+                Reviews = reviews.Select(r => MapToDto(r, memberId)),
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize),
+                CurrentPage = page,
+                PageSize = pageSize
+            };
         }
 
         public async Task<IEnumerable<string>> GetKeywordsAsync()
@@ -37,7 +53,7 @@ namespace MyFitnessCoach_Server.Models.Services
         public async Task<ReviewDto?> GetReviewByReservationIdAsync(int memberId, int reservationId)
         {
             var review = await _repo.GetReviewByReservationIdAsync(reservationId, memberId);
-            return review == null ? null : MapToDto(review);
+            return review == null ? null : MapToDto(review, memberId);
         }
 
         public async Task<bool> UpdateReviewAsync(int memberId, CreateReviewDto dto)
@@ -45,7 +61,7 @@ namespace MyFitnessCoach_Server.Models.Services
             return await _repo.UpdateReviewAsync(memberId, dto);
         }
 
-        private ReviewDto MapToDto(EfModels.Review r)
+        private ReviewDto MapToDto(EfModels.Review r, int memberId = 0)
         {
             return new ReviewDto
             {
@@ -62,7 +78,10 @@ namespace MyFitnessCoach_Server.Models.Services
                 // 統一使用 API 路徑獲取圖片
                 InstructorAvatar = $"/api/Instructor/Image/{r.InstructorId}",
                 InstructorTitle = r.Instructor?.Title ?? "專業營養師",
-                CreatedAt = r.CreatedAt
+                CreatedAt = r.CreatedAt,
+                LikeCount = _likeService.GetLikeCount(r.ReserveOrderId),
+                ReservationId = r.ReserveOrderId,
+                IsLiked = memberId > 0 && _likeService.IsLiked(r.ReserveOrderId, memberId)
             };
         }
 

@@ -13,5 +13,8 @@ namespace MyFitnessCoach_Server.Models.DTOs
         public string InstructorAvatar { get; set; }
         public string InstructorTitle { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int LikeCount { get; set; }
+        public int ReservationId { get; set; }
+        public bool IsLiked { get; set; }
     }
 }

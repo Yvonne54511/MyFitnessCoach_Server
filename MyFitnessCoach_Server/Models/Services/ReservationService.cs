@@ -22,7 +22,7 @@ namespace MyFitnessCoach_Server.Models.Services
             return await _repo.CreateAsync(memberId, dto);
         }
 
-        public async Task<bool> CancelReservationAsync(int memberId, int reservationId)
+        public async Task<(bool Success, string Message)> CancelReservationAsync(int memberId, int reservationId)
         {
             return await _repo.CancelAsync(memberId, reservationId);
         }
