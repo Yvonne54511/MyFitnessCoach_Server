@@ -40,4 +40,47 @@ public class AccountController : ControllerBase
             ImageUrl = result.ImageUrl
         });
     }
+
+    /// <summary>
+    /// POST /api/auth/forgotpassword
+    /// 發送密碼重設信（防 enumeration：不論帳號是否存在均回傳相同訊息）
+    /// </summary>
+    [HttpPost("forgotpassword")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        try
+        {
+            await _accountService.ForgotPasswordAsync(dto, ip);
+            return Ok(new { message = "若此帳號存在，系統已將重設郵件寄出" });
+        }
+        catch (RateLimitException ex)
+        {
+            return StatusCode(429, new { retryAfterSeconds = ex.RetryAfterSeconds });
+        }
+    }
+
+    /// <summary>
+    /// POST /api/auth/resetpassword
+    /// 使用 token 重設密碼
+    /// </summary>
+    [HttpPost("resetpassword")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var result = await _accountService.ResetPasswordAsync(dto);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.Message });
+
+        return Ok(new { message = result.Message });
+    }
 }
