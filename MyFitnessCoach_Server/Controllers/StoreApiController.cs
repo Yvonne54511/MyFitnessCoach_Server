@@ -32,11 +32,13 @@ namespace MyFitnessCoach_Server.Controllers
 			return Ok(categories);
 		}
 
-		// GET /api/StoreApi/products?categoryId=1
+		// GET /api/StoreApi/products?name=蛋白&categoryId=1
 		[HttpGet("products")]
-		public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts([FromQuery] int? categoryId)
+		public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts(
+			[FromQuery] string? name,
+			[FromQuery] int? categoryId)
 		{
-			var products = await _productService.GetAllProducts(null, categoryId)
+			var products = await _productService.GetAllProducts(name, categoryId)
 				.Where(p => p.IsActive)
 				.OrderBy(p => p.SortOrder)
 				.ToListAsync();
