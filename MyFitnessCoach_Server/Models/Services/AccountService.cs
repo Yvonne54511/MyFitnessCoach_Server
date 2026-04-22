@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using MyFitnessCoach_Server.Models.DTOs;
 using MyFitnessCoach_Server.Models.EfModels;
 using MyFitnessCoach_Server.Models.Repositories;
+using MyFitnessCoach_Server.Utilities;
 
 namespace MyFitnessCoach_Server.Models.Services;
 
@@ -219,5 +220,108 @@ public class AccountService : IAccountService
         await _emailService.SendPasswordChangedNotificationAsync(user.Email);
 
         return new ResetPasswordResultDto { IsSuccess = true, Message = "密碼已成功重設" };
+    }
+
+    // ── Register ───────────────────────────────────────────────────────────
+
+    public async Task RegisterAsync(RegisterDto dto)
+    {
+        var exists = await _accountRepository.AccountOrEmailExistsAsync(dto.Account, dto.Email);
+        if (exists)
+            throw new InvalidOperationException("ACCOUNT_OR_EMAIL_EXISTS");
+
+        var (rawToken, hash) = HashHelper.ProduceConfirmCode();
+
+        var tempUser = new User();
+        var hashedPassword = _passwordHasher.HashPassword(tempUser, dto.Password);
+
+        var user = new User
+        {
+            Account                  = dto.Account,
+            HashedPassword           = hashedPassword,
+            Email                    = dto.Email,
+            UserName                 = dto.UserName,
+            Mobile                   = dto.Mobile,
+            IsConfirmed              = false,
+            IsActive                 = true,
+            NewMemberConfirmCode     = hash,
+            NewMemberConfirmCodeExpiry = DateTime.UtcNow.AddHours(24)
+        };
+
+        await _accountRepository.CreateUserAsync(user);
+
+        var activationUrl = $"{_config["FrontEnd:BaseUrl"]}/activate?token={rawToken}";
+        await _emailService.SendActivationEmailAsync(user.Email, activationUrl);
+    }
+
+    // ── Activate account ───────────────────────────────────────────────────
+
+    public async Task<ActivateAccountResultDto> ActivateAccountAsync(string rawToken)
+    {
+        var hash = HashHelper.HashConfirmCode(rawToken);
+
+        var user = await _accountRepository.GetByActivationCodeHashAsync(hash);
+
+        if (user == null)
+            return new ActivateAccountResultDto { IsSuccess = false, ErrorCode = "NOT_FOUND" };
+
+        if (user.IsConfirmed)
+            return new ActivateAccountResultDto { IsSuccess = false, ErrorCode = "NOT_FOUND" };
+
+        if (DateTime.UtcNow > user.NewMemberConfirmCodeExpiry)
+            return new ActivateAccountResultDto { IsSuccess = false, ErrorCode = "TOKEN_EXPIRED" };
+
+        await _accountRepository.ActivateUserAsync(user.Id);
+        return new ActivateAccountResultDto { IsSuccess = true };
+    }
+
+    // ── Resend activation email ────────────────────────────────────────────
+
+    public async Task ResendActivationEmailAsync(ResendActivationDto dto, string ipAddress)
+    {
+        const string endPoint = "resend-activation";
+        var now   = DateTime.UtcNow;
+        var email = dto.Email.Trim().ToLower();
+
+        // IP 限流：1 小時 5 次
+        var ipCount = await _accountRepository.CountRateLimitAsync(ipAddress, endPoint, byIp: true, since: now.AddHours(-1));
+        if (ipCount >= 5)
+        {
+            var oldest = await _accountRepository.GetOldestRateLimitTimeAsync(ipAddress, endPoint, since: now.AddHours(-1));
+            var retryAfter = oldest.HasValue
+                ? (int)Math.Ceiling((oldest.Value.AddHours(1) - now).TotalSeconds)
+                : 3600;
+            throw new RateLimitException(Math.Max(retryAfter, 1));
+        }
+
+        // Email 冷卻：60 秒
+        var recentCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddSeconds(-60));
+        if (recentCount >= 1)
+        {
+            var latest = await _accountRepository.GetLatestRateLimitTimeAsync(email, endPoint, since: now.AddSeconds(-60));
+            var retryAfter = latest.HasValue
+                ? (int)Math.Ceiling((latest.Value.AddSeconds(60) - now).TotalSeconds)
+                : 60;
+            throw new RateLimitException(Math.Max(retryAfter, 1));
+        }
+
+        await _accountRepository.LogRateLimitAsync(new RateLimitLog
+        {
+            IpAddress   = ipAddress,
+            EndPoint    = endPoint,
+            Identity    = email,
+            IsSuccess   = true,
+            RequestedAt = now
+        });
+
+        // Silent fail：防止帳號枚舉
+        var user = await _accountRepository.GetPendingUserByEmailAsync(email);
+        if (user == null) return;
+
+        var (rawToken, hash) = HashHelper.ProduceConfirmCode();
+        await _accountRepository.UpdateActivationTokenAsync(user.Id, hash, now.AddHours(24));
+
+        var activationUrl = $"{_config["FrontEnd:BaseUrl"]}/activate?token={rawToken}";
+        await _emailService.SendActivationEmailAsync(user.Email, activationUrl);
     }
 }

@@ -83,4 +83,74 @@ public class AccountController : ControllerBase
 
         return Ok(new { message = result.Message });
     }
+
+    /// <summary>
+    /// POST /api/auth/register
+    /// 註冊新帳號，成功後寄出啟用信
+    /// </summary>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            await _accountService.RegisterAsync(dto);
+            return StatusCode(201, new { message = "註冊成功，請至信箱收取啟用信" });
+        }
+        catch (InvalidOperationException)
+        {
+            return Conflict(new { message = "帳號或信箱已被使用" });
+        }
+    }
+
+    /// <summary>
+    /// GET /api/auth/activate?token=xxx
+    /// 啟用帳號
+    /// </summary>
+    [HttpGet("activate")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ActivateAccount([FromQuery] string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return NotFound(new { message = "連結無效" });
+
+        var result = await _accountService.ActivateAccountAsync(token);
+
+        if (!result.IsSuccess)
+        {
+            if (result.ErrorCode == "TOKEN_EXPIRED")
+                return BadRequest(new { error_code = "TOKEN_EXPIRED" });
+
+            return NotFound(new { message = "連結無效或該帳號已完成驗證" });
+        }
+
+        return Ok(new { message = "帳號已成功啟用" });
+    }
+
+    /// <summary>
+    /// POST /api/auth/resend-activation
+    /// 重新寄出啟用信（有限流保護）
+    /// </summary>
+    [HttpPost("resend-activation")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResendActivation([FromBody] ResendActivationDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        try
+        {
+            await _accountService.ResendActivationEmailAsync(dto, ip);
+            return Ok(new { message = "若此信箱尚未完成驗證，系統已將啟用信重新寄出" });
+        }
+        catch (RateLimitException ex)
+        {
+            return StatusCode(429, new { retryAfterSeconds = ex.RetryAfterSeconds });
+        }
+    }
 }

@@ -1,15 +1,32 @@
 using System.Net;
 using System.Net.Mail;
+using Microsoft.Extensions.Options;
+using MyFitnessCoach_Server.Utilities;
 
 namespace MyFitnessCoach_Server.Models.Services;
 
 public class EmailService : IEmailService
 {
-    private readonly IConfiguration _config;
+    private readonly EmailSettings _settings;
 
-    public EmailService(IConfiguration config)
+    public EmailService(IOptions<EmailSettings> options)
     {
-        _config = config;
+        _settings = options.Value;
+    }
+
+    public async Task SendActivationEmailAsync(string toEmail, string activationUrl)
+    {
+        var subject = "【MyFitnessCoach】啟用您的帳號";
+        var body = $"""
+            <p>您好，</p>
+            <p>感謝您加入 MyFitnessCoach！請點擊下方連結以啟用您的帳號（連結將於 24 小時後失效）：</p>
+            <p><a href="{activationUrl}" style="display:inline-block;padding:10px 20px;background:#1a1613;color:#f5f0eb;border-radius:8px;text-decoration:none;">啟用帳號</a></p>
+            <p>如果按鈕無法點擊，請複製並貼上以下連結：<br/>{activationUrl}</p>
+            <p>這封信是由系統自動發出，請勿直接回覆。</p>
+            <p>MyFitnessCoach 團隊</p>
+            """;
+
+        await SendAsync(toEmail, subject, body);
     }
 
     public async Task SendForgotPasswordEmailAsync(string toEmail, string resetLink)
@@ -18,7 +35,8 @@ public class EmailService : IEmailService
         var body = $"""
             <p>您好，</p>
             <p>我們收到了您的密碼重設請求。請點擊下方連結重設密碼（連結將於 15 分鐘後失效）：</p>
-            <p><a href="{resetLink}">{resetLink}</a></p>
+            <p><a href="{resetLink}" style="display:inline-block;padding:10px 20px;background:#1a1613;color:#f5f0eb;border-radius:8px;text-decoration:none;">重設密碼</a></p>
+            <p>如果按鈕無法點擊，請複製並貼上以下連結：<br/>{resetLink}</p>
             <p>若非您本人操作，請忽略此信件。</p>
             <p>MyFitnessCoach 團隊</p>
             """;
@@ -41,22 +59,17 @@ public class EmailService : IEmailService
 
     private async Task SendAsync(string toEmail, string subject, string body)
     {
-        var smtpHost    = _config["Email:SmtpHost"]!;
-        var smtpPort    = int.Parse(_config["Email:SmtpPort"]!);
-        var senderEmail = _config["Email:SenderEmail"]!;
-        var senderName  = _config["Email:SenderName"]!;
-        var username    = _config["Email:Username"]!;
-        var password    = _config["Email:Password"]!;
+        var smtpPort = int.TryParse(_settings.SmtpPort, out var p) ? p : 587;
 
-        using var client = new SmtpClient(smtpHost, smtpPort)
+        using var client = new SmtpClient(_settings.SmtpServer, smtpPort)
         {
-            Credentials = new NetworkCredential(username, password),
+            Credentials = new NetworkCredential(_settings.SenderEmail, _settings.ApiKey),
             EnableSsl   = true
         };
 
         using var message = new MailMessage
         {
-            From       = new MailAddress(senderEmail, senderName),
+            From       = new MailAddress(_settings.SenderEmail, _settings.SenderName),
             Subject    = subject,
             Body       = body,
             IsBodyHtml = true

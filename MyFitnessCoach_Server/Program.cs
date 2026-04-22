@@ -6,9 +6,9 @@ using Microsoft.IdentityModel.Tokens;
 using MyFitnessCoach_Server.Models.EfModels;
 using MyFitnessCoach_Server.Models.Repositories;
 using MyFitnessCoach_Server.Models.Services;
-using System.Text;
-using MyFitnessCoach_Server.Models.Services;
 using MyFitnessCoach_Server.Repositories;
+using MyFitnessCoach_Server.Utilities;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +52,7 @@ builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
