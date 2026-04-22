@@ -59,7 +59,8 @@ namespace MyFitnessCoach_Server.Repositories
 					StartAt        = c.StartAt,
 					EndAt          = c.EndAt,
 					RemainingQuota = c.RemainingQuota,
-					BannerImageUrl = c.BannerImageUrl
+					BannerImageUrl = c.BannerImageUrl,
+					VisibleOnlyOnDayOfMonth = c.VisibleOnlyOnDayOfMonth
 				})
 				.ToListAsync();
 		}
@@ -84,6 +85,7 @@ namespace MyFitnessCoach_Server.Repositories
 				{
 					Id        = mc.Id,
 					ClaimedAt = mc.ClaimedAt,
+					ExpiresAt = mc.ExpiresAt,
 					UsedAt    = mc.UsedAt,
 					Coupon    = new CouponDto
 					{
@@ -98,7 +100,8 @@ namespace MyFitnessCoach_Server.Repositories
 						StartAt        = mc.Coupon.StartAt,
 						EndAt          = mc.Coupon.EndAt,
 						RemainingQuota = mc.Coupon.RemainingQuota,
-						BannerImageUrl = mc.Coupon.BannerImageUrl
+						BannerImageUrl = mc.Coupon.BannerImageUrl,
+						VisibleOnlyOnDayOfMonth = mc.Coupon.VisibleOnlyOnDayOfMonth
 					}
 				})
 				.ToListAsync();

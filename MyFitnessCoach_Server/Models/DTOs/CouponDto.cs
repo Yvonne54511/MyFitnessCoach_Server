@@ -14,5 +14,6 @@ namespace MyFitnessCoach_Server.Models.DTOs
         public DateTime EndAt { get; set; }
         public int? RemainingQuota { get; set; }
         public string? BannerImageUrl { get; set; }
+        public byte? VisibleOnlyOnDayOfMonth { get; set; }   // 給前端推「今日 23:59 到期」用
     }
 }

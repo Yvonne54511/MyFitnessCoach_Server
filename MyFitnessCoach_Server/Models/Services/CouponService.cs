@@ -62,6 +62,7 @@ namespace MyFitnessCoach_Server.Models.Services
 			{
 				Id        = mc.Id,
 				ClaimedAt = mc.ClaimedAt,
+				ExpiresAt = mc.ExpiresAt,
 				UsedAt    = mc.UsedAt,
 				Coupon    = new CouponDto
 				{
@@ -76,7 +77,8 @@ namespace MyFitnessCoach_Server.Models.Services
 					StartAt        = coupon.StartAt,
 					EndAt          = coupon.EndAt,
 					RemainingQuota = coupon.RemainingQuota - 1,   // 已扣
-					BannerImageUrl = coupon.BannerImageUrl
+					BannerImageUrl = coupon.BannerImageUrl,
+					VisibleOnlyOnDayOfMonth = coupon.VisibleOnlyOnDayOfMonth
 				}
 			};
 		}
