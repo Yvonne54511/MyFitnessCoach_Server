@@ -7,11 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.26" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.24" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.23" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
@@ -24,6 +26,16 @@
   <ItemGroup>
     <Folder Include="SqlCodes\SeedData\" />
     <Folder Include="SqlCodes\Schema\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="efpt.config.json.user" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\DTOs\" />
+    <Folder Include="Models\Services\" />
+    <Folder Include="StaticFiles\images\NewFolder\" />
   </ItemGroup>
 
 </Project>

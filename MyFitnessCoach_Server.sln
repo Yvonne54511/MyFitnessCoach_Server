@@ -1,9 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.37012.4 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11620.152 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyFitnessCoach_Server", "MyFitnessCoach_Server\MyFitnessCoach_Server.csproj", "{5B8C3E23-6FD4-4A90-A284-7751D5E8E227}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "images", "images", "{EC9CAD9B-A013-4195-BB1E-DFBB0E8EEDE7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "members", "members", "{117921CE-06D7-4B88-9815-4E69CA0C0C22}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\download\default.jpg = ..\..\download\default.jpg
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,6 +25,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{117921CE-06D7-4B88-9815-4E69CA0C0C22} = {EC9CAD9B-A013-4195-BB1E-DFBB0E8EEDE7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8E2D5054-96E2-4C20-AAA2-81EB8E8BE678}
