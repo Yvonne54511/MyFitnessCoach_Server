@@ -46,6 +46,16 @@ namespace MyFitnessCoach_Server.Controllers
 			return Ok(products);
 		}
 
+		// GET /api/StoreApi/products/{id}
+		[HttpGet("products/{id}")]
+		public async Task<ActionResult<ProductDto>> GetProduct(int id)
+		{
+			var product = await _productService.GetProductAsync(id);
+			if (product == null || !product.IsActive)
+				return NotFound();
+			return Ok(product);
+		}
+
 		// GET /api/StoreApi/ProductImage/{id}
 		[HttpGet("ProductImage/{id}")]
 		public async Task<IActionResult> GetProductImage(int id)
