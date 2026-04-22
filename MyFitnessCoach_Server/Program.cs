@@ -7,7 +7,6 @@ using MyFitnessCoach_Server.Models.EfModels;
 using MyFitnessCoach_Server.Models.Repositories;
 using MyFitnessCoach_Server.Models.Services;
 using System.Text;
-using MyFitnessCoach_Server.Models.Services;
 using MyFitnessCoach_Server.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,6 +41,7 @@ builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<InstructorService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<ReservationService>();
+builder.Services.AddScoped<GoogleCalendarService>();
 
 // Add services to the container.
 // Register application services

@@ -77,6 +77,9 @@ public class AccountService : IAccountService
         if (instructor?.Id is int instructorId)
             claims.Add(new Claim("InstructorId", instructorId.ToString()));
 
+        if (member?.Id is int memberId)
+            claims.Add(new Claim("MemberId", memberId.ToString()));
+
         if (employee?.Id is int employeeId)
             claims.Add(new Claim("EmployeeId", employeeId.ToString()));
 
