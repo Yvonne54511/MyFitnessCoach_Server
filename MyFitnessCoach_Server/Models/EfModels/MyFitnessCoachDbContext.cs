@@ -69,6 +69,8 @@ public partial class MyFitnessCoachDbContext : DbContext
 
     public virtual DbSet<ProductOrderDetail> ProductOrderDetails { get; set; }
 
+    public virtual DbSet<RateLimitLog> RateLimitLogs { get; set; }
+
     public virtual DbSet<ReserveOrder> ReserveOrders { get; set; }
 
     public virtual DbSet<Review> Reviews { get; set; }
@@ -84,6 +86,8 @@ public partial class MyFitnessCoachDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserExternalLogin> UserExternalLogins { get; set; }
+
+    public virtual DbSet<UserPasswordHistory> UserPasswordHistories { get; set; }
 
     public virtual DbSet<UserRole> UserRoles { get; set; }
 
@@ -629,6 +633,22 @@ public partial class MyFitnessCoachDbContext : DbContext
                 .HasConstraintName("FK_ProductOrderDetails_ProductOrders");
         });
 
+        modelBuilder.Entity<RateLimitLog>(entity =>
+        {
+            entity.Property(e => e.EndPoint)
+                .IsRequired()
+                .HasMaxLength(200);
+            entity.Property(e => e.Identity).HasMaxLength(100);
+            entity.Property(e => e.IpAddress)
+                .IsRequired()
+                .HasMaxLength(45)
+                .IsUnicode(false);
+            entity.Property(e => e.RequestedAt)
+                .HasPrecision(0)
+                .HasDefaultValueSql("(getdate())")
+                .HasAnnotation("Relational:DefaultConstraintName", "DF_RateLimitLogs_RequestedAt");
+        });
+
         modelBuilder.Entity<ReserveOrder>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__ReserveO__3214EC074B699A73");
@@ -786,6 +806,19 @@ public partial class MyFitnessCoachDbContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ExternalLogins_Users");
+        });
+
+        modelBuilder.Entity<UserPasswordHistory>(entity =>
+        {
+            entity.Property(e => e.CreatedAt).HasPrecision(0);
+            entity.Property(e => e.HashedPassword)
+                .IsRequired()
+                .HasMaxLength(256);
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserPasswordHistories)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_UserPasswordHistories_Users");
         });
 
         modelBuilder.Entity<UserRole>(entity =>

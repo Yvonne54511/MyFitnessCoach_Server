@@ -131,6 +131,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[RateLimitLogs]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[ReserveOrders]",
          "ObjectType": 0
       },
@@ -156,6 +160,10 @@
       },
       {
          "Name": "[dbo].[UserExternalLogins]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[UserPasswordHistories]",
          "ObjectType": 0
       },
       {
