@@ -18,8 +18,8 @@ namespace MyFitnessCoach_Server.Repositories
 		/// <summary>檢查會員是否領過該券。</summary>
 		Task<bool> HasClaimedAsync(int memberId, int couponId);
 
-		/// <summary>領取一張券:用 transaction + ExecuteUpdateAsync 原子扣 RemainingQuota,避免超發。</summary>
-		Task<MemberCoupon> ClaimAsync(int memberId, int couponId);
+		/// <summary>領取一張券:用 transaction + ExecuteUpdateAsync 原子扣 RemainingQuota,避免超發。expiresAt 為個人到期日(由 Service 依 Coupon.ValidDaysAfterClaim 計算)。</summary>
+		Task<MemberCoupon> ClaimAsync(int memberId, int couponId, DateTime? expiresAt);
 
 		/// <summary>取得會員的單一已領取券(含 Coupon 主檔),做 ownership 驗證。</summary>
 		Task<MemberCoupon?> GetMemberCouponAsync(int memberCouponId, int memberId);
@@ -37,12 +37,14 @@ namespace MyFitnessCoach_Server.Repositories
 		public async Task<List<CouponDto>> GetActiveCouponsAsync()
 		{
 			var now = DateTime.Now;
+			var todayDay = (byte)now.Day;
 			return await _context.Coupons
 				.AsNoTracking()
 				.Where(c => c.IsActive
 				         && c.StartAt <= now
 				         && c.EndAt > now
-				         && (c.RemainingQuota == null || c.RemainingQuota > 0))
+				         && (c.RemainingQuota == null || c.RemainingQuota > 0)
+				         && (c.VisibleOnlyOnDayOfMonth == null || c.VisibleOnlyOnDayOfMonth == todayDay))
 				.OrderBy(c => c.EndAt)
 				.Select(c => new CouponDto
 				{
@@ -56,7 +58,8 @@ namespace MyFitnessCoach_Server.Repositories
 					MaxDiscount    = c.MaxDiscount,
 					StartAt        = c.StartAt,
 					EndAt          = c.EndAt,
-					RemainingQuota = c.RemainingQuota
+					RemainingQuota = c.RemainingQuota,
+					BannerImageUrl = c.BannerImageUrl
 				})
 				.ToListAsync();
 		}
@@ -69,9 +72,12 @@ namespace MyFitnessCoach_Server.Repositories
 
 		public async Task<List<MemberCouponDto>> GetMyCouponsAsync(int memberId)
 		{
+			var todayDay = (byte)DateTime.Now.Day;
 			return await _context.MemberCoupons
 				.AsNoTracking()
-				.Where(mc => mc.MemberId == memberId)
+				.Where(mc => mc.MemberId == memberId
+				          && (mc.Coupon.VisibleOnlyOnDayOfMonth == null
+				              || mc.Coupon.VisibleOnlyOnDayOfMonth == todayDay))
 				.OrderBy(mc => mc.UsedAt.HasValue)        // 未使用排前
 				.ThenByDescending(mc => mc.ClaimedAt)
 				.Select(mc => new MemberCouponDto
@@ -91,7 +97,8 @@ namespace MyFitnessCoach_Server.Repositories
 						MaxDiscount    = mc.Coupon.MaxDiscount,
 						StartAt        = mc.Coupon.StartAt,
 						EndAt          = mc.Coupon.EndAt,
-						RemainingQuota = mc.Coupon.RemainingQuota
+						RemainingQuota = mc.Coupon.RemainingQuota,
+						BannerImageUrl = mc.Coupon.BannerImageUrl
 					}
 				})
 				.ToListAsync();
@@ -104,7 +111,7 @@ namespace MyFitnessCoach_Server.Repositories
 				.AnyAsync(mc => mc.MemberId == memberId && mc.CouponId == couponId);
 		}
 
-		public async Task<MemberCoupon> ClaimAsync(int memberId, int couponId)
+		public async Task<MemberCoupon> ClaimAsync(int memberId, int couponId, DateTime? expiresAt)
 		{
 			using var tx = await _context.Database.BeginTransactionAsync();
 
@@ -126,7 +133,8 @@ namespace MyFitnessCoach_Server.Repositories
 			{
 				MemberId  = memberId,
 				CouponId  = couponId,
-				ClaimedAt = DateTime.Now
+				ClaimedAt = DateTime.Now,
+				ExpiresAt = expiresAt
 			};
 			_context.MemberCoupons.Add(mc);
 			await _context.SaveChangesAsync();

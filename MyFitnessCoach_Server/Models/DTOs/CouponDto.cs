@@ -13,5 +13,6 @@ namespace MyFitnessCoach_Server.Models.DTOs
         public DateTime StartAt { get; set; }
         public DateTime EndAt { get; set; }
         public int? RemainingQuota { get; set; }
+        public string? BannerImageUrl { get; set; }
     }
 }

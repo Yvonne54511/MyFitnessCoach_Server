@@ -35,5 +35,11 @@ public partial class Coupon
 
     public DateTime CreatedAt { get; set; }
 
+    public int? ValidDaysAfterClaim { get; set; }
+
+    public byte? VisibleOnlyOnDayOfMonth { get; set; }
+
+    public string BannerImageUrl { get; set; }
+
     public virtual ICollection<MemberCoupon> MemberCoupons { get; set; } = new List<MemberCoupon>();
 }

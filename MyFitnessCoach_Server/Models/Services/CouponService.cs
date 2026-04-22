@@ -51,7 +51,12 @@ namespace MyFitnessCoach_Server.Models.Services
 			if (await _repo.HasClaimedAsync(memberId, coupon.Id))
 				throw new InvalidOperationException("您已領取過此優惠券");
 
-			var mc = await _repo.ClaimAsync(memberId, coupon.Id);
+			// 個人到期日:資料驅動 — 由 Coupon.ValidDaysAfterClaim 決定
+			DateTime? expiresAt = coupon.ValidDaysAfterClaim.HasValue
+				? DateTime.Now.AddDays(coupon.ValidDaysAfterClaim.Value)
+				: null;
+
+			var mc = await _repo.ClaimAsync(memberId, coupon.Id, expiresAt);
 
 			return new MemberCouponDto
 			{
@@ -70,7 +75,8 @@ namespace MyFitnessCoach_Server.Models.Services
 					MaxDiscount    = coupon.MaxDiscount,
 					StartAt        = coupon.StartAt,
 					EndAt          = coupon.EndAt,
-					RemainingQuota = coupon.RemainingQuota - 1   // 已扣
+					RemainingQuota = coupon.RemainingQuota - 1,   // 已扣
+					BannerImageUrl = coupon.BannerImageUrl
 				}
 			};
 		}
@@ -101,9 +107,10 @@ namespace MyFitnessCoach_Server.Models.Services
 					.AnyAsync(po => po.MemberId == memberId && po.Status >= 1);
 				if (hasPaid) return Invalid("此券限首次消費使用");
 			}
-			if (c.Code == "DAY22" && now.Day != 22)
+			// 日期限定券(資料驅動):後端清單已過濾掉非當日的券,這裡是 deep-defense
+			if (c.VisibleOnlyOnDayOfMonth.HasValue && c.VisibleOnlyOnDayOfMonth.Value != now.Day)
 			{
-				return Invalid("僅限每月 22 日當日使用");
+				return Invalid($"僅限每月 {c.VisibleOnlyOnDayOfMonth.Value} 日當日使用");
 			}
 
 			// ---------- 折扣計算 ----------

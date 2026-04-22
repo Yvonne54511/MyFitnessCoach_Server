@@ -17,8 +17,6 @@ public partial class ProductOrder
 
     public decimal DiscountAmount { get; set; }
 
-    public decimal? FinalAmount { get; set; }
-
     public string Receiver { get; set; }
 
     public string Address { get; set; }
@@ -30,6 +28,8 @@ public partial class ProductOrder
     public int Status { get; set; }
 
     public string Memo { get; set; }
+
+    public decimal? FinalAmount { get; set; }
 
     public int PaymentMethod { get; set; }
 
