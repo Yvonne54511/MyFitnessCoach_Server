@@ -24,35 +24,17 @@ ALTER TABLE [dbo].[UserPasswordHistories]
     FOREIGN KEY ([UserId]) REFERENCES [dbo].[Users]([Id])
 GO
 
--- 將現有 Users 中已設定帳號密碼的資料匯入（第三方登入帳號 Account/HashedPassword 為 NULL 則略過）
-INSERT INTO [dbo].[UserPasswordHistories] ([UserId], [HashedPassword], [CreatedAt])
-SELECT
-    [Id],
-    [HashedPassword],
-    -- 隨機產生 2025-01-01 ~ 2025-12-31 之間的日期
-    DATEADD(DAY, ABS(CHECKSUM(NEWID())) % 365, CAST('2025-01-01' AS datetime2(0)))
-FROM [dbo].[Users]
-WHERE [Account]        IS NOT NULL
-  AND [HashedPassword] IS NOT NULL
-GO
-
 
 -- ============================================================
--- 3. Users 新增欄位 IsResetPasswordConfirmCodeUsed
+-- 2. Users 新增欄位 IsResetPasswordConfirmCodeUsed
 -- ============================================================
 ALTER TABLE [dbo].[Users]
     ADD [IsResetPasswordConfirmCodeUsed] [bit] NULL
 GO
 
--- 有 ResetPasswordConfirmCode 的設為 1，其他維持 NULL
-UPDATE [dbo].[Users]
-SET [IsResetPasswordConfirmCodeUsed] = 1
-WHERE [ResetPasswordConfirmCode] IS NOT NULL
-GO
-
 
 -- ============================================================
--- 4. RateLimitLogs
+-- 3. RateLimitLogs
 -- ============================================================
 SET ANSI_NULLS ON
 GO

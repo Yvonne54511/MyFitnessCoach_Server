@@ -39,6 +39,9 @@ builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<ReviewRepository>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<CategoryService>();
+
+builder.Services.AddScoped<ITopUpPlanRepository, TopUpPlanRepository>();
+builder.Services.AddScoped<TopUpPlanService>();
 builder.Services.AddScoped<InstructorService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<ReservationService>();

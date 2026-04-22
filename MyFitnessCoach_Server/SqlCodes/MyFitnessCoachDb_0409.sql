@@ -666,6 +666,7 @@ CREATE TABLE [dbo].[ProductOrders](
 	[CreateAt] [datetime2](7) NOT NULL,
 	[OriginalAmount] [decimal](18, 0) NOT NULL,
 	[DiscountAmount] [decimal](18, 0) NOT NULL,
+	[FinalAmount] AS ([OriginalAmount] - [DiscountAmount]),
 	[Receiver] [nvarchar](30) NOT NULL,
 	[Address] [nvarchar](500) NOT NULL,
 	[Mobile] [varchar](20) NOT NULL,

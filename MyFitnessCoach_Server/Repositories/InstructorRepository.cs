@@ -64,14 +64,14 @@ namespace MyFitnessCoach_Server.Repositories
 				{
 					Id = i.Id,
 					UserId = i.UserId,
-					UserName = i.User.UserName,
+					UserName = i.User?.UserName ?? "未設定名稱",
 					ImageUrl = i.ImageUrl,
 					Title = i.Title,
 					Description = i.Description,
 					HourWage = i.HourWage,
 					IsActive = i.IsActive,
 					TotalScore = totalScore,
-					AverageRating = i.Reviews.Any() ? i.Reviews.Average(r => (double)r.Rating) : 0
+					AverageRating = (i.Reviews != null && i.Reviews.Any()) ? i.Reviews.Average(r => (double)r.Rating) : 0
 				};
 			}).OrderByDescending(i => i.TotalScore);
 

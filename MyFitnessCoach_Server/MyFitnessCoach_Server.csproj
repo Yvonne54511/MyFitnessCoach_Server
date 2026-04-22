@@ -18,6 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="ECPay.Payment.Integration">
+      <HintPath>..\..\ECPayAIO_Net-master\ECPay.Payment.Integration.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="SqlCodes\SeedData\" />
     <Folder Include="SqlCodes\Schema\" />
   </ItemGroup>
