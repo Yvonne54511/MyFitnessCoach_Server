@@ -33,6 +33,8 @@ public partial class Member
 
     public virtual ICollection<BodyRecord> BodyRecords { get; set; } = new List<BodyRecord>();
 
+    public virtual Cart Cart { get; set; }
+
     public virtual ICollection<FoodRecord> FoodRecords { get; set; } = new List<FoodRecord>();
 
     public virtual MemberViolation MemberViolation { get; set; }

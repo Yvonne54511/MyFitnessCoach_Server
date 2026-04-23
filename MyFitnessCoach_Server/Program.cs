@@ -46,6 +46,10 @@ builder.Services.AddScoped<InstructorService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<ReservationService>();
 
+// Cart (Phase 3)
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<CartService>();
+
 // Add services to the container.
 // Register application services
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
