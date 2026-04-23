@@ -85,9 +85,9 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseDeveloperExceptionPage(); // 強制開啟
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
