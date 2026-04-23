@@ -114,6 +114,11 @@ public class AccountRepository : IAccountRepository
         return await _db.Users.AnyAsync(u => u.Account == account || u.Email == email);
     }
 
+    public async Task<bool> MobileExistsAsync(string mobile)
+    {
+        return await _db.Users.AnyAsync(u => u.Mobile == mobile);
+    }
+
     public async Task CreateUserAsync(User user)
     {
         _db.Users.Add(user);

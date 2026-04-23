@@ -95,14 +95,24 @@ public class AccountController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
         try
         {
-            await _accountService.RegisterAsync(dto);
+            await _accountService.RegisterAsync(dto, ip);
             return StatusCode(201, new { message = "註冊成功，請至信箱收取啟用信" });
         }
-        catch (InvalidOperationException)
+        catch (RateLimitException ex)
+        {
+            return StatusCode(429, new { retryAfterSeconds = ex.RetryAfterSeconds });
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "ACCOUNT_OR_EMAIL_EXISTS")
         {
             return Conflict(new { message = "帳號或信箱已被使用" });
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "MOBILE_EXISTS")
+        {
+            return Conflict(new { message = "手機號碼已被使用" });
         }
     }
 

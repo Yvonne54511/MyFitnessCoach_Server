@@ -23,6 +23,7 @@ public interface IAccountRepository
 
     // Register / Activate
     Task<bool> AccountOrEmailExistsAsync(string account, string email);
+    Task<bool> MobileExistsAsync(string mobile);
     Task CreateUserAsync(User user);
     Task<User?> GetByActivationCodeHashAsync(string hash);
     Task ActivateUserAsync(int userId);

@@ -227,28 +227,62 @@ public class AccountService : IAccountService
 
     // ── Register ───────────────────────────────────────────────────────────
 
-    public async Task RegisterAsync(RegisterDto dto)
+    public async Task RegisterAsync(RegisterDto dto, string ipAddress)
     {
-        var exists = await _accountRepository.AccountOrEmailExistsAsync(dto.Account, dto.Email);
-        if (exists)
+        const string endPoint = "register";
+        var now = DateTime.UtcNow;
+
+        // IP rate limit：1 小時 10 次（防止大量垃圾註冊）
+        var ipCount = await _accountRepository.CountRateLimitAsync(ipAddress, endPoint, byIp: true, since: now.AddHours(-1));
+        if (ipCount >= 10)
+        {
+            var oldest = await _accountRepository.GetOldestRateLimitTimeAsync(ipAddress, endPoint, since: now.AddHours(-1));
+            var retryAfter = oldest.HasValue
+                ? (int)Math.Ceiling((oldest.Value.AddHours(1) - now).TotalSeconds)
+                : 3600;
+            throw new RateLimitException(Math.Max(retryAfter, 1));
+        }
+
+        // 記錄請求（即使後續驗證失敗也計入，防止枚舉攻擊）
+        await _accountRepository.LogRateLimitAsync(new RateLimitLog
+        {
+            IpAddress   = ipAddress,
+            EndPoint    = endPoint,
+            Identity    = dto.Email.Trim().ToLower(),
+            IsSuccess   = true,
+            RequestedAt = now
+        });
+
+        // 正規化輸入
+        var account = dto.Account.Trim();
+        var email   = dto.Email.Trim().ToLower();
+        var mobile  = dto.Mobile.Trim();
+
+        // 驗證帳號/信箱唯一性
+        if (await _accountRepository.AccountOrEmailExistsAsync(account, email))
             throw new InvalidOperationException("ACCOUNT_OR_EMAIL_EXISTS");
 
-        var (rawToken, hash) = HashHelper.ProduceConfirmCode();
+        // 驗證手機唯一性
+        if (await _accountRepository.MobileExistsAsync(mobile))
+            throw new InvalidOperationException("MOBILE_EXISTS");
 
-        var tempUser = new User();
-        var hashedPassword = _passwordHasher.HashPassword(tempUser, dto.Password);
+        // 雜湊密碼
+        var hashedPassword = _passwordHasher.HashPassword(new User(), dto.Password);
+
+        // 產生啟用 token
+        var (rawToken, hash) = HashHelper.ProduceConfirmCode();
 
         var user = new User
         {
-            Account                  = dto.Account,
-            HashedPassword           = hashedPassword,
-            Email                    = dto.Email,
-            UserName                 = dto.UserName,
-            Mobile                   = dto.Mobile,
-            IsConfirmed              = false,
-            IsActive                 = true,
-            NewMemberConfirmCode     = hash,
-            NewMemberConfirmCodeExpiry = DateTime.UtcNow.AddHours(24)
+            Account                    = account,
+            HashedPassword             = hashedPassword,
+            Email                      = email,
+            UserName                   = dto.UserName.Trim(),
+            Mobile                     = mobile,
+            IsConfirmed                = false,
+            IsActive                   = true,
+            NewMemberConfirmCode       = hash,
+            NewMemberConfirmCodeExpiry = now.AddHours(24)
         };
 
         await _accountRepository.CreateUserAsync(user);
