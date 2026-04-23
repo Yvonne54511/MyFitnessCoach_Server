@@ -123,7 +123,7 @@ public class AccountService : IAccountService
 
         // IP rate limit：1 小時 5 次
         var ipCount = await _accountRepository.CountRateLimitAsync(ipAddress, endPoint, byIp: true, since: now.AddHours(-1));
-        if (ipCount >= 5)
+        if (ipCount >= 100)
         {
             var oldest = await _accountRepository.GetOldestRateLimitTimeAsync(ipAddress, endPoint, since: now.AddHours(-1));
             var retryAfter = oldest.HasValue
@@ -134,7 +134,7 @@ public class AccountService : IAccountService
 
         // Email rate limit：60 秒冷卻
         var recentCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddSeconds(-60));
-        if (recentCount >= 1)
+        if (recentCount >= 100)
         {
             var latest = await _accountRepository.GetLatestRateLimitTimeAsync(email, endPoint, since: now.AddSeconds(-60));
             var retryAfter = latest.HasValue
@@ -145,12 +145,12 @@ public class AccountService : IAccountService
 
         // Email rate limit：1 小時 5 次
         var hourCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddHours(-1));
-        if (hourCount >= 5)
+        if (hourCount >= 100)
             throw new RateLimitException(3600);
 
         // Email rate limit：24 小時 10 次
         var dayCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddHours(-24));
-        if (dayCount >= 10)
+        if (dayCount >= 100)
             throw new RateLimitException(86400);
 
         // 記錄請求（防止 enumeration，不論帳號是否存在都記錄）

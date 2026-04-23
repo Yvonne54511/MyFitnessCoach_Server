@@ -59,7 +59,7 @@ public class EmailService : IEmailService
 
     private async Task SendAsync(string toEmail, string subject, string body)
     {
-        var smtpPort = int.TryParse(_settings.SmtpPort, out var p) ? p : 587;
+var smtpPort = int.TryParse(_settings.SmtpPort, out var p) ? p : 587;
 
         using var client = new SmtpClient(_settings.SmtpServer, smtpPort)
         {
