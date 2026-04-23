@@ -45,6 +45,7 @@ builder.Services.AddScoped<TopUpPlanService>();
 builder.Services.AddScoped<InstructorService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<ReservationService>();
+builder.Services.AddScoped<GoogleCalendarService>();
 
 // Cart (Phase 3)
 builder.Services.AddScoped<ICartRepository, CartRepository>();
@@ -54,7 +55,8 @@ builder.Services.AddScoped<CartService>();
 // Register application services
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ILoginEmailService, LoginEmailService>();
+builder.Services.AddScoped<IReservationEmailService, ReservationEmailService>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 

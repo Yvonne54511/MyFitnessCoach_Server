@@ -11,6 +11,7 @@ namespace MyFitnessCoach_Server.Models.DTOs
         public string Status { get; set; } = string.Empty;
         public string? Target { get; set; }
         public string? Memorandum { get; set; }
+        public string? GoogleEventId { get; set; }
         public decimal? Price { get; set; }
         public int? PointCost { get; set; }
         public string? PaymentMethod { get; set; }

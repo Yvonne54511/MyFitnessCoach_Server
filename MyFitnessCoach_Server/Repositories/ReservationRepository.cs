@@ -7,7 +7,7 @@ namespace MyFitnessCoach_Server.Repositories
     public interface IReservationRepository
     {
         Task<IEnumerable<ReservationDto>> GetByMemberIdAsync(int memberId);
-        Task<bool> CreateAsync(int memberId, CreateReservationDto dto);
+        Task<(bool Success, ReserveOrder Order)> CreateAsync(int memberId, CreateReservationDto dto);
         Task<(bool Success, string Message)> CancelAsync(int memberId, int reservationId);
     }
 
@@ -71,19 +71,19 @@ namespace MyFitnessCoach_Server.Repositories
             return (true, "預約已成功取消");
         }
 
-        public async Task<bool> CreateAsync(int memberId, CreateReservationDto dto)
+        public async Task<(bool Success, ReserveOrder Order)> CreateAsync(int memberId, CreateReservationDto dto)
         {
             if (!DateOnly.TryParse(dto.Date, out DateOnly scheduleDate))
             {
-                return false;
+                return (false, null);
             }
 
             var shift = await _db.Shifts
                 .FirstOrDefaultAsync(s => s.InstructorId == dto.InstructorId && 
                                           s.ScheduleDate == scheduleDate && 
                                           s.TimeSlot == dto.Time);
-            
-            if (shift == null || shift.IsBooked) return false;
+
+            if (shift == null || shift.IsBooked) return (false, null);
 
             var order = new ReserveOrder
             {
@@ -101,7 +101,7 @@ namespace MyFitnessCoach_Server.Repositories
 
             _db.ReserveOrders.Add(order);
             await _db.SaveChangesAsync();
-            return true;
+            return (true, order);
         }
 
         public async Task<IEnumerable<ReservationDto>> GetByMemberIdAsync(int memberId)
@@ -177,6 +177,7 @@ namespace MyFitnessCoach_Server.Repositories
                     Status = ro.Status,
                     Target = ro.Target,
                     Memorandum = ro.Memorandum,
+                    GoogleEventId = ro.GoogleEventId,
                     Price = ro.Price,
                     PointCost = ro.PointCost,
                     PaymentMethod = ro.PaymentMethod,
