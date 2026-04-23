@@ -185,14 +185,12 @@ public class AccountService : IAccountService
         var now  = DateTime.UtcNow;
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(dto.Token.Trim()))).ToLower();
 
-        // 原子 UPDATE：token 必須未使用且未過期，防止 race condition
-        var affected = await _accountRepository.MarkResetTokenUsedAsync(hash, now);
-        if (affected == 0)
-            return new ResetPasswordResultDto { IsSuccess = false, Message = "連結已失效或過期，請重新申請" };
-
-        // 取得 user
+        // 取得 user 並驗證 token 狀態（未使用、未過期）
         var user = await _accountRepository.GetByResetCodeHashAsync(hash);
-        if (user == null)
+        if (user == null
+            || user.IsResetPasswordConfirmCodeUsed == true
+            || user.ResetPasswordConfirmCodeExpiry == null
+            || user.ResetPasswordConfirmCodeExpiry <= now)
             return new ResetPasswordResultDto { IsSuccess = false, Message = "連結已失效或過期，請重新申請" };
 
         // 密碼歷史比對（最近 3 次）
@@ -203,6 +201,11 @@ public class AccountService : IAccountService
             if (verifyResult != PasswordVerificationResult.Failed)
                 return new ResetPasswordResultDto { IsSuccess = false, Message = "新密碼不可與近三次使用過的密碼相同" };
         }
+
+        // 所有檢查都通過才原子地把 token 標為已使用（防 race condition：併發請求只有一個會成功）
+        var affected = await _accountRepository.MarkResetTokenUsedAsync(hash, now);
+        if (affected == 0)
+            return new ResetPasswordResultDto { IsSuccess = false, Message = "連結已失效或過期，請重新申請" };
 
         // 更新密碼
         var newHashedPassword = _passwordHasher.HashPassword(user, dto.NewPassword);
