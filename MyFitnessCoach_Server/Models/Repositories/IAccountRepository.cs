@@ -1,9 +1,14 @@
+using Microsoft.EntityFrameworkCore.Storage;
 using MyFitnessCoach_Server.Models.EfModels;
 
 namespace MyFitnessCoach_Server.Models.Repositories;
 
 public interface IAccountRepository
 {
+    // Transaction
+    Task<IDbContextTransaction> BeginTransactionAsync();
+
+
     // Login
     Task<User?> GetByAccountAsync(string account);
     Task<Instructor?> GetInstructorByUserIdAsync(int userId);

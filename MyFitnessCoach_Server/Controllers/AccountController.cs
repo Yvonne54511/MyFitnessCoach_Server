@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyFitnessCoach_Server.Models.DTOs;
 using MyFitnessCoach_Server.Models.Services;
+using MyFitnessCoach_Server.Utilities;
 
 namespace MyFitnessCoach_Server.Controllers;
 

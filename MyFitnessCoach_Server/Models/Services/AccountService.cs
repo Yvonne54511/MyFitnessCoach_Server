@@ -11,13 +11,6 @@ using MyFitnessCoach_Server.Utilities;
 
 namespace MyFitnessCoach_Server.Models.Services;
 
-public class RateLimitException : Exception
-{
-    public int RetryAfterSeconds { get; }
-    public RateLimitException(int retryAfterSeconds) : base("Too many requests")
-        => RetryAfterSeconds = retryAfterSeconds;
-}
-
 public class AccountService : IAccountService
 {
     private readonly IAccountRepository _accountRepository;
@@ -285,10 +278,15 @@ public class AccountService : IAccountService
             NewMemberConfirmCodeExpiry = now.AddHours(24)
         };
 
+        // 用交易包住「建立帳號 + 寄送啟用信」：寄信失敗時回滾，避免產生無法啟用的孤兒帳號
+        using var transaction = await _accountRepository.BeginTransactionAsync();
+
         await _accountRepository.CreateUserAsync(user);
 
         var activationUrl = $"{_config["FrontEnd:BaseUrl"]}/activate?token={rawToken}";
         await _emailService.SendActivationEmailAsync(user.Email, activationUrl);
+
+        await transaction.CommitAsync();
     }
 
     // ── Activate account ───────────────────────────────────────────────────

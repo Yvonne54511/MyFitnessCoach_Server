@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using MyFitnessCoach_Server.Models.EfModels;
 
 namespace MyFitnessCoach_Server.Models.Repositories;
@@ -8,6 +9,11 @@ public class AccountRepository : IAccountRepository
     private readonly MyFitnessCoachDbContext _db;
 
     public AccountRepository(MyFitnessCoachDbContext db) => _db = db;
+
+    // ── Transaction ────────────────────────────────────────────────────────
+
+    public Task<IDbContextTransaction> BeginTransactionAsync()
+        => _db.Database.BeginTransactionAsync();
 
     // ── Login ──────────────────────────────────────────────────────────────
 
