@@ -15,13 +15,13 @@ public class AccountService : IAccountService
 {
     private readonly IAccountRepository _accountRepository;
     private readonly IPasswordHasher<User> _passwordHasher;
-    private readonly IEmailService _emailService;
+    private readonly IPasswordEmailService _emailService;
     private readonly IConfiguration _config;
 
     public AccountService(
         IAccountRepository accountRepository,
         IPasswordHasher<User> passwordHasher,
-        IEmailService emailService,
+        IPasswordEmailService emailService,
         IConfiguration config)
     {
         _accountRepository = accountRepository;

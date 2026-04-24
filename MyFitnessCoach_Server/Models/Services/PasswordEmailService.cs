@@ -5,11 +5,11 @@ using MyFitnessCoach_Server.Utilities;
 
 namespace MyFitnessCoach_Server.Models.Services;
 
-public class EmailService : IEmailService
+public class PasswordEmailService : IPasswordEmailService
 {
     private readonly EmailSettings _settings;
 
-    public EmailService(IOptions<EmailSettings> options)
+    public PasswordEmailService(IOptions<EmailSettings> options)
     {
         _settings = options.Value;
     }
