@@ -50,6 +50,9 @@ namespace MyFitnessCoach_Server.Controllers
                     .Include(r => r.PointOrder)
                         .ThenInclude(o => o.TopUpPlan)
                     .Include(r => r.ReserveOrder)
+                        .ThenInclude(ro => ro.Shift)
+                            .ThenInclude(s => s.Instructor)
+                                .ThenInclude(i => i.User)
                     .OrderByDescending(r => r.CreateAt)
                     .ToListAsync();
 
@@ -59,8 +62,9 @@ namespace MyFitnessCoach_Server.Controllers
                     {
                         "Recharge" => r.PointOrder?.TopUpPlan?.PlanName ?? "購買點數",
                         "Reserve"  => r.ReserveOrder != null
-                            ? $"課程預約 #{r.ReserveOrder.Id}"
+                            ? $"課程預約 - {r.ReserveOrder.Shift?.Instructor?.User?.UserName ?? "教練"}"
                             : "課程預約",
+                        "Cancel"   => "取消預約 (點數退回)",
                         _          => r.MerchandiseCategory ?? "點數異動"
                     };
 
