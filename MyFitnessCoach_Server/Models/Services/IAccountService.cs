@@ -7,4 +7,8 @@ public interface IAccountService
     Task<LoginResultDto> LoginAsync(LoginDto dto);
     Task ForgotPasswordAsync(ForgotPasswordDto dto, string ipAddress);
     Task<ResetPasswordResultDto> ResetPasswordAsync(ResetPasswordDto dto);
+
+    Task RegisterAsync(RegisterDto dto);
+    Task<ActivateAccountResultDto> ActivateAccountAsync(string rawToken);
+    Task ResendActivationEmailAsync(ResendActivationDto dto, string ipAddress);
 }

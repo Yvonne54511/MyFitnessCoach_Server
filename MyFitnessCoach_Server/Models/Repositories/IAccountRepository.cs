@@ -21,6 +21,14 @@ public interface IAccountRepository
     Task<List<UserPasswordHistory>> GetPasswordHistoryAsync(int userId, int count);
     Task AddPasswordHistoryAsync(UserPasswordHistory history);
 
+    // Register / Activate
+    Task<bool> AccountOrEmailExistsAsync(string account, string email);
+    Task CreateUserAsync(User user);
+    Task<User?> GetByActivationCodeHashAsync(string hash);
+    Task ActivateUserAsync(int userId);
+    Task UpdateActivationTokenAsync(int userId, string hash, DateTime expiry);
+    Task<User?> GetPendingUserByEmailAsync(string email);
+
     // Rate limit
     Task<int> CountRateLimitAsync(string identifier, string endPoint, bool byIp, DateTime since);
     Task<DateTime?> GetLatestRateLimitTimeAsync(string identity, string endPoint, DateTime since);

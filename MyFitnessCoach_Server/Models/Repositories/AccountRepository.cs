@@ -107,6 +107,52 @@ public class AccountRepository : IAccountRepository
         await _db.SaveChangesAsync();
     }
 
+    // ── Register / Activate ────────────────────────────────────────────────
+
+    public async Task<bool> AccountOrEmailExistsAsync(string account, string email)
+    {
+        return await _db.Users.AnyAsync(u => u.Account == account || u.Email == email);
+    }
+
+    public async Task CreateUserAsync(User user)
+    {
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task<User?> GetByActivationCodeHashAsync(string hash)
+    {
+        return await _db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.NewMemberConfirmCode == hash);
+    }
+
+    public async Task ActivateUserAsync(int userId)
+    {
+        await _db.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(u => u.IsConfirmed, true)
+                .SetProperty(u => u.NewMemberConfirmCode, (string?)null)
+                .SetProperty(u => u.NewMemberConfirmCodeExpiry, (DateTime?)null));
+    }
+
+    public async Task UpdateActivationTokenAsync(int userId, string hash, DateTime expiry)
+    {
+        await _db.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(u => u.NewMemberConfirmCode, hash)
+                .SetProperty(u => u.NewMemberConfirmCodeExpiry, expiry));
+    }
+
+    public async Task<User?> GetPendingUserByEmailAsync(string email)
+    {
+        return await _db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email == email && u.IsConfirmed == false);
+    }
+
     // ── Rate limit ─────────────────────────────────────────────────────────
 
     public async Task<int> CountRateLimitAsync(string identifier, string endPoint, bool byIp, DateTime since)
