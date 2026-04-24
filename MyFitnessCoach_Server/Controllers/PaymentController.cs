@@ -157,9 +157,10 @@ namespace MyFitnessCoach_Server.Controllers
                 if (member == null)
                     return NotFound(new { error = "找不到會員資料" });
 
+                // TODO: 測試完成後將下方改回加上 && o.MemberId == member.Id
                 var order = await _context.ProductOrders
                     .Include(o => o.ProductOrderDetails)
-                    .FirstOrDefaultAsync(o => o.Id == productOrderId && o.MemberId == member.Id);
+                    .FirstOrDefaultAsync(o => o.Id == productOrderId);
 
                 if (order == null)
                     return NotFound(new { error = "找不到訂單" });
