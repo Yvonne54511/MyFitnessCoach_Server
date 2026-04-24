@@ -85,7 +85,11 @@ public class AccountService : IAccountService
 
         var key     = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds   = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.UtcNow.AddHours(8);
+        var lifetimeMinutes = int.TryParse(_config["Jwt:AccessTokenLifetimeMinutes"], out var minutes)
+            ? minutes
+            : 480;
+
+        var expires = DateTime.UtcNow.AddMinutes(lifetimeMinutes);
 
         var token = new JwtSecurityToken(
             issuer:             _config["Jwt:Issuer"],
