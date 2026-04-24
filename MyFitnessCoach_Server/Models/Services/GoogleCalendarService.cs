@@ -27,11 +27,14 @@ public class GoogleCalendarService
 
         if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
         {
-            throw new Exception("後端設定缺失：請檢查 appsettings.json 是否包含 Google:ClientId 和 Google:ClientSecret");
+            var msg = $"後端設定缺失：ClientId={(string.IsNullOrEmpty(clientId) ? "空" : "有值")}, ClientSecret={(string.IsNullOrEmpty(clientSecret) ? "空" : "有值")}";
+            System.Diagnostics.Debug.WriteLine(msg);
+            throw new Exception(msg);
         }
 
         try 
         {
+            System.Diagnostics.Debug.WriteLine($"嘗試換票: ClientId 開始於 {clientId.Substring(0, Math.Min(5, clientId.Length))}...");
             var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
             {
                 ClientSecrets = new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
@@ -81,10 +84,15 @@ public class GoogleCalendarService
         var loginInfo = await _db.UserExternalLogins
             .FirstOrDefaultAsync(l => l.UserId == userId && l.LoginProvider == "GoogleCalendar");
 
-        if (loginInfo == null || string.IsNullOrEmpty(loginInfo.ProviderKey)) return null;
+        if (loginInfo == null || string.IsNullOrEmpty(loginInfo.ProviderKey)) 
+        {
+            System.Diagnostics.Debug.WriteLine($"[Google Sync] 跳過同步：找不到 UserId {userId} 的授權紀錄");
+            return null;
+        }
 
         try 
         {
+            System.Diagnostics.Debug.WriteLine($"[Google Sync] 開始同步 UserId {userId} 的行程...");
             var tokenResponse = new TokenResponse { RefreshToken = loginInfo.ProviderKey };
 
             var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
@@ -95,9 +103,6 @@ public class GoogleCalendarService
 
             var credential = new UserCredential(flow, userId.ToString(), tokenResponse);
             
-            // 獲取有效 AccessToken (內部會自動處理刷新)
-            await credential.GetAccessTokenForRequestAsync();
-
             var service = new CalendarService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,
@@ -120,11 +125,12 @@ public class GoogleCalendarService
             };
 
             var createdEvent = await service.Events.Insert(newEvent, "primary").ExecuteAsync();
+            System.Diagnostics.Debug.WriteLine($"[Google Sync] 同步成功！EventId: {createdEvent.Id}");
             return createdEvent.Id; // 回傳 ID 以便存入資料庫
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Google Calendar Sync Error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[Google Sync] 失敗：{ex.Message}");
             if (ex.Message.Contains("invalid_grant") || (ex.InnerException != null && ex.InnerException.Message.Contains("invalid_grant")))
             {
                 var loginToRemove = await _db.UserExternalLogins
