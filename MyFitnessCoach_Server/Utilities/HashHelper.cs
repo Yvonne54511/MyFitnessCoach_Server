@@ -1,23 +1,27 @@
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
+using MyFitnessCoach_Server.Models.EfModels;
 
 namespace MyFitnessCoach_Server.Utilities;
 
-public static class HashHelper
+public class HashHelper : IHashHelper
 {
-    /// <summary>
-    /// 產生確認碼：回傳 rawToken（放 Email 連結）和 hash（存 DB）。
-    /// </summary>
-    public static (string rawToken, string hash) ProduceConfirmCode()
+    private static readonly PasswordHasher<User> _passwordHasher = new();
+
+    public string HashPassword(string password) =>
+        _passwordHasher.HashPassword(new User(), password);
+
+    public bool VerifyPassword(string hashedPassword, string providedPassword) =>
+        _passwordHasher.VerifyHashedPassword(new User(), hashedPassword, providedPassword)
+            != PasswordVerificationResult.Failed;
+
+    public (string rawToken, string hash) ProduceConfirmCode()
     {
         var rawToken = Guid.NewGuid().ToString("N");
-        var hash     = HashConfirmCode(rawToken);
-        return (rawToken, hash);
+        return (rawToken, HashConfirmCode(rawToken));
     }
 
-    /// <summary>
-    /// 將前端傳回的 rawToken 雜湊，用於與 DB 中的 hash 比對。
-    /// </summary>
-    public static string HashConfirmCode(string rawToken) =>
+    public string HashConfirmCode(string rawToken) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken.Trim()))).ToLower();
 }

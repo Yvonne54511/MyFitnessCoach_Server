@@ -1,8 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using MyFitnessCoach_Server.Models.DTOs;
 using MyFitnessCoach_Server.Models.EfModels;
@@ -15,20 +13,20 @@ public class AccountService : IAccountService
 {
     private readonly IAccountRepository _accountRepository;
     private readonly IAccountRateLimitService _accountRateLimitService;
-    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IHashHelper _hashHelper;
     private readonly IPasswordEmailService _emailService;
     private readonly IConfiguration _config;
 
     public AccountService(
         IAccountRepository accountRepository,
         IAccountRateLimitService accountRateLimitService,
-        IPasswordHasher<User> passwordHasher,
+        IHashHelper hashHelper,
         IPasswordEmailService emailService,
         IConfiguration config)
     {
         _accountRepository        = accountRepository;
         _accountRateLimitService  = accountRateLimitService;
-        _passwordHasher           = passwordHasher;
+        _hashHelper               = hashHelper;
         _emailService             = emailService;
         _config                   = config;
     }
@@ -42,8 +40,7 @@ public class AccountService : IAccountService
         if (user == null || string.IsNullOrWhiteSpace(user.HashedPassword))
             return new LoginResultDto { IsSuccess = false, Message = "帳號或密碼錯誤" };
 
-        var result = _passwordHasher.VerifyHashedPassword(user, user.HashedPassword, dto.Password);
-        if (result == PasswordVerificationResult.Failed)
+        if (!_hashHelper.VerifyPassword(user.HashedPassword, dto.Password))
             return new LoginResultDto { IsSuccess = false, Message = "帳號或密碼錯誤" };
 
         if (!user.IsConfirmed)
@@ -126,9 +123,8 @@ public class AccountService : IAccountService
         var user = await _accountRepository.GetByEmailAsync(email);
         if (user == null) return;
 
-        // 產生 token 並存入 DB（SHA256 hash）
-        var rawToken = Guid.NewGuid().ToString("N");
-        var hash     = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken))).ToLower();
+        // 產生 token 並存入 DB（hash 儲存）
+        var (rawToken, hash) = _hashHelper.ProduceConfirmCode();
 
         await _accountRepository.UpdateResetTokenAsync(user.Id, hash, now.AddMinutes(15));
 
@@ -142,7 +138,7 @@ public class AccountService : IAccountService
     public async Task<ResetPasswordResultDto> ResetPasswordAsync(ResetPasswordDto dto)
     {
         var now  = DateTime.UtcNow;
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(dto.Token.Trim()))).ToLower();
+        var hash = _hashHelper.HashConfirmCode(dto.Token);
 
         // 取得 user 並驗證 token 狀態（未使用、未過期）
         var user = await _accountRepository.GetByResetCodeHashAsync(hash);
@@ -156,8 +152,7 @@ public class AccountService : IAccountService
         var history = await _accountRepository.GetPasswordHistoryAsync(user.Id, 3);
         foreach (var record in history)
         {
-            var verifyResult = _passwordHasher.VerifyHashedPassword(user, record.HashedPassword, dto.NewPassword);
-            if (verifyResult != PasswordVerificationResult.Failed)
+            if (_hashHelper.VerifyPassword(record.HashedPassword, dto.NewPassword))
                 return new ResetPasswordResultDto { IsSuccess = false, Message = "新密碼不可與近三次使用過的密碼相同" };
         }
 
@@ -167,7 +162,7 @@ public class AccountService : IAccountService
             return new ResetPasswordResultDto { IsSuccess = false, Message = "連結已失效或過期，請重新申請" };
 
         // 更新密碼
-        var newHashedPassword = _passwordHasher.HashPassword(user, dto.NewPassword);
+        var newHashedPassword = _hashHelper.HashPassword(dto.NewPassword);
         await _accountRepository.UpdatePasswordAsync(user.Id, newHashedPassword);
 
         // 新增密碼歷史紀錄
@@ -210,10 +205,10 @@ public class AccountService : IAccountService
             throw new InvalidOperationException("MOBILE_EXISTS");
 
         // 雜湊密碼
-        var hashedPassword = _passwordHasher.HashPassword(new User(), dto.Password);
+        var hashedPassword = _hashHelper.HashPassword(dto.Password);
 
         // 產生啟用 token
-        var (rawToken, hash) = HashHelper.ProduceConfirmCode();
+        var (rawToken, hash) = _hashHelper.ProduceConfirmCode();
 
         var user = new User
         {
@@ -243,7 +238,7 @@ public class AccountService : IAccountService
 
     public async Task<ActivateAccountResultDto> ActivateAccountAsync(string rawToken)
     {
-        var hash = HashHelper.HashConfirmCode(rawToken);
+        var hash = _hashHelper.HashConfirmCode(rawToken);
 
         var user = await _accountRepository.GetByActivationCodeHashAsync(hash);
 
@@ -276,7 +271,7 @@ public class AccountService : IAccountService
         var user = await _accountRepository.GetPendingUserByEmailAsync(email);
         if (user == null) return;
 
-        var (rawToken, hash) = HashHelper.ProduceConfirmCode();
+        var (rawToken, hash) = _hashHelper.ProduceConfirmCode();
         await _accountRepository.UpdateActivationTokenAsync(user.Id, hash, now.AddHours(24));
 
         var activationUrl = $"{_config["FrontEnd:BaseUrl"]}/activate?token={rawToken}";
