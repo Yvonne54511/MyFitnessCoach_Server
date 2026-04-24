@@ -140,6 +140,74 @@ namespace MyFitnessCoach_Server.Controllers
         }
 
         // ──────────────────────────────────────────────────────────────
+        // POST /api/Payment/ProductSendToEcPay
+        // 商品結帳：從 DB 讀 ProductOrder.FinalAmount，傳給綠界
+        // ──────────────────────────────────────────────────────────────
+        [Authorize]
+        [HttpPost("ProductSendToEcPay")]
+        public async Task<IActionResult> ProductSendToEcPay([FromForm] int productOrderId)
+        {
+            try
+            {
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(userIdStr, out int userId))
+                    return Unauthorized(new { error = "無法識別登入用戶" });
+
+                var member = await _context.Members.FirstOrDefaultAsync(m => m.UserId == userId);
+                if (member == null)
+                    return NotFound(new { error = "找不到會員資料" });
+
+                var order = await _context.ProductOrders
+                    .Include(o => o.ProductOrderDetails)
+                    .FirstOrDefaultAsync(o => o.Id == productOrderId && o.MemberId == member.Id);
+
+                if (order == null)
+                    return NotFound(new { error = "找不到訂單" });
+
+                if (order.FinalAmount == null || order.FinalAmount <= 0)
+                    return BadRequest(new { error = "訂單金額無效" });
+
+                int totalAmount = (int)order.FinalAmount.Value;
+
+                string itemName = order.ProductOrderDetails.Any()
+                    ? string.Join("#", order.ProductOrderDetails.Select(d => $"{d.ProductName} x{d.Qty}"))
+                    : "商品訂單";
+
+                string tradeNo = "MFP" + DateTime.Now.ToString("yyyyMMddHHmmssfff");
+
+                var parameters = new Dictionary<string, string>
+                {
+                    { "MerchantID",        _merchantID },
+                    { "MerchantTradeNo",   tradeNo },
+                    { "MerchantTradeDate", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") },
+                    { "PaymentType",       "aio" },
+                    { "TotalAmount",       totalAmount.ToString() },
+                    { "TradeDesc",         "MyFitnessCoach_Product" },
+                    { "ItemName",          itemName },
+                    { "ReturnURL",      $"{_ngrokUrl}/api/Payment/Callback" },
+                    { "ClientBackURL",  $"{_frontendUrl}/checkout" },
+                    { "OrderResultURL", $"{_ngrokUrl}/api/Payment/Result" },
+                    { "ChoosePayment",     "ALL" },
+                    { "EncryptType",       "1" },
+                    { "CustomField1",      "" },
+                    { "CustomField2",      productOrderId.ToString() },
+                };
+
+                parameters["CheckMacValue"] = GenerateCheckMacValue(parameters);
+
+                return Ok(new
+                {
+                    action     = "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5",
+                    parameters
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // ──────────────────────────────────────────────────────────────
         // POST /api/Payment/Callback
         // 綠界伺服器付款完成後主動通知（ReturnURL，非瀏覽器）
         // 更新訂單狀態並將點數存入錢包
@@ -210,6 +278,20 @@ namespace MyFitnessCoach_Server.Controllers
                             });
                         }
 
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                // ── 處理商品訂單（CustomField2）────────────────────
+                string customField2 = form["CustomField2"].ToString();
+                if (rtnCode == "1" && int.TryParse(customField2, out int productOrderId))
+                {
+                    var productOrder = await _context.ProductOrders
+                        .FirstOrDefaultAsync(o => o.Id == productOrderId && o.Status == 0);
+
+                    if (productOrder != null)
+                    {
+                        productOrder.Status = 1;
                         await _context.SaveChangesAsync();
                     }
                 }
@@ -294,11 +376,30 @@ namespace MyFitnessCoach_Server.Controllers
                         await _context.SaveChangesAsync();
                     }
                 }
+
+                // ── 處理商品訂單（CustomField2）────────────────────
+                string resultCustomField2 = form["CustomField2"].ToString();
+                if (macValid && rtnCode == "1" && int.TryParse(resultCustomField2, out int resultProductOrderId))
+                {
+                    var productOrder = await _context.ProductOrders
+                        .FirstOrDefaultAsync(o => o.Id == resultProductOrderId && o.Status == 0);
+
+                    if (productOrder != null)
+                    {
+                        productOrder.Status = 1;
+                        await _context.SaveChangesAsync();
+                    }
+                }
             }
             catch { /* 入帳失敗不影響頁面跳轉，錯誤由 Callback 補救 */ }
 
+            // 依訂單類型跳轉不同頁面
+            string resultCustomField2Check = form["CustomField2"].ToString();
+            bool isProductOrder = int.TryParse(resultCustomField2Check, out _);
+            string resultPage = isProductOrder ? "checkout-result" : "lesson-result";
+
             return Redirect(
-                $"{_frontendUrl}/lesson-result" +
+                $"{_frontendUrl}/{resultPage}" +
                 $"?RtnCode={rtnCode}" +
                 $"&RtnMsg={rtnMsg}" +
                 $"&MerchantTradeNo={tradeNo}");
