@@ -2,21 +2,23 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using System.Text;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using MyFitnessCoach_Server.Utilities;
 
 namespace MyFitnessCoach_Server.Models.Services;
 
 public class ReservationEmailService : IReservationEmailService
 {
-    private readonly IConfiguration _config;
+    private readonly EmailSettings _settings;
 
-    public ReservationEmailService(IConfiguration config)
+    public ReservationEmailService(IOptions<EmailSettings> options)
     {
-        _config = config;
+        _settings = options.Value;
     }
 
     public async Task SendReservationConfirmationEmailAsync(string toEmail, string memberName, string instructorName, DateTime startTime, string target)
     {
+        // ... (keep the email body and ics content logic)
         var subject = "【MyFitnessCoach】預約成功通知";
         var endTime = startTime.AddHours(1); // 假設每堂課一小時
 
@@ -58,12 +60,12 @@ public class ReservationEmailService : IReservationEmailService
 
     private async Task SendAsync(string toEmail, string subject, string bodyHtml, string? icsContent = null)
     {
-        var smtpHost = _config["Email:SmtpHost"] ?? "smtp.gmail.com";
-        var smtpPort = int.Parse(_config["Email:SmtpPort"] ?? "587");
-        var senderEmail = _config["Email:SenderEmail"] ?? "";
-        var senderName = _config["Email:SenderName"] ?? "MyFitnessCoach";
-        var username = _config["Email:Username"] ?? "";
-        var password = _config["Email:Password"] ?? "";
+        var smtpHost = _settings.SmtpServer ?? "smtp.gmail.com";
+        var smtpPort = int.Parse(_settings.SmtpPort ?? "587");
+        var senderEmail = _settings.SenderEmail;
+        var senderName = _settings.SenderName;
+        var username = _settings.SenderEmail; // 通常 Username 就是 SenderEmail
+        var password = _settings.ApiKey;      // 密碼存放在 ApiKey 欄位
 
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(senderName, senderEmail));
