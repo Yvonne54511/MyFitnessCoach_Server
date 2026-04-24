@@ -19,9 +19,9 @@ namespace MyFitnessCoach_Server.Controllers
         }
 
         // GET /api/Points/my-points
-        // 回傳登入會員的點數餘額與異動紀錄
+        // 回傳登入會員的點數餘額與異動紀錄 (支援分頁)
         [HttpGet("my-points")]
-        public async Task<IActionResult> GetMyPoints()
+        public async Task<IActionResult> GetMyPoints([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             // JWT 存的是 User.Id，需先轉成 Member.Id
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -42,11 +42,16 @@ namespace MyFitnessCoach_Server.Controllers
 
             // 查點數異動紀錄
             List<object> history = new();
+            int totalCount = 0;
 
             if (wallet != null)
             {
-                var records = await _context.PointsRecordDetails
-                    .Where(r => r.UserWalletId == wallet.Id)
+                var query = _context.PointsRecordDetails
+                    .Where(r => r.UserWalletId == wallet.Id);
+
+                totalCount = await query.CountAsync();
+
+                var records = await query
                     .Include(r => r.PointOrder)
                         .ThenInclude(o => o.TopUpPlan)
                     .Include(r => r.ReserveOrder)
@@ -54,6 +59,8 @@ namespace MyFitnessCoach_Server.Controllers
                             .ThenInclude(s => s.Instructor)
                                 .ThenInclude(i => i.User)
                     .OrderByDescending(r => r.CreateAt)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
                     .ToListAsync();
 
                 history = records.Select(r =>
@@ -83,7 +90,13 @@ namespace MyFitnessCoach_Server.Controllers
                 }).ToList();
             }
 
-            return Ok(new { balance, history });
+            return Ok(new { 
+                balance, 
+                history, 
+                totalCount, 
+                totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
+                currentPage = page
+            });
         }
     }
 }
