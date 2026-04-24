@@ -18,25 +18,96 @@ public class ReservationEmailService : IReservationEmailService
 
     public async Task SendReservationConfirmationEmailAsync(string toEmail, string memberName, string instructorName, DateTime startTime, string target)
     {
-        // ... (keep the email body and ics content logic)
         var subject = "【MyFitnessCoach】預約成功通知";
         var endTime = startTime.AddHours(1); // 假設每堂課一小時
 
         var body = $"""
-            <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
-                <h2>預約成功！</h2>
-                <p>親愛的 {memberName} 您好：</p>
-                <p>您已成功預約 <strong>MyFitnessCoach</strong> 的課程，以下是您的預約資訊：</p>
-                <ul style="list-style: none; padding: 0;">
-                    <li><strong>課程教練：</strong> {instructorName}</li>
-                    <li><strong>課程時間：</strong> {startTime:yyyy/MM/dd HH:mm}</li>
-                    <li><strong>課程目標：</strong> {target}</li>
-                </ul>
-                <p>我們已將行程附件 (.ics) 夾帶於此信件中，您可以點擊附件將行程加入您的電腦或手機日曆。</p>
-                <hr>
-                <p>期待在課堂上見到您！</p>
-                <p>MyFitnessCoach 團隊</p>
-            </div>
+            <!DOCTYPE html>
+            <html lang="zh-TW">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>預約成功</title>
+            </head>
+            <body style="margin:0;padding:0;background-color:#f5f0eb;font-family:'Noto Sans TC','DM Sans',Arial,sans-serif;color:#1a1613;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f0eb;padding:40px 16px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+                      <!-- Header -->
+                      <tr>
+                        <td style="background-color:#1a1613;border-radius:16px 16px 0 0;padding:36px 40px;text-align:center;">
+                          <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:600;color:#c4a882;letter-spacing:0.08em;">
+                            MyFitnessCoach
+                          </div>
+                          <div style="font-family:'Noto Sans TC','DM Sans',Arial,sans-serif;font-size:13px;color:#6b5e52;margin-top:6px;letter-spacing:0.12em;text-transform:uppercase;">
+                            Your Personal Fitness Journey
+                          </div>
+                        </td>
+                      </tr>
+
+                      <!-- Body Card -->
+                      <tr>
+                        <td style="background-color:#eae4dc;padding:40px 40px 32px;border-left:1px solid #d4ccc2;border-right:1px solid #d4ccc2;">
+                          <h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:600;color:#1a1613;margin:0 0 20px;letter-spacing:0.04em;">
+                            預約成功確認
+                          </h1>
+                          <p style="font-size:15px;line-height:1.8;color:#1a1613;margin:0 0 12px;">
+                            親愛的 {memberName} 您好，
+                          </p>
+                          <p style="font-size:15px;line-height:1.8;color:#6b5e52;margin:0 0 28px;">
+                            您已成功預約課程。我們非常期待能在課堂上與您見面，以下是您的預約明細：
+                          </p>
+
+                          <!-- Reservation Details Table -->
+                          <div style="background-color:#f5f0eb;border-radius:12px;padding:24px;margin-bottom:28px;border:1px solid #d4ccc2;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                              <tr>
+                                <td style="padding-bottom:12px;font-size:14px;color:#6b5e52;width:80px;">課程教練</td>
+                                <td style="padding-bottom:12px;font-size:14px;color:#1a1613;font-weight:600;">{instructorName}</td>
+                              </tr>
+                              <tr>
+                                <td style="padding-bottom:12px;font-size:14px;color:#6b5e52;">課程時間</td>
+                                <td style="padding-bottom:12px;font-size:14px;color:#1a1613;font-weight:600;">{startTime:yyyy/MM/dd HH:mm}</td>
+                              </tr>
+                              <tr>
+                                <td style="font-size:14px;color:#6b5e52;">課程目標</td>
+                                <td style="font-size:14px;color:#1a1613;font-weight:600;">{target}</td>
+                              </tr>
+                            </table>
+                          </div>
+
+                          <div style="background-color:#fdfaf5;border-left:3px solid #c4a882;border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:28px;">
+                            <p style="font-size:13px;line-height:1.7;color:#6b5e52;margin:0;">
+                              &#x1F4C5;&nbsp; 我們已將行程附件 (.ics) 夾帶於此信件中，您可以點擊附件將課程加入您的個人日曆。
+                            </p>
+                          </div>
+
+                          <p style="font-size:13px;line-height:1.7;color:#6b5e52;margin:0;">
+                            如果您需要變更或取消預約，請至少於課程開始前 40 分鐘透過系統進行操作。
+                          </p>
+                        </td>
+                      </tr>
+
+                      <!-- Footer -->
+                      <tr>
+                        <td style="background-color:#1a1613;border-radius:0 0 16px 16px;padding:24px 40px;text-align:center;">
+                          <p style="font-size:12px;color:#6b5e52;margin:0 0 6px;letter-spacing:0.06em;">
+                            © 2026 MyFitnessCoach．All rights reserved.
+                          </p>
+                          <p style="font-size:12px;color:#6b5e52;margin:0;">
+                            此為系統自動發送郵件，請勿直接回覆。
+                          </p>
+                        </td>
+                      </tr>
+
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
             """;
 
         // 產生 iCalendar (.ics) 內容
