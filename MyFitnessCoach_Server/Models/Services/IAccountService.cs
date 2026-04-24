@@ -13,4 +13,6 @@ public interface IAccountService
     Task RegisterAsync(RegisterDto dto, string ipAddress);
     Task<ActivateAccountResultDto> ActivateAccountAsync(string rawToken);
     Task ResendActivationEmailAsync(ResendActivationDto dto, string ipAddress);
+
+    Task<CurrentUserDto?> GetCurrentUserAsync(int userId);
 }

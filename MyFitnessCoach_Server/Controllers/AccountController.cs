@@ -12,15 +12,32 @@ namespace MyFitnessCoach_Server.Controllers;
 public class AccountController : ControllerBase
 {
     private readonly IAccountService _accountService;
+    private readonly IConfiguration _config;
 
-    public AccountController(IAccountService accountService)
+    public AccountController(IAccountService accountService, IConfiguration config)
     {
         _accountService = accountService;
+        _config         = config;
+    }
+
+    private const string AccessTokenCookieName = "access_token";
+
+    private CookieOptions BuildAccessTokenCookieOptions(DateTimeOffset? expires = null)
+    {
+        var lifetime = int.TryParse(_config["Jwt:AccessTokenLifetimeMinutes"], out var m) ? m : 480;
+        return new CookieOptions
+        {
+            HttpOnly = true,
+            Secure   = true,
+            SameSite = SameSiteMode.Strict,
+            Path     = "/",
+            Expires  = expires ?? DateTimeOffset.UtcNow.AddMinutes(lifetime)
+        };
     }
 
     /// <summary>
     /// POST /api/auth/login
-    /// 驗證帳號密碼，成功後回傳 JWT Token
+    /// 驗證帳號密碼，成功後將 JWT 寫入 HttpOnly Cookie
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
@@ -34,13 +51,52 @@ public class AccountController : ControllerBase
         if (!result.IsSuccess)
             return Unauthorized(new { message = result.Message });
 
+        // JWT 改以 HttpOnly Cookie 傳遞，避免 XSS 竊取
+        Response.Cookies.Append(AccessTokenCookieName, result.Token!, BuildAccessTokenCookieOptions());
+
         return Ok(new LoginResponseDto
         {
-            Token    = result.Token!,//JWT Token 不應為 null，因為登入成功才會回傳
-			UserId   = result.UserId,
+            Token    = string.Empty, // 保留欄位以相容既有前端型別，內容留空（token 已存於 cookie）
+            UserId   = result.UserId,
             UserName = result.UserName!,
             ImageUrl = result.ImageUrl
         });
+    }
+
+    /// <summary>
+    /// POST /api/auth/logout
+    /// 清除 JWT cookie
+    /// </summary>
+    [HttpPost("logout")]
+    [AllowAnonymous]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete(AccessTokenCookieName, new CookieOptions
+        {
+            Path     = "/",
+            SameSite = SameSiteMode.Strict,
+            Secure   = true,
+            HttpOnly = true
+        });
+        return NoContent();
+    }
+
+    /// <summary>
+    /// GET /api/auth/me
+    /// 取得目前登入使用者資訊（供前端啟動時同步使用者狀態）
+    /// </summary>
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var current = await _accountService.GetCurrentUserAsync(userId);
+        if (current == null) return Unauthorized();
+
+        return Ok(current);
     }
 
     /// <summary>

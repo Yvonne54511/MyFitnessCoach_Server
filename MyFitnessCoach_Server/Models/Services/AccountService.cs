@@ -317,4 +317,21 @@ public class AccountService : IAccountService
         var activationUrl = $"{_config["FrontEnd:BaseUrl"]}/activate?token={rawToken}";
         await _emailService.SendActivationEmailAsync(user.Email, activationUrl);
     }
+
+    // ── Current user (for /api/auth/me) ────────────────────────────────────
+
+    public async Task<CurrentUserDto?> GetCurrentUserAsync(int userId)
+    {
+        var user = await _accountRepository.GetByIdAsync(userId);
+        if (user == null || !user.IsActive) return null;
+
+        var member = await _accountRepository.GetMemberByUserIdAsync(user.Id);
+
+        return new CurrentUserDto
+        {
+            UserId   = user.Id,
+            UserName = user.UserName ?? user.Account,
+            ImageUrl = member?.ImageUrl ?? "/images/members/default.jpg"
+        };
+    }
 }

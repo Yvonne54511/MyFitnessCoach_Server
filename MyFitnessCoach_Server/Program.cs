@@ -20,7 +20,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("MyFitnessCoach_Client", policy =>
     {
-        policy.AllowAnyHeader().AllowAnyOrigin().AllowAnyMethod();
+        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                      ?? new[] { "https://localhost:5173", "http://localhost:5173" };
+
+        policy.WithOrigins(origins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -78,6 +84,20 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey         = new SymmetricSecurityKey(
                                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = ctx =>
+        {
+            if (string.IsNullOrEmpty(ctx.Token) &&
+                ctx.Request.Cookies.TryGetValue("access_token", out var cookieToken) &&
+                !string.IsNullOrEmpty(cookieToken))
+            {
+                ctx.Token = cookieToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
@@ -92,6 +112,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<MyFitnessCoach_Server.Middleware.SecurityHeadersMiddleware>();
 app.UseRouting();
 app.UseCors("MyFitnessCoach_Client");
 app.UseAuthentication();
