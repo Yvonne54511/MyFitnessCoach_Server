@@ -25,6 +25,7 @@ public interface IAccountRepository
     // Password history
     Task<List<UserPasswordHistory>> GetPasswordHistoryAsync(int userId, int count);
     Task AddPasswordHistoryAsync(UserPasswordHistory history);
+    Task<int> CountPasswordChangesInPeriodAsync(int userId, DateTime since);
 
     // Register / Activate
     Task<bool> AccountOrEmailExistsAsync(string account, string email);

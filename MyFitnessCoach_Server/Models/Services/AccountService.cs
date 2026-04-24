@@ -16,19 +16,22 @@ public class AccountService : IAccountService
     private readonly IHashHelper _hashHelper;
     private readonly IPasswordEmailService _emailService;
     private readonly IConfiguration _config;
+    private readonly IVerifyPasswordRequirements _passwordPolicy;
 
     public AccountService(
         IAccountRepository accountRepository,
         IAccountRateLimitService accountRateLimitService,
         IHashHelper hashHelper,
         IPasswordEmailService emailService,
-        IConfiguration config)
+        IConfiguration config,
+        IVerifyPasswordRequirements passwordPolicy)
     {
         _accountRepository        = accountRepository;
         _accountRateLimitService  = accountRateLimitService;
         _hashHelper               = hashHelper;
         _emailService             = emailService;
         _config                   = config;
+        _passwordPolicy           = passwordPolicy;
     }
 
     // ── Login ──────────────────────────────────────────────────────────────
@@ -152,13 +155,10 @@ public class AccountService : IAccountService
             || user.ResetPasswordConfirmCodeExpiry <= now)
             return new ResetPasswordResultDto { IsSuccess = false, Message = "連結已失效或過期，請重新申請" };
 
-        // 密碼歷史比對（最近 3 次）
-        var history = await _accountRepository.GetPasswordHistoryAsync(user.Id, 3);
-        foreach (var record in history)
-        {
-            if (_hashHelper.VerifyPassword(record.HashedPassword, dto.NewPassword))
-                return new ResetPasswordResultDto { IsSuccess = false, Message = "新密碼不可與近三次使用過的密碼相同" };
-        }
+        // 密碼規則驗證（長度 > 8、一個月內修改 < 3 次、不可與近 3 次相同）
+        var policyResult = await _passwordPolicy.VerifyAsync(dto.NewPassword, user.Id);
+        if (!policyResult.IsSuccess)
+            return new ResetPasswordResultDto { IsSuccess = false, Message = policyResult.Message! };
 
         // 所有檢查都通過才原子地把 token 標為已使用（防 race condition：併發請求只有一個會成功）
         var affected = await _accountRepository.MarkResetTokenUsedAsync(hash, now);
@@ -207,6 +207,11 @@ public class AccountService : IAccountService
         // 驗證手機唯一性
         if (await _accountRepository.MobileExistsAsync(mobile))
             throw new InvalidOperationException("MOBILE_EXISTS");
+
+        // 密碼規則驗證（長度 > 8）
+        var policyResult = await _passwordPolicy.VerifyAsync(dto.Password);
+        if (!policyResult.IsSuccess)
+            throw new InvalidOperationException(policyResult.Message);
 
         // 雜湊密碼
         var hashedPassword = _hashHelper.HashPassword(dto.Password);

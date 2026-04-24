@@ -113,6 +113,11 @@ public class AccountRepository : IAccountRepository
         await _db.SaveChangesAsync();
     }
 
+    public async Task<int> CountPasswordChangesInPeriodAsync(int userId, DateTime since)
+        => await _db.UserPasswordHistories
+            .Where(h => h.UserId == userId && h.CreatedAt >= since)
+            .CountAsync();
+
     // ── Register / Activate ────────────────────────────────────────────────
 
     public async Task<bool> AccountOrEmailExistsAsync(string account, string email)

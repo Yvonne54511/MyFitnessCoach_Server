@@ -53,6 +53,7 @@ builder.Services.AddScoped<CartService>();
 // Register application services
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAccountRateLimitService, AccountRateLimitService>();
+builder.Services.AddScoped<IVerifyPasswordRequirements, VerifyPasswordRequirements>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IPasswordEmailService, PasswordEmailService>();
 builder.Services.AddSingleton<IHashHelper, HashHelper>();
