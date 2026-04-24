@@ -53,6 +53,7 @@ builder.Services.AddScoped<CartService>();
 // Add services to the container.
 // Register application services
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<IAccountRateLimitService, AccountRateLimitService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IPasswordEmailService, PasswordEmailService>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();

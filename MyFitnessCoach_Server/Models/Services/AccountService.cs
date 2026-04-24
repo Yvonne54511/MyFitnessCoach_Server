@@ -14,20 +14,23 @@ namespace MyFitnessCoach_Server.Models.Services;
 public class AccountService : IAccountService
 {
     private readonly IAccountRepository _accountRepository;
+    private readonly IAccountRateLimitService _accountRateLimitService;
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly IPasswordEmailService _emailService;
     private readonly IConfiguration _config;
 
     public AccountService(
         IAccountRepository accountRepository,
+        IAccountRateLimitService accountRateLimitService,
         IPasswordHasher<User> passwordHasher,
         IPasswordEmailService emailService,
         IConfiguration config)
     {
-        _accountRepository = accountRepository;
-        _passwordHasher    = passwordHasher;
-        _emailService      = emailService;
-        _config            = config;
+        _accountRepository        = accountRepository;
+        _accountRateLimitService  = accountRateLimitService;
+        _passwordHasher           = passwordHasher;
+        _emailService             = emailService;
+        _config                   = config;
     }
 
     // ── Login ──────────────────────────────────────────────────────────────
@@ -114,47 +117,10 @@ public class AccountService : IAccountService
         var now   = DateTime.UtcNow;
         var email = dto.Email.Trim().ToLower();
 
-        // IP rate limit：1 小時 5 次
-        var ipCount = await _accountRepository.CountRateLimitAsync(ipAddress, endPoint, byIp: true, since: now.AddHours(-1));
-        if (ipCount >= 100)
-        {
-            var oldest = await _accountRepository.GetOldestRateLimitTimeAsync(ipAddress, endPoint, since: now.AddHours(-1));
-            var retryAfter = oldest.HasValue
-                ? (int)Math.Ceiling((oldest.Value.AddHours(1) - now).TotalSeconds)
-                : 3600;
-            throw new RateLimitException(Math.Max(retryAfter, 1));
-        }
-
-        // Email rate limit：60 秒冷卻
-        var recentCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddSeconds(-60));
-        if (recentCount >= 100)
-        {
-            var latest = await _accountRepository.GetLatestRateLimitTimeAsync(email, endPoint, since: now.AddSeconds(-60));
-            var retryAfter = latest.HasValue
-                ? (int)Math.Ceiling((latest.Value.AddSeconds(60) - now).TotalSeconds)
-                : 60;
-            throw new RateLimitException(Math.Max(retryAfter, 1));
-        }
-
-        // Email rate limit：1 小時 5 次
-        var hourCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddHours(-1));
-        if (hourCount >= 100)
-            throw new RateLimitException(3600);
-
-        // Email rate limit：24 小時 10 次
-        var dayCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddHours(-24));
-        if (dayCount >= 100)
-            throw new RateLimitException(86400);
+        await _accountRateLimitService.VerifyIPRequestRateLimit(ipAddress, email, now);
 
         // 記錄請求（防止 enumeration，不論帳號是否存在都記錄）
-        await _accountRepository.LogRateLimitAsync(new RateLimitLog
-        {
-            IpAddress   = ipAddress,
-            EndPoint    = endPoint,
-            Identity    = email,
-            IsSuccess   = true,
-            RequestedAt = now
-        });
+        await _accountRateLimitService.VerifyEmailSendRateLimit(ipAddress, endPoint, email, now);
 
         // 查帳號（silent fail，防止 enumeration attack）
         var user = await _accountRepository.GetByEmailAsync(email);
@@ -225,26 +191,10 @@ public class AccountService : IAccountService
         const string endPoint = "register";
         var now = DateTime.UtcNow;
 
-        // IP rate limit：1 小時 10 次（防止大量垃圾註冊）
-        var ipCount = await _accountRepository.CountRateLimitAsync(ipAddress, endPoint, byIp: true, since: now.AddHours(-1));
-        if (ipCount >= 10)
-        {
-            var oldest = await _accountRepository.GetOldestRateLimitTimeAsync(ipAddress, endPoint, since: now.AddHours(-1));
-            var retryAfter = oldest.HasValue
-                ? (int)Math.Ceiling((oldest.Value.AddHours(1) - now).TotalSeconds)
-                : 3600;
-            throw new RateLimitException(Math.Max(retryAfter, 1));
-        }
+        await _accountRateLimitService.EnsureRegisterAllowedAsync(ipAddress, now);
 
         // 記錄請求（即使後續驗證失敗也計入，防止枚舉攻擊）
-        await _accountRepository.LogRateLimitAsync(new RateLimitLog
-        {
-            IpAddress   = ipAddress,
-            EndPoint    = endPoint,
-            Identity    = dto.Email.Trim().ToLower(),
-            IsSuccess   = true,
-            RequestedAt = now
-        });
+        await _accountRateLimitService.VerifyEmailSendRateLimit(ipAddress, endPoint, dto.Email.Trim().ToLower(), now);
 
         // 正規化輸入
         var account = dto.Account.Trim();
@@ -318,36 +268,9 @@ public class AccountService : IAccountService
         var now   = DateTime.UtcNow;
         var email = dto.Email.Trim().ToLower();
 
-        // IP 限流：1 小時 5 次
-        var ipCount = await _accountRepository.CountRateLimitAsync(ipAddress, endPoint, byIp: true, since: now.AddHours(-1));
-        if (ipCount >= 5)
-        {
-            var oldest = await _accountRepository.GetOldestRateLimitTimeAsync(ipAddress, endPoint, since: now.AddHours(-1));
-            var retryAfter = oldest.HasValue
-                ? (int)Math.Ceiling((oldest.Value.AddHours(1) - now).TotalSeconds)
-                : 3600;
-            throw new RateLimitException(Math.Max(retryAfter, 1));
-        }
+        await _accountRateLimitService.EnsureResendActivationAllowedAsync(ipAddress, email, now);
 
-        // Email 冷卻：60 秒
-        var recentCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddSeconds(-60));
-        if (recentCount >= 1)
-        {
-            var latest = await _accountRepository.GetLatestRateLimitTimeAsync(email, endPoint, since: now.AddSeconds(-60));
-            var retryAfter = latest.HasValue
-                ? (int)Math.Ceiling((latest.Value.AddSeconds(60) - now).TotalSeconds)
-                : 60;
-            throw new RateLimitException(Math.Max(retryAfter, 1));
-        }
-
-        await _accountRepository.LogRateLimitAsync(new RateLimitLog
-        {
-            IpAddress   = ipAddress,
-            EndPoint    = endPoint,
-            Identity    = email,
-            IsSuccess   = true,
-            RequestedAt = now
-        });
+        await _accountRateLimitService.VerifyEmailSendRateLimit(ipAddress, endPoint, email, now);
 
         // Silent fail：防止帳號枚舉
         var user = await _accountRepository.GetPendingUserByEmailAsync(email);
