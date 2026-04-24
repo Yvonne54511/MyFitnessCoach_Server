@@ -51,6 +51,9 @@ public class AccountRepository : IAccountRepository
 
     // ── Forgot / Reset password ────────────────────────────────────────────
 
+    public async Task<User?> GetByIdAsync(int userId)
+        => await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+
     public async Task<User?> GetByEmailAsync(string email)
     {
         return await _db.Users

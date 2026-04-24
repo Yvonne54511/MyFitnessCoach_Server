@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyFitnessCoach_Server.Models.DTOs;
@@ -35,11 +36,36 @@ public class AccountController : ControllerBase
 
         return Ok(new LoginResponseDto
         {
-            Token    = result.Token!,
-            UserId   = result.UserId,
+            Token    = result.Token!,//JWT Token 不應為 null，因為登入成功才會回傳
+			UserId   = result.UserId,
             UserName = result.UserName!,
             ImageUrl = result.ImageUrl
         });
+    }
+
+    /// <summary>
+    /// POST /api/auth/ChangePassword
+    /// 已登入用戶修改自己的密碼
+    /// </summary>
+    [HttpPost("ChangePassword")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _accountService.ChangePasswordAsync(dto, userId);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Message == "OLD_PASSWORD_WRONG")
+                return Unauthorized(new { message = "舊密碼不正確" });
+
+            return BadRequest(new { message = result.Message });
+        }
+
+        return Ok(new { message = result.Message });
     }
 
     /// <summary>

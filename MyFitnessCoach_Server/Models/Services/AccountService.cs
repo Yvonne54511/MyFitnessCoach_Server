@@ -113,6 +113,37 @@ public class AccountService : IAccountService
         };
     }
 
+    // ── Change password ────────────────────────────────────────────────────
+
+    public async Task<ChangePasswordResultDto> ChangePasswordAsync(ChangePasswordDto dto, int userId)
+    {
+        var user = await _accountRepository.GetByIdAsync(userId);
+        if (user == null || string.IsNullOrWhiteSpace(user.HashedPassword))
+            return new ChangePasswordResultDto { IsSuccess = false, Message = "使用者不存在" };
+
+        if (!_hashHelper.VerifyPassword(user.HashedPassword, dto.OldPassword))
+            return new ChangePasswordResultDto { IsSuccess = false, Message = "OLD_PASSWORD_WRONG" };
+
+        var policyResult = await _passwordPolicy.VerifyAsync(dto.NewPassword, userId);
+        if (!policyResult.IsSuccess)
+            return new ChangePasswordResultDto { IsSuccess = false, Message = policyResult.Message };
+
+        var now = DateTime.UtcNow;
+        var newHashedPassword = _hashHelper.HashPassword(dto.NewPassword);
+        await _accountRepository.UpdatePasswordAsync(userId, newHashedPassword);
+
+        await _accountRepository.AddPasswordHistoryAsync(new UserPasswordHistory
+        {
+            UserId         = userId,
+            HashedPassword = newHashedPassword,
+            CreatedAt      = now
+        });
+
+        await _emailService.SendPasswordChangedNotificationAsync(user.Email);
+
+        return new ChangePasswordResultDto { IsSuccess = true, Message = "密碼已成功修改" };
+    }
+
     // ── Forgot password ────────────────────────────────────────────────────
 
     public async Task ForgotPasswordAsync(ForgotPasswordDto dto, string ipAddress)

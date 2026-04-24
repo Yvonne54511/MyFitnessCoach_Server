@@ -11,6 +11,7 @@ public interface IAccountRepository
 
     // Login
     Task<User?> GetByAccountAsync(string account);
+    Task<User?> GetByIdAsync(int userId);
     Task<Instructor?> GetInstructorByUserIdAsync(int userId);
     Task<Employee?> GetEmployeeByUserIdAsync(int userId);
     Task<Member?> GetMemberByUserIdAsync(int userId);
