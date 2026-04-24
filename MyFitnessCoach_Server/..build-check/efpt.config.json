@@ -23,6 +23,14 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[CartItems]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Carts]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[Departments]",
          "ObjectType": 0
       },
@@ -131,6 +139,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[RateLimitLogs]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[ReserveOrders]",
          "ObjectType": 0
       },
@@ -156,6 +168,10 @@
       },
       {
          "Name": "[dbo].[UserExternalLogins]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[UserPasswordHistories]",
          "ObjectType": 0
       },
       {
