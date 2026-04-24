@@ -28,6 +28,13 @@ namespace MyFitnessCoach_Server.Repositories
 
             if (order == null) return (false, "找不到該預約紀錄或您無權限取消");
 
+            // 檢查會員取消次數
+            var member = await _db.Members.FirstOrDefaultAsync(m => m.Id == memberId);
+            if (member != null && member.CancelCount >= 3)
+            {
+                return (false, "您的取消預約次數已達 3 次上限，無法再進行取消。請聯繫客服處理。");
+            }
+
             // 檢查是否在 40 分鐘內
             if (order.Shift != null)
             {
@@ -76,7 +83,7 @@ namespace MyFitnessCoach_Server.Repositories
                         UserWalletId = wallet.Id,
                         CreateAt = DateTime.Now,
                         PointAmount = order.PointCost.Value,
-                        MerchandiseCategory = "Cancel", 
+                        MerchandiseCategory = "手動取消預約(點數歸還)", 
                         ReserveOrderId = null 
                     });
                 }
@@ -94,6 +101,12 @@ namespace MyFitnessCoach_Server.Repositories
             if (order.Shift != null)
             {
                 order.Shift.IsBooked = false;
+            }
+
+            // 增加會員的取消次數 (前面已經檢查過 member 且確認過次數)
+            if (member != null)
+            {
+                member.CancelCount += 1;
             }
 
             // 徹底刪除紀錄
