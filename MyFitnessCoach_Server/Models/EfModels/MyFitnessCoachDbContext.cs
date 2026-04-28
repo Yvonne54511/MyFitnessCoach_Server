@@ -755,7 +755,7 @@ public partial class MyFitnessCoachDbContext : DbContext
             entity.Property(e => e.CreateAt)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.GoogleEventId).HasMaxLength(255);
+            entity.Property(e => e.GoogleEventId).HasMaxLength(100);
             entity.Property(e => e.Memorandum).HasMaxLength(100);
             entity.Property(e => e.PaymentMethod)
                 .IsRequired()
