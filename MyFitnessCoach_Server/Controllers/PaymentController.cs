@@ -105,6 +105,7 @@ namespace MyFitnessCoach_Server.Controllers
                 }
 
                 // ── 2. 組合綠界表單參數 ────────────────────────────
+                // Server 專案的儲值 Callback 以 CustomField1 存訂單 ID 查詢，不需要 MerchantTradeNo
                 string tradeNo = "MF" + DateTime.Now.ToString("yyyyMMddHHmmssfff");
 
                 var parameters = new Dictionary<string, string>
@@ -121,7 +122,6 @@ namespace MyFitnessCoach_Server.Controllers
                     { "OrderResultURL", $"{_ngrokUrl}/api/Payment/Result" },
                     { "ChoosePayment",     "ALL" },
                     { "EncryptType",       "1" },
-                    // 將訂單 ID 帶回 Callback，用以更新付款狀態
                     { "CustomField1",      string.Join(",", orderIds) },
                 };
 
@@ -157,10 +157,9 @@ namespace MyFitnessCoach_Server.Controllers
                 if (member == null)
                     return NotFound(new { error = "找不到會員資料" });
 
-                // TODO: 測試完成後將下方改回加上 && o.MemberId == member.Id
                 var order = await _context.ProductOrders
                     .Include(o => o.ProductOrderDetails)
-                    .FirstOrDefaultAsync(o => o.Id == productOrderId);
+                    .FirstOrDefaultAsync(o => o.Id == productOrderId && o.MemberId == member.Id);
 
                 if (order == null)
                     return NotFound(new { error = "找不到訂單" });
@@ -175,6 +174,10 @@ namespace MyFitnessCoach_Server.Controllers
                     : "商品訂單";
 
                 string tradeNo = "MFP" + DateTime.Now.ToString("yyyyMMddHHmmssfff");
+
+                // 將 MerchantTradeNo 存入訂單，Callback 時用來精確比對
+                order.MerchantTradeNo = tradeNo;
+                await _context.SaveChangesAsync();
 
                 var parameters = new Dictionary<string, string>
                 {
@@ -283,12 +286,24 @@ namespace MyFitnessCoach_Server.Controllers
                     }
                 }
 
-                // ── 處理商品訂單（CustomField2）────────────────────
-                string customField2 = form["CustomField2"].ToString();
-                if (rtnCode == "1" && int.TryParse(customField2, out int productOrderId))
+                // ── 處理商品訂單：優先用 MerchantTradeNo，備援用 CustomField2 ──
+                if (rtnCode == "1")
                 {
-                    var productOrder = await _context.ProductOrders
-                        .FirstOrDefaultAsync(o => o.Id == productOrderId && o.Status == 0);
+                    string merchantTradeNo = form["MerchantTradeNo"].ToString();
+                    ProductOrder productOrder = null;
+
+                    if (!string.IsNullOrEmpty(merchantTradeNo))
+                        productOrder = await _context.ProductOrders
+                            .FirstOrDefaultAsync(o => o.MerchantTradeNo == merchantTradeNo && o.Status == 0);
+
+                    // 備援：CustomField2 帶有 productOrderId
+                    if (productOrder == null)
+                    {
+                        string customField2 = form["CustomField2"].ToString();
+                        if (int.TryParse(customField2, out int fallbackId))
+                            productOrder = await _context.ProductOrders
+                                .FirstOrDefaultAsync(o => o.Id == fallbackId && o.Status == 0);
+                    }
 
                     if (productOrder != null)
                     {
@@ -378,12 +393,22 @@ namespace MyFitnessCoach_Server.Controllers
                     }
                 }
 
-                // ── 處理商品訂單（CustomField2）────────────────────
-                string resultCustomField2 = form["CustomField2"].ToString();
-                if (macValid && rtnCode == "1" && int.TryParse(resultCustomField2, out int resultProductOrderId))
+                // ── 處理商品訂單：優先用 MerchantTradeNo，備援用 CustomField2 ──
+                if (macValid && rtnCode == "1")
                 {
-                    var productOrder = await _context.ProductOrders
-                        .FirstOrDefaultAsync(o => o.Id == resultProductOrderId && o.Status == 0);
+                    ProductOrder productOrder = null;
+
+                    if (!string.IsNullOrEmpty(tradeNo))
+                        productOrder = await _context.ProductOrders
+                            .FirstOrDefaultAsync(o => o.MerchantTradeNo == tradeNo && o.Status == 0);
+
+                    if (productOrder == null)
+                    {
+                        string resultCustomField2 = form["CustomField2"].ToString();
+                        if (int.TryParse(resultCustomField2, out int fallbackId))
+                            productOrder = await _context.ProductOrders
+                                .FirstOrDefaultAsync(o => o.Id == fallbackId && o.Status == 0);
+                    }
 
                     if (productOrder != null)
                     {

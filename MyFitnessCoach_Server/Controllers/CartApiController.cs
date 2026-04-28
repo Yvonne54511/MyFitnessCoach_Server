@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using MyFitnessCoach_Server.Models.DTOs;
 using MyFitnessCoach_Server.Models.EfModels;
 using MyFitnessCoach_Server.Models.Services;
+using System.Text.RegularExpressions;
 
 namespace MyFitnessCoach_Server.Controllers
 {
@@ -106,6 +107,105 @@ namespace MyFitnessCoach_Server.Controllers
 
 			await _cartService.ClearAsync(memberId.Value);
 			return NoContent();
+		}
+
+		// POST /api/CartApi/checkout  body: { receiver, address, mobile, taxNumber?, memo? }
+		// 將購物車轉為 ProductOrder，回傳 productOrderId 供前端呼叫 ProductSendToEcPay
+		[HttpPost("checkout")]
+		public async Task<ActionResult<CheckoutResultDto>> Checkout([FromBody] CheckoutRequestDto dto)
+		{
+			// ── 基本欄位驗證 ──────────────────────────────────────────
+			if (string.IsNullOrWhiteSpace(dto?.Receiver))
+				return BadRequest(new { message = "收件人姓名為必填" });
+			if (string.IsNullOrWhiteSpace(dto.Address))
+				return BadRequest(new { message = "收件地址為必填" });
+			if (string.IsNullOrWhiteSpace(dto.Mobile) || !Regex.IsMatch(dto.Mobile, @"^09\d{8}$"))
+				return BadRequest(new { message = "手機號碼格式錯誤（需為 09 開頭共 10 碼）" });
+
+			var memberId = await GetCurrentMemberIdAsync();
+			if (memberId == null) return Unauthorized(new { message = "找不到對應的會員資料" });
+
+			// ── 讀取購物車（含商品資料）──────────────────────────────
+			var cart = await _db.Carts
+				.Include(c => c.CartItems)
+				.ThenInclude(ci => ci.Product)
+				.FirstOrDefaultAsync(c => c.MemberId == memberId.Value);
+
+			if (cart == null || !cart.CartItems.Any())
+				return BadRequest(new { message = "購物車是空的" });
+
+			// ── 確認所有商品仍上架 ────────────────────────────────────
+			var inactiveItems = cart.CartItems
+				.Where(ci => ci.Product == null || !ci.Product.IsActive)
+				.ToList();
+			if (inactiveItems.Any())
+			{
+				var names = string.Join("、", inactiveItems.Select(ci => ci.Product?.Name ?? $"商品#{ci.ProductId}"));
+				return BadRequest(new { message = $"以下商品已下架，請移除後再結帳：{names}" });
+			}
+
+			// ── 計算金額 ──────────────────────────────────────────────
+			decimal originalAmount = cart.CartItems.Sum(ci => ci.Product.OriginalPrice * ci.Qty);
+			decimal finalAmount    = cart.CartItems.Sum(ci => ci.Product.UnitPrice * ci.Qty);
+			decimal discountAmount = originalAmount - finalAmount;
+			var itemSummary = string.Join("、", cart.CartItems.Select(ci => $"{ci.Product.Name} x{ci.Qty}"));
+
+			using var tx = await _db.Database.BeginTransactionAsync();
+			try
+			{
+				// ── 建立 ProductOrder ──────────────────────────────────
+				// FinalAmount 是 DB 計算欄位（OriginalAmount - DiscountAmount），不需手動設定
+				var order = new ProductOrder
+				{
+					MemberId       = memberId.Value,
+					CreateAt       = DateTime.Now,
+					OriginalAmount = originalAmount,
+					DiscountAmount = discountAmount,
+					Receiver       = dto.Receiver,
+					Address        = dto.Address,
+					Mobile         = dto.Mobile,
+					TaxNumber      = dto.TaxNumber,
+					Memo           = dto.Memo,
+					Status         = 0  // 0 = 待付款
+				};
+				_db.ProductOrders.Add(order);
+				await _db.SaveChangesAsync(); // 先儲存取得 order.Id
+
+				// ── 建立 ProductOrderDetail ────────────────────────────
+				foreach (var item in cart.CartItems)
+				{
+					_db.ProductOrderDetails.Add(new ProductOrderDetail
+					{
+						ProductOrderId  = order.Id,
+						ProductId       = item.ProductId,
+						ProductName     = item.Product.Name,
+						ImageURL        = item.Product.ImageUrl,
+						UnitPrice       = item.Product.UnitPrice,
+						Qty             = item.Qty,
+						SubTotal        = item.Product.UnitPrice * item.Qty,
+						DiscountedPrice = item.Product.UnitPrice * item.Qty,
+						Memo            = null
+					});
+				}
+
+				// ── 清空購物車 ────────────────────────────────────────
+				_db.CartItems.RemoveRange(cart.CartItems);
+
+				await _db.SaveChangesAsync();
+				await tx.CommitAsync();
+
+				return Ok(new CheckoutResultDto
+				{
+					ProductOrderId = order.Id,
+					FinalAmount    = finalAmount,
+					ItemSummary    = itemSummary
+				});
+			}
+			catch (Exception ex)
+			{
+				await tx.RollbackAsync();
+				return StatusCode(500, new { message = $"建立訂單失敗：{ex.Message}" });
+			}
 		}
 
 		// POST /api/CartApi/merge  body: { items: [{ productId, qty }, ...] }
