@@ -43,10 +43,6 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[FoodRecords]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[Foods]",
          "ObjectType": 0
       },
@@ -108,10 +104,6 @@
       },
       {
          "Name": "[dbo].[Notifications]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[Nutrients]",
          "ObjectType": 0
       },
       {
@@ -185,26 +177,6 @@
       {
          "Name": "[dbo].[UserWallets]",
          "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[vw_EmployeeDeptInfo]",
-         "ObjectType": 3
-      },
-      {
-         "Name": "[dbo].[vw_RoleFunctions]",
-         "ObjectType": 3
-      },
-      {
-         "Name": "[dbo].[vw_UserMemberFoodRecord]",
-         "ObjectType": 3
-      },
-      {
-         "Name": "[dbo].[vw_UserRoleFunction]",
-         "ObjectType": 3
-      },
-      {
-         "Name": "[dbo].[vw_UserRoleFunctions]",
-         "ObjectType": 3
       }
    ],
    "UiHint": null,

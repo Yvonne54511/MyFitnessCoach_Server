@@ -13,11 +13,11 @@ public partial class Food
 
     public string FoodName { get; set; }
 
-    public bool IsDeleted { get; set; }
+    public bool IsActive { get; set; }
+
+    public int? MemberId { get; set; }
 
     public virtual FoodCategory Category { get; set; }
 
-    public virtual ICollection<FoodRecord> FoodRecords { get; set; } = new List<FoodRecord>();
-
-    public virtual ICollection<Nutrient> Nutrients { get; set; } = new List<Nutrient>();
+    public virtual Member Member { get; set; }
 }
