@@ -17,6 +17,8 @@ public partial class ProductOrder
 
     public decimal DiscountAmount { get; set; }
 
+    public decimal? FinalAmount { get; set; }
+
     public string Receiver { get; set; }
 
     public string Address { get; set; }
@@ -29,7 +31,13 @@ public partial class ProductOrder
 
     public string Memo { get; set; }
 
-    public decimal? FinalAmount { get; set; }
+    public int PaymentMethod { get; set; }
+
+    public string StoreId { get; set; }
+
+    public string StoreName { get; set; }
+
+    public string LogisticsOrderNo { get; set; }
 
     public virtual Member Member { get; set; }
 

@@ -52,6 +52,10 @@ builder.Services.AddScoped<GoogleCalendarService>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<CartService>();
 
+// Coupon (Phase 4)
+builder.Services.AddScoped<ICouponRepository, CouponRepository>();
+builder.Services.AddScoped<CouponService>();
+
 // Add services to the container.
 // Register application services
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
