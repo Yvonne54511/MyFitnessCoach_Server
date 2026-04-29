@@ -7,5 +7,6 @@ namespace MyFitnessCoach_Server.Models.DTOs
         public string? Avatar { get; set; }
         public decimal Points { get; set; }
         public string? Phone { get; set; }
+        public int CancelCount { get; set; }
     }
 }

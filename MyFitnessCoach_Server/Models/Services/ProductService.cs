@@ -15,7 +15,11 @@ namespace MyFitnessCoach_Server.Models.Services
 		/// <summary>
 		/// 回傳 IQueryable，上層可再疊加 Where/OrderBy 後才 materialize。
 		/// </summary>
-		public IQueryable<ProductDto> GetAllProducts(string? name = null, int? categoryId = null)
+		public IQueryable<ProductDto> GetAllProducts(
+			string? name = null,
+			int? categoryId = null,
+			decimal? minPrice = null,
+			decimal? maxPrice = null)
 		{
 			var query = _repository.GetAllQueryable();
 
@@ -27,6 +31,16 @@ namespace MyFitnessCoach_Server.Models.Services
 			if (categoryId.HasValue && categoryId.Value > 0)
 			{
 				query = query.Where(p => p.CategoryId == categoryId.Value);
+			}
+
+			if (minPrice.HasValue)
+			{
+				query = query.Where(p => p.UnitPrice >= minPrice.Value);
+			}
+
+			if (maxPrice.HasValue)
+			{
+				query = query.Where(p => p.UnitPrice <= maxPrice.Value);
 			}
 
 			return query;
