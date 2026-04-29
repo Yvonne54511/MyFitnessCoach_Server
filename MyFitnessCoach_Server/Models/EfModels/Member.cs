@@ -31,6 +31,10 @@ public partial class Member
 
     public int CancelCount { get; set; }
 
+    public double? StartWeight { get; set; }
+
+    public string HealthPlan { get; set; }
+
     public virtual ICollection<BodyRecord> BodyRecords { get; set; } = new List<BodyRecord>();
 
     public virtual Cart Cart { get; set; }
