@@ -75,19 +75,18 @@ public class FoodLibraryService
 
     public async Task<FoodLibraryBundleDto> GetBundleAsync(int memberId)
     {
-        var systemTask  = GetSystemFoodsAsync();
-        var customTask  = _repo.GetCustomFoodsAsync(memberId);
-        var favTask     = _repo.GetFavoriteFoodIdsAsync(memberId);
-        var catTask     = GetCategoriesAsync();
-
-        await Task.WhenAll(systemTask, customTask, favTask, catTask);
+        // DbContext is not thread-safe — queries must run sequentially
+        var systemFoods     = await GetSystemFoodsAsync();
+        var customFoods     = await _repo.GetCustomFoodsAsync(memberId);
+        var favoriteFoodIds = await _repo.GetFavoriteFoodIdsAsync(memberId);
+        var categories      = await GetCategoriesAsync();
 
         return new FoodLibraryBundleDto
         {
-            SystemFoods     = systemTask.Result,
-            CustomFoods     = customTask.Result,
-            FavoriteFoodIds = favTask.Result,
-            Categories      = catTask.Result,
+            SystemFoods     = systemFoods,
+            CustomFoods     = customFoods,
+            FavoriteFoodIds = favoriteFoodIds,
+            Categories      = categories,
             Version         = _store.Version
         };
     }
