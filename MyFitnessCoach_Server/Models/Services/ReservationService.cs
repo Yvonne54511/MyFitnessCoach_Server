@@ -29,7 +29,7 @@ namespace MyFitnessCoach_Server.Models.Services
         {
             var result = await _repo.CreateAsync(memberId, dto);
 
-            if (result.Success && result.Order != null && dto.PaymentMethod != "信用卡")
+            if (result.Success && result.Order != null && dto.PaymentMethod != "CreditCard")
             {
                 try
                 {
