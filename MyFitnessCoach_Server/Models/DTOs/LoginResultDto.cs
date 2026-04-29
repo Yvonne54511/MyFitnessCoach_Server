@@ -7,6 +7,7 @@ public class LoginResultDto
     public string Message { get; set; } = string.Empty;
     public string? Token { get; set; }
     public int UserId { get; set; }
+    public int? MemberId { get; set; }
     public string? UserName { get; set; }
     public string? ImageUrl { get; set; }
 }

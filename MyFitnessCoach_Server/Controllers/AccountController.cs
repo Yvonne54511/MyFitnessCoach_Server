@@ -58,6 +58,7 @@ public class AccountController : ControllerBase
         {
             Token    = string.Empty, // 保留欄位以相容既有前端型別，內容留空（token 已存於 cookie）
             UserId   = result.UserId,
+            MemberId = result.MemberId,
             UserName = result.UserName!,
             ImageUrl = result.ImageUrl
         });

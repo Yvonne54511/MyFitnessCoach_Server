@@ -156,6 +156,37 @@ public class AccountRepository : IAccountRepository
                 .SetProperty(u => u.NewMemberConfirmCodeExpiry, (DateTime?)null));
     }
 
+    public async Task ActivateAndEnsureMemberAsync(int userId)
+    {
+        using var tx = await _db.Database.BeginTransactionAsync();
+
+        await _db.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(u => u.IsConfirmed, true)
+                .SetProperty(u => u.NewMemberConfirmCode, (string?)null)
+                .SetProperty(u => u.NewMemberConfirmCodeExpiry, (DateTime?)null));
+
+        var exists = await _db.Members.AnyAsync(m => m.UserId == userId);
+        if (!exists)
+        {
+            _db.Members.Add(new Member { UserId = userId, CancelCount = 1 });
+            await _db.SaveChangesAsync();
+        }
+
+        await tx.CommitAsync();
+    }
+
+    public async Task EnsureMemberAsync(int userId)
+    {
+        var exists = await _db.Members.AnyAsync(m => m.UserId == userId);
+        if (!exists)
+        {
+            _db.Members.Add(new Member { UserId = userId, CancelCount = 1 });
+            await _db.SaveChangesAsync();
+        }
+    }
+
     public async Task UpdateActivationTokenAsync(int userId, string hash, DateTime expiry)
     {
         await _db.Users

@@ -53,7 +53,11 @@ public partial class MyFitnessCoachDbContext : DbContext
 
     public virtual DbSet<Member> Members { get; set; }
 
+    public virtual DbSet<MemberFavoriteFood> MemberFavoriteFoods { get; set; }
+
     public virtual DbSet<MemberViolation> MemberViolations { get; set; }
+
+    public virtual DbSet<NutrientReferenceValue> NutrientReferenceValues { get; set; }
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
@@ -202,6 +206,9 @@ public partial class MyFitnessCoachDbContext : DbContext
             entity.Property(e => e.IsActive)
                 .HasDefaultValue(true)
                 .HasAnnotation("Relational:DefaultConstraintName", "DF__Foods__IsDeleted__1EA48E88");
+            entity.Property(e => e.UpdatedAt)
+                .HasPrecision(0)
+                .HasDefaultValue(new DateTime(2024, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
             entity.HasOne(d => d.Category).WithMany(p => p.Foods)
                 .HasForeignKey(d => d.CategoryId)
@@ -468,6 +475,28 @@ public partial class MyFitnessCoachDbContext : DbContext
                 .HasConstraintName("FK_Members_Users");
         });
 
+        modelBuilder.Entity<MemberFavoriteFood>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_MemberFavoriteFoods");
+
+            entity.HasIndex(e => new { e.MemberId, e.FoodId }, "UX_MemberFavoriteFoods_Member_Food").IsUnique();
+
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(0)
+                .HasDefaultValueSql("(getdate())")
+                .HasAnnotation("Relational:DefaultConstraintName", "DF_MemberFavoriteFoods_CreatedAt");
+
+            entity.HasOne(d => d.Food).WithMany(p => p.MemberFavoriteFoods)
+                .HasForeignKey(d => d.FoodId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MemberFavoriteFoods_Foods");
+
+            entity.HasOne(d => d.Member).WithMany(p => p.MemberFavoriteFoods)
+                .HasForeignKey(d => d.MemberId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MemberFavoriteFoods_Members");
+        });
+
         modelBuilder.Entity<MemberViolation>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__MemberVi__3214EC077ED072F2");
@@ -507,6 +536,25 @@ public partial class MyFitnessCoachDbContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Notifications_Users_Receiver");
+        });
+
+        modelBuilder.Entity<NutrientReferenceValue>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_NutrientReferenceValues");
+
+            entity.Property(e => e.BaseAmount).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.CarbGram).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.FatGram).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.Kcal).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.Measure)
+                .IsRequired()
+                .HasMaxLength(20);
+            entity.Property(e => e.ProteinGram).HasColumnType("decimal(10, 2)");
+
+            entity.HasOne(d => d.Food).WithMany(p => p.NutrientReferenceValues)
+                .HasForeignKey(d => d.FoodId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_NutrientReferenceValues_Foods");
         });
 
         modelBuilder.Entity<PointOrder>(entity =>

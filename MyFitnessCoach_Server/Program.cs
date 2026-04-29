@@ -63,6 +63,12 @@ builder.Services.AddScoped<IVerifyPasswordRequirements, VerifyPasswordRequiremen
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IPasswordEmailService, PasswordEmailService>();
 builder.Services.AddSingleton<IHashHelper, HashHelper>();
+
+// Food Library
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<FoodLibraryCacheStore>();
+builder.Services.AddScoped<IFoodLibraryRepository, FoodLibraryRepository>();
+builder.Services.AddScoped<FoodLibraryService>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 // JWT Authentication

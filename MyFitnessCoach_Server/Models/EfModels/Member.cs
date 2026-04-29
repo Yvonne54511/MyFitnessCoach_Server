@@ -35,6 +35,8 @@ public partial class Member
 
     public virtual Cart Cart { get; set; }
 
+    public virtual ICollection<MemberFavoriteFood> MemberFavoriteFoods { get; set; } = new List<MemberFavoriteFood>();
+
     public virtual ICollection<Food> Foods { get; set; } = new List<Food>();
 
     public virtual MemberViolation MemberViolation { get; set; }

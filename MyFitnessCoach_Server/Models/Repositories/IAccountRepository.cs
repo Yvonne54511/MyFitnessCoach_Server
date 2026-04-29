@@ -34,6 +34,8 @@ public interface IAccountRepository
     Task CreateUserAsync(User user);
     Task<User?> GetByActivationCodeHashAsync(string hash);
     Task ActivateUserAsync(int userId);
+    Task ActivateAndEnsureMemberAsync(int userId);
+    Task EnsureMemberAsync(int userId);
     Task UpdateActivationTokenAsync(int userId, string hash, DateTime expiry);
     Task<User?> GetPendingUserByEmailAsync(string email);
 

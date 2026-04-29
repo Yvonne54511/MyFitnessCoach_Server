@@ -52,6 +52,8 @@ public class AccountService : IAccountService
         if (!user.IsActive)
             return new LoginResultDto { IsSuccess = false, Message = "此帳號目前停用中，請洽管理員" };
 
+        await _accountRepository.EnsureMemberAsync(user.Id);
+
         var instructor = await _accountRepository.GetInstructorByUserIdAsync(user.Id);
         var employee   = await _accountRepository.GetEmployeeByUserIdAsync(user.Id);
         var member     = await _accountRepository.GetMemberByUserIdAsync(user.Id);
@@ -70,6 +72,9 @@ public class AccountService : IAccountService
             new(ClaimTypes.Email, user.Email),
             new("Account", user.Account)
         };
+
+        if (member?.Id is int memberId)
+            claims.Add(new Claim("MemberId", memberId.ToString()));
 
         if (instructor?.Id is int instructorId)
             claims.Add(new Claim("InstructorId", instructorId.ToString()));
@@ -108,6 +113,7 @@ public class AccountService : IAccountService
             Message   = "登入成功",
             Token     = new JwtSecurityTokenHandler().WriteToken(token),
             UserId    = user.Id,
+            MemberId  = member?.Id,
             UserName  = user.UserName ?? user.Account,
             ImageUrl  = member?.ImageUrl ?? "/images/members/default.jpg"
         };
@@ -291,7 +297,7 @@ public class AccountService : IAccountService
         if (DateTime.UtcNow > user.NewMemberConfirmCodeExpiry)
             return new ActivateAccountResultDto { IsSuccess = false, ErrorCode = "TOKEN_EXPIRED" };
 
-        await _accountRepository.ActivateUserAsync(user.Id);
+        await _accountRepository.ActivateAndEnsureMemberAsync(user.Id);
         return new ActivateAccountResultDto { IsSuccess = true };
     }
 
