@@ -29,9 +29,7 @@ namespace MyFitnessCoach_Server.Models.Services
         {
             var result = await _repo.CreateAsync(memberId, dto);
 
-            // 修正：只有當狀態為「已預約」時（例如點數支付），才立即執行後續動作。
-            // 如果是信用卡，狀態會是「待付款」，後續動作將在 PaymentController 呼叫 CompleteReservationAsync 時執行。
-            if (result.Success && result.Order != null && result.Order.Status == "已預約")
+            if (result.Success && result.Order != null && dto.PaymentMethod != "CreditCard")
             {
                 await CompleteReservationAsync(result.Order.Id);
             }

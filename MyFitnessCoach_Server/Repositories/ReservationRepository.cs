@@ -163,11 +163,12 @@ namespace MyFitnessCoach_Server.Repositories
                 MemberId = memberId,
                 ShiftId = shift.Id,
                 CreateAt = DateTime.Now,
+                // 信用卡付款需等綠界回調確認後才改為「已預約」
                 Status = dto.PaymentMethod == "CreditCard" ? "待付款" : "已預約",
                 PaymentMethod = dto.PaymentMethod,
                 Target = dto.Target ?? dto.Note,
-                Price = dto.PaymentMethod == "Points" ? 0 : 1200, 
-                Memorandum = "" 
+                Price = dto.PaymentMethod == "Points" ? 0 : 1200,
+                Memorandum = ""
             };
 
             // 點數扣款邏輯
