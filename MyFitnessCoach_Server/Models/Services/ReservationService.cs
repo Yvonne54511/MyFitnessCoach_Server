@@ -25,11 +25,11 @@ namespace MyFitnessCoach_Server.Models.Services
             return await _repo.GetByMemberIdAsync(memberId);
         }
 
-        public async Task<bool> CreateReservationAsync(int memberId, CreateReservationDto dto)
+        public async Task<(bool Success, int ReservationId)> CreateReservationAsync(int memberId, CreateReservationDto dto)
         {
             var result = await _repo.CreateAsync(memberId, dto);
-            
-            if (result.Success && result.Order != null)
+
+            if (result.Success && result.Order != null && dto.PaymentMethod != "信用卡")
             {
                 try
                 {
@@ -106,18 +106,52 @@ namespace MyFitnessCoach_Server.Models.Services
                 }
             }
 
-            return result.Success;
+            return (result.Success, result.Order?.Id ?? 0);
         }
 
         public async Task<(bool Success, string Message)> CancelReservationAsync(int memberId, int reservationId)
         {
-            // 1. 在取消前，先抓出資訊 (使用 AsNoTracking 避免後續刪除衝突)
+            // 1. 在取消前，先抓出資訊 (包含 Email 與教練姓名)
             var order = await _db.ReserveOrders
                 .AsNoTracking()
-                .Include(ro => ro.Member)
+                .Include(ro => ro.Member).ThenInclude(m => m.User)
+                .Include(ro => ro.Shift).ThenInclude(s => s.Instructor).ThenInclude(i => i.User)
                 .FirstOrDefaultAsync(ro => ro.Id == reservationId && ro.MemberId == memberId);
             
             if (order == null) return (false, "找不到該預約紀錄");
+
+            // 備份發信用資訊
+            var toEmail = order.Member?.User?.Email;
+            var memberName = order.Member?.User?.UserName ?? "會員";
+            var instructorName = order.Shift?.Instructor?.User?.UserName ?? "教練";
+            
+            // 安全解析時間
+            DateTime startTime = DateTime.Now; 
+            if (order.Shift != null)
+            {
+                try
+                {
+                    var rawDateStr = order.Shift.ScheduleDate.ToString("yyyy-MM-dd");
+                    var rawTime = order.Shift.TimeSlot.Split('-')[0].Trim();
+                    if (rawTime.Contains("(")) rawTime = rawTime.Split('(')[0].Trim();
+                    
+                    if (int.TryParse(rawTime, out int hour))
+                    {
+                        startTime = new DateTime(order.Shift.ScheduleDate.Year, order.Shift.ScheduleDate.Month, order.Shift.ScheduleDate.Day, hour, 0, 0);
+                    }
+                    else
+                    {
+                        if (!DateTime.TryParse($"{rawDateStr} {rawTime}", out startTime))
+                        {
+                            startTime = order.Shift.ScheduleDate.ToDateTime(TimeOnly.MinValue);
+                        }
+                    }
+                }
+                catch
+                {
+                    startTime = order.Shift?.ScheduleDate.ToDateTime(TimeOnly.MinValue) ?? DateTime.Now;
+                }
+            }
 
             string googleEventId = order.GoogleEventId;
             if (string.IsNullOrEmpty(googleEventId) && !string.IsNullOrEmpty(order.Memorandum) && order.Memorandum.StartsWith("GoogleEventId:"))
@@ -127,19 +161,35 @@ namespace MyFitnessCoach_Server.Models.Services
 
             int? userId = order.Member?.UserId;
 
-            // 2. 執行資料庫取消
+            // 2. 執行資料庫取消邏輯 (包含退點)
             var result = await _repo.CancelAsync(memberId, reservationId);
 
-            // 3. 刪除 Google 日曆事件
-            if (result.Success && !string.IsNullOrEmpty(googleEventId) && userId.HasValue)
+            if (result.Success)
             {
-                try
+                // 3. 發送取消通知 Email
+                if (!string.IsNullOrEmpty(toEmail))
                 {
-                    await _googleService.DeleteEventAsync(userId.Value, googleEventId);
+                    try
+                    {
+                        await _emailService.SendCancellationEmailAsync(toEmail, memberName, instructorName, startTime);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"取消通知郵件發送失敗: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
+
+                // 4. 刪除 Google 日曆事件
+                if (!string.IsNullOrEmpty(googleEventId) && userId.HasValue)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Google 日曆刪除失敗 (UserId: {userId}, EventId: {googleEventId}): {ex.Message}");
+                    try
+                    {
+                        await _googleService.DeleteEventAsync(userId.Value, googleEventId);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Google 日曆刪除失敗 (UserId: {userId}, EventId: {googleEventId}): {ex.Message}");
+                    }
                 }
             }
 

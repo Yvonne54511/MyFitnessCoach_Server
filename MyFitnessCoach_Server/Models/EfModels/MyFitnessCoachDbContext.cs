@@ -705,8 +705,7 @@ public partial class MyFitnessCoachDbContext : DbContext
             entity.Property(e => e.Receiver)
                 .IsRequired()
                 .HasMaxLength(30);
-            entity.Property(e => e.StoreId).HasMaxLength(6);
-            entity.Property(e => e.StoreName).HasMaxLength(60);
+            entity.Property(e => e.MerchantTradeNo).HasMaxLength(25);
 
             entity.HasOne(d => d.Member).WithMany(p => p.ProductOrders)
                 .HasForeignKey(d => d.MemberId)

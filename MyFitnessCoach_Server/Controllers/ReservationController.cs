@@ -42,10 +42,11 @@ namespace MyFitnessCoach_Server.Controllers
             var memberIdClaim = User.FindFirst("MemberId")?.Value;
             int memberId = (!string.IsNullOrEmpty(memberIdClaim) && int.TryParse(memberIdClaim, out int id)) ? id : 1;
 
-            var success = await _service.CreateReservationAsync(memberId, dto);
+            var (success, reservationId) = await _service.CreateReservationAsync(memberId, dto);
             if (success)
             {
-                return Ok(new { message = "預約成功" });
+                string message = dto.PaymentMethod == "信用卡" ? "預約建立中，請完成付款" : "預約成功";
+                return Ok(new { message, reservationId });
             }
             return BadRequest(new { message = "預約失敗，該時段可能已被預約或不存在" });
         }
