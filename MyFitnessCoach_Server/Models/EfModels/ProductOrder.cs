@@ -41,6 +41,10 @@ public partial class ProductOrder
 
     public string MerchantTradeNo { get; set; }
 
+    public int? CouponId { get; set; }
+
+    public virtual Coupon Coupon { get; set; }
+
     public virtual Member Member { get; set; }
 
     public virtual ICollection<ProductOrderDetail> ProductOrderDetails { get; set; } = new List<ProductOrderDetail>();

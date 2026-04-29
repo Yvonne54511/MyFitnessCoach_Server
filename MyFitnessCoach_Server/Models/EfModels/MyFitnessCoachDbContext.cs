@@ -789,6 +789,10 @@ public partial class MyFitnessCoachDbContext : DbContext
             entity.Property(e => e.StoreId).HasMaxLength(6);
             entity.Property(e => e.StoreName).HasMaxLength(60);
 
+            entity.HasOne(d => d.Coupon).WithMany(p => p.ProductOrders)
+                .HasForeignKey(d => d.CouponId)
+                .HasConstraintName("FK_ProductOrders_Coupons");
+
             entity.HasOne(d => d.Member).WithMany(p => p.ProductOrders)
                 .HasForeignKey(d => d.MemberId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
