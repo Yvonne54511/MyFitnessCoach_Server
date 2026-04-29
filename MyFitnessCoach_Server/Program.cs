@@ -64,6 +64,10 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IPasswordEmailService, PasswordEmailService>();
 builder.Services.AddSingleton<IHashHelper, HashHelper>();
 
+// Goals
+builder.Services.AddScoped<IGoalRepository, GoalRepository>();
+builder.Services.AddScoped<IGoalService, GoalService>();
+
 // Food Library
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<FoodLibraryCacheStore>();
