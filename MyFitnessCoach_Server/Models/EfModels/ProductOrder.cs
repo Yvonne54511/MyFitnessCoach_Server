@@ -31,6 +31,9 @@ public partial class ProductOrder
 
     public decimal? FinalAmount { get; set; }
 
+    // 綠界交易編號，Callback 時用來精確比對此筆訂單
+    public string MerchantTradeNo { get; set; }
+
     public virtual Member Member { get; set; }
 
     public virtual ICollection<ProductOrderDetail> ProductOrderDetails { get; set; } = new List<ProductOrderDetail>();

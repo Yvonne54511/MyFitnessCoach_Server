@@ -25,11 +25,11 @@ namespace MyFitnessCoach_Server.Models.Services
             return await _repo.GetByMemberIdAsync(memberId);
         }
 
-        public async Task<bool> CreateReservationAsync(int memberId, CreateReservationDto dto)
+        public async Task<(bool Success, int ReservationId)> CreateReservationAsync(int memberId, CreateReservationDto dto)
         {
             var result = await _repo.CreateAsync(memberId, dto);
-            
-            if (result.Success && result.Order != null)
+
+            if (result.Success && result.Order != null && dto.PaymentMethod != "信用卡")
             {
                 try
                 {
@@ -106,7 +106,7 @@ namespace MyFitnessCoach_Server.Models.Services
                 }
             }
 
-            return result.Success;
+            return (result.Success, result.Order?.Id ?? 0);
         }
 
         public async Task<(bool Success, string Message)> CancelReservationAsync(int memberId, int reservationId)
