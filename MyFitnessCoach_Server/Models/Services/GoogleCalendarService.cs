@@ -38,7 +38,10 @@ public class GoogleCalendarService
             var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
             {
                 ClientSecrets = new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
-                Scopes = new[] { CalendarService.Scope.CalendarEvents }
+                Scopes = new[] { 
+                    CalendarService.Scope.CalendarEvents,
+                    "https://www.googleapis.com/auth/gmail.send"
+                }
             });
 
             // 這裡最容易出錯：如果 redirectUri 與 Google Console 設定的不完全一致，會拋出 Exception
@@ -56,7 +59,7 @@ public class GoogleCalendarService
                         UserId = userId,
                         LoginProvider = "GoogleCalendar",
                         ProviderKey = tokenResponse.RefreshToken,
-                        ProviderDisplayName = "Google日曆同步"
+                        ProviderDisplayName = "Google 同步"
                     });
                 }
                 else
@@ -98,7 +101,10 @@ public class GoogleCalendarService
             var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
             {
                 ClientSecrets = new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
-                Scopes = new[] { CalendarService.Scope.CalendarEvents }
+                Scopes = new[] { 
+                    CalendarService.Scope.CalendarEvents,
+                    "https://www.googleapis.com/auth/gmail.send"
+                }
             });
 
             var credential = new UserCredential(flow, userId.ToString(), tokenResponse);
@@ -163,7 +169,10 @@ public class GoogleCalendarService
             var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
             {
                 ClientSecrets = new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
-                Scopes = new[] { CalendarService.Scope.CalendarEvents }
+                Scopes = new[] { 
+                    CalendarService.Scope.CalendarEvents,
+                    "https://www.googleapis.com/auth/gmail.send"
+                }
             });
 
             var credential = new UserCredential(flow, userId.ToString(), tokenResponse);

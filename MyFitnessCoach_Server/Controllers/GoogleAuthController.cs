@@ -12,11 +12,13 @@ namespace MyFitnessCoach_Server.Controllers
     public class GoogleAuthController : ControllerBase
     {
         private readonly GoogleCalendarService _googleService;
+        private readonly ReservationService _reservationService;
         private readonly MyFitnessCoachDbContext _db;
 
-        public GoogleAuthController(GoogleCalendarService googleService, MyFitnessCoachDbContext db)
+        public GoogleAuthController(GoogleCalendarService googleService, ReservationService reservationService, MyFitnessCoachDbContext db)
         {
             _googleService = googleService;
+            _reservationService = reservationService;
             _db = db;
         }
 
@@ -53,7 +55,7 @@ namespace MyFitnessCoach_Server.Controllers
                 await _db.SaveChangesAsync();
             }
 
-            return Ok(new { message = "已解除 Google 日曆連結" });
+            return Ok(new { message = "已解除 Google 連結" });
         }
 
         [HttpPost("SaveToken")]
@@ -71,58 +73,28 @@ namespace MyFitnessCoach_Server.Controllers
                 
                 if (success) 
                 {
-                    // 授權成功後，主動補做最新一筆預約的同步
+                    // 授權成功後，主動補做最新一筆預約的「郵件發送」與「日曆同步」
                     try
                     {
                         var latestReservation = await _db.ReserveOrders
                             .Include(ro => ro.Member)
-                            .Include(ro => ro.Shift)
-                            .ThenInclude(s => s.Instructor)
-                            .ThenInclude(i => i.User)
                             .Where(ro => ro.Member.UserId == userId)
                             .OrderByDescending(ro => ro.CreateAt)
                             .FirstOrDefaultAsync();
 
                         if (latestReservation != null)
                         {
-                            // 解析時間 (ScheduleDate 是 DateOnly)
-                            var rawDate = latestReservation.Shift.ScheduleDate;
-                            var rawTime = latestReservation.Shift.TimeSlot.Split('-')[0].Trim();
-                            if (rawTime.Contains("(")) rawTime = rawTime.Split('(')[0].Trim();
-                            
-                            DateTime startTime;
-                            if (int.TryParse(rawTime, out int hour))
-                            {
-                                startTime = new DateTime(rawDate.Year, rawDate.Month, rawDate.Day, hour, 0, 0);
-                            }
-                            else
-                            {
-                                // DateOnly 轉 DateTime
-                                startTime = rawDate.ToDateTime(TimeOnly.Parse(rawTime));
-                            }
-
-                            var googleEventId = await _googleService.AddEventAsync(
-                                userId,
-                                $"MyFitnessCoach 課程 - 教練: {latestReservation.Shift.Instructor.User.UserName}",
-                                $"您的預約目標: {latestReservation.Target ?? "一般健身諮詢"}",
-                                startTime,
-                                startTime.AddHours(1)
-                            );
-
-                            if (!string.IsNullOrEmpty(googleEventId))
-                            {
-                                latestReservation.GoogleEventId = googleEventId;
-                                await _db.SaveChangesAsync();
-                            }
+                            // 呼叫 ReservationService 的完整補完邏輯 (包含發信 + 同步)
+                            await _reservationService.CompleteReservationAsync(latestReservation.Id);
                         }
                     }
                     catch (Exception syncEx)
                     {
-                        // 補做同步失敗不應影響授權結果，僅記錄日誌
-                        System.Diagnostics.Debug.WriteLine($"補做同步失敗: {syncEx.Message}");
+                        // 補做失敗不應影響授權結果，僅記錄日誌
+                        System.Diagnostics.Debug.WriteLine($"授權後補做通知失敗: {syncEx.Message}");
                     }
 
-                    return Ok(new { message = "Google 日曆授權成功！以後您的預約將自動同步。" });
+                    return Ok(new { message = "Google 授權成功！以後您的預約將自動同步並發送郵件通知。" });
                 }
                 return BadRequest(new { message = "授權失敗：Google 拒絕了換票請求，請檢查 ClientSecret 或 RedirectUri" });
             }
