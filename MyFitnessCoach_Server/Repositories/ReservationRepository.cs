@@ -163,7 +163,7 @@ namespace MyFitnessCoach_Server.Repositories
                 MemberId = memberId,
                 ShiftId = shift.Id,
                 CreateAt = DateTime.Now,
-                Status = "已預約",
+                Status = dto.PaymentMethod == "CreditCard" ? "待付款" : "已預約",
                 PaymentMethod = dto.PaymentMethod,
                 Target = dto.Target ?? dto.Note,
                 Price = dto.PaymentMethod == "Points" ? 0 : 1200, 
@@ -269,7 +269,7 @@ namespace MyFitnessCoach_Server.Repositories
                 .Include(ro => ro.Shift)
                 .ThenInclude(s => s.Instructor)
                 .ThenInclude(i => i.User)
-                .Where(ro => ro.MemberId == memberId)
+                .Where(ro => ro.MemberId == memberId && ro.Status != "待付款")
                 .OrderByDescending(ro => ro.Shift.ScheduleDate)
                 .ThenByDescending(ro => ro.Shift.TimeSlot)
                 .Select(ro => new ReservationDto

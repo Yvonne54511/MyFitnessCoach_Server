@@ -19,9 +19,16 @@ namespace MyFitnessCoach_Server.Controllers
         public async Task<ActionResult<IEnumerable<ReservationDto>>> GetMyReservations()
         {
             var memberIdClaim = User.FindFirst("MemberId")?.Value;
-            if (string.IsNullOrEmpty(memberIdClaim) || !int.TryParse(memberIdClaim, out int memberId))
+            int memberId;
+
+            if (!string.IsNullOrEmpty(memberIdClaim) && int.TryParse(memberIdClaim, out int mid))
             {
-                return Unauthorized(new { message = "請先登入會員" });
+                memberId = mid;
+            }
+            else
+            {
+                // 訪客模式：預設為 MemberId = 6
+                memberId = 6;
             }
 
             var reservations = await _service.GetMemberReservationsAsync(memberId);
@@ -52,6 +59,8 @@ namespace MyFitnessCoach_Server.Controllers
             var (success, reservationId) = await _service.CreateReservationAsync(memberId, dto);
             if (success)
             {
+                // 修正：如果選擇信用卡，前端需要跳轉，狀態應先設為待付款（這部分在 Repository 內已處理或需配合）
+                // 檢查 Repository 是否已將狀態設為已預約，若是信用卡則應改為待付款
                 string message = dto.PaymentMethod == "CreditCard" ? "預約建立中，請完成付款" : "預約成功";
                 return Ok(new { message, reservationId });
             }
