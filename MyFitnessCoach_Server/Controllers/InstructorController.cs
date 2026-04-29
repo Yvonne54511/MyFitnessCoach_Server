@@ -45,43 +45,53 @@ namespace MyFitnessCoach_Server.Controllers
 
 		[HttpGet("Image/{id}")]
 		public async Task<IActionResult> GetImage(int id)
-{
-	try
-	{
-		// 1. 取得專案根目錄
-		string rootPath = _env.ContentRootPath;
-
-		// 2. 預設圖片路徑 (仍在 StaticFiles 下)
-		string noImgPath = Path.Combine(rootPath, "StaticFiles", "images", "NoImage.jpg");
-
-		// 3. 從資料庫取得路徑 (例如: /img/instructors/xxx.png)
-		var instructor = await _service.GetInstructorByIdAsync(id);
-		string dbPath = instructor?.ImageUrl ?? "";
-
-		// 4. 拼接實體路徑 (直接用資料庫路徑拼接根目錄，去除開頭斜線)
-		string relativePath = dbPath.TrimStart('/');
-		string fullPath = Path.Combine(rootPath, relativePath);
-
-		// 5. 檢查與讀取
-		if (!string.IsNullOrEmpty(dbPath) && System.IO.File.Exists(fullPath))
 		{
-			// 根據副檔名判斷 MIME
-			string contentType = fullPath.EndsWith(".png") ? "image/png" : "image/jpeg";
-			return PhysicalFile(fullPath, contentType);
-		}
+			try
+			{
+				// 1. 取得專案根目錄
+				string rootPath = _env.ContentRootPath;
 
-		// 6. 備援：回傳預設圖
-		if (System.IO.File.Exists(noImgPath))
-		{
-			return PhysicalFile(noImgPath, "image/jpeg");
-		}
+				// 2. 預設圖片路徑
+				string noImgPath = Path.Combine(rootPath, "StaticFiles", "images", "NoImage.jpg");
 
-		return NotFound("Image not found on server.");
-	}
-	catch (Exception ex)
-	{
-		return StatusCode(500, $"Internal server error: {ex.Message}");
-	}
-}
+				// 3. 從資料庫取得路徑 (例如: /img/instructors/xxx.png)
+				var instructor = await _service.GetInstructorByIdAsync(id);
+				string dbPath = instructor?.ImageUrl ?? "";
+
+				// 4. 拼接實體路徑
+				string fullPath = "";
+				if (!string.IsNullOrEmpty(dbPath))
+				{
+					// 修正：如果路徑以 /img/ 開頭，實體路徑是在 StaticFiles 下
+					if (dbPath.StartsWith("/img/"))
+					{
+						fullPath = Path.Combine(rootPath, "StaticFiles", dbPath.TrimStart('/'));
+					}
+					else
+					{
+						fullPath = Path.Combine(rootPath, dbPath.TrimStart('/'));
+					}
+				}
+
+				// 5. 檢查與讀取
+				if (!string.IsNullOrEmpty(fullPath) && System.IO.File.Exists(fullPath))
+				{
+					string contentType = fullPath.EndsWith(".png") ? "image/png" : "image/jpeg";
+					return PhysicalFile(fullPath, contentType);
+				}
+
+				// 6. 備援：回傳預設圖
+				if (System.IO.File.Exists(noImgPath))
+				{
+					return PhysicalFile(noImgPath, "image/jpeg");
+				}
+
+				return NotFound("Image not found on server.");
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, $"Internal server error: {ex.Message}");
+			}
+		}
 	}
 }

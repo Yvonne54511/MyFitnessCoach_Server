@@ -35,7 +35,7 @@ namespace MyFitnessCoach_Server.Models.Services
         {
             try {
                 var dir = Path.GetDirectoryName(_filePath);
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                if (dir != null && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
                 var data = _likes.ToDictionary(k => k.Key, v => v.Value.ToList());
                 File.WriteAllText(_filePath, JsonSerializer.Serialize(data));
             } catch { }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyFitnessCoach_Server.Models.EfModels;
+using MyFitnessCoach_Server.Models.Services;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -20,10 +21,12 @@ namespace MyFitnessCoach_Server.Controllers
         private readonly string _frontendUrl;
 
         private readonly MyFitnessCoachDbContext _context;
+        private readonly ReservationService _reservationService;
 
-        public PaymentApiController(MyFitnessCoachDbContext context, IConfiguration config)
+        public PaymentApiController(MyFitnessCoachDbContext context, IConfiguration config, ReservationService reservationService)
         {
             _context     = context;
+            _reservationService = reservationService;
             _merchantID  = config["ECPay:MerchantID"] ?? throw new InvalidOperationException("ECPay:MerchantID 未設定");
             _hashKey     = config["ECPay:HashKey"]     ?? throw new InvalidOperationException("ECPay:HashKey 未設定");
             _hashIV      = config["ECPay:HashIV"]      ?? throw new InvalidOperationException("ECPay:HashIV 未設定");
@@ -358,13 +361,8 @@ namespace MyFitnessCoach_Server.Controllers
                 string customField3 = form["CustomField3"].ToString();
                 if (rtnCode == "1" && int.TryParse(customField3, out int cbReservationId) && cbReservationId > 0)
                 {
-                    var reservation = await _context.ReserveOrders
-                        .FirstOrDefaultAsync(r => r.Id == cbReservationId && r.Status == "待付款");
-                    if (reservation != null)
-                    {
-                        reservation.Status = "已預約";
-                        await _context.SaveChangesAsync();
-                    }
+                    // 使用 Service 處理：更新狀態、發信、同步日曆
+                    await _reservationService.CompleteReservationAsync(cbReservationId);
                 }
 
                 // ── 處理商品訂單：優先用 MerchantTradeNo，備援用 CustomField2 ──
@@ -478,14 +476,10 @@ namespace MyFitnessCoach_Server.Controllers
                 string resultCustomField3 = form["CustomField3"].ToString();
                 if (macValid && rtnCode == "1" && int.TryParse(resultCustomField3, out int resultReservationId) && resultReservationId > 0)
                 {
-                    var reservation = await _context.ReserveOrders
-                        .FirstOrDefaultAsync(r => r.Id == resultReservationId && r.Status == "待付款");
-                    if (reservation != null)
-                    {
-                        reservation.Status = "已預約";
-                        await _context.SaveChangesAsync();
-                    }
+                    // 使用 Service 處理：更新狀態、發信、同步日曆
+                    await _reservationService.CompleteReservationAsync(resultReservationId);
                 }
+
 
                 // ── 處理商品訂單：優先用 MerchantTradeNo，備援用 CustomField2 ──
                 if (macValid && rtnCode == "1")

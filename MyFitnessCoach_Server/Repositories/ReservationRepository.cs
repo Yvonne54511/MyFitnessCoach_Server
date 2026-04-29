@@ -7,7 +7,7 @@ namespace MyFitnessCoach_Server.Repositories
     public interface IReservationRepository
     {
         Task<IEnumerable<ReservationDto>> GetByMemberIdAsync(int memberId);
-        Task<(bool Success, ReserveOrder Order)> CreateAsync(int memberId, CreateReservationDto dto);
+        Task<(bool Success, ReserveOrder? Order)> CreateAsync(int memberId, CreateReservationDto dto);
         Task<(bool Success, string Message)> CancelAsync(int memberId, int reservationId);
     }
 
@@ -116,7 +116,7 @@ namespace MyFitnessCoach_Server.Repositories
             return (true, "預約已成功取消");
         }
 
-        public async Task<(bool Success, ReserveOrder Order)> CreateAsync(int memberId, CreateReservationDto dto)
+        public async Task<(bool Success, ReserveOrder? Order)> CreateAsync(int memberId, CreateReservationDto dto)
         {
             if (!DateOnly.TryParse(dto.Date, out DateOnly scheduleDate))
             {
@@ -129,6 +129,34 @@ namespace MyFitnessCoach_Server.Repositories
                                           s.TimeSlot == dto.Time);
 
             if (shift == null || shift.IsBooked) return (false, null);
+
+            // 時間過期檢查
+            var now = DateTime.Now;
+            var today = DateOnly.FromDateTime(now);
+            if (scheduleDate < today)
+            {
+                return (false, null);
+            }
+            if (scheduleDate == today)
+            {
+                // 解析 TimeSlot，例如 "09-10 (早)" -> 取 10
+                var match = System.Text.RegularExpressions.Regex.Match(dto.Time, @"-(\d+)");
+                if (match.Success)
+                {
+                    int endHour = int.Parse(match.Groups[1].Value);
+                    if (now.Hour >= endHour) return (false, null);
+                }
+                else
+                {
+                    // 若無結束時間，嘗試取開始時間
+                    match = System.Text.RegularExpressions.Regex.Match(dto.Time, @"(\d+)");
+                    if (match.Success)
+                    {
+                        int startHour = int.Parse(match.Groups[1].Value);
+                        if (now.Hour >= startHour) return (false, null);
+                    }
+                }
+            }
 
             var order = new ReserveOrder
             {
@@ -242,7 +270,7 @@ namespace MyFitnessCoach_Server.Repositories
                 .Include(ro => ro.Shift)
                 .ThenInclude(s => s.Instructor)
                 .ThenInclude(i => i.User)
-                .Where(ro => ro.MemberId == memberId)
+                .Where(ro => ro.MemberId == memberId && ro.Status != "待付款")
                 .OrderByDescending(ro => ro.Shift.ScheduleDate)
                 .ThenByDescending(ro => ro.Shift.TimeSlot)
                 .Select(ro => new ReservationDto

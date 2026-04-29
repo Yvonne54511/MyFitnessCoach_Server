@@ -19,21 +19,45 @@ namespace MyFitnessCoach_Server.Controllers
         [HttpGet("Info")]
         public async Task<ActionResult<MemberInfoDto>> GetMemberInfo()
         {
-            // 模擬目前登入者為 MemberId = 1
+            // 1. 優先從 Claims 取得 MemberId
             var memberIdClaim = User.FindFirst("MemberId")?.Value;
-            int memberId = (!string.IsNullOrEmpty(memberIdClaim) && int.TryParse(memberIdClaim, out int id)) ? id : 1;
+            int memberId = 0;
+
+            if (!string.IsNullOrEmpty(memberIdClaim) && int.TryParse(memberIdClaim, out int mid))
+            {
+                memberId = mid;
+            }
+            else
+            {
+                // 2. 如果沒有 MemberId Claim，檢查是否有 UserId (可能剛註冊尚未在 Token 更新 MemberId)
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int uid))
+                {
+                    var memberRecord = await _db.Members.FirstOrDefaultAsync(m => m.UserId == uid);
+                    if (memberRecord != null)
+                    {
+                        memberId = memberRecord.Id;
+                    }
+                }
+            }
+
+            // 3. 如果依然沒找到，則視為訪客，預設為 MemberId = 6 (對應 UserId 13)
+            if (memberId == 0)
+            {
+                memberId = 6;
+            }
 
             var member = await _db.Members
-                .Include(m => m.User)       // 修正這裡為 m.User
+                .Include(m => m.User)
                 .Include(m => m.UserWallet)
                 .FirstOrDefaultAsync(m => m.Id == memberId);
 
-            if (member == null) return NotFound();
+            if (member == null) return NotFound("找不到該會員資訊");
 
             return Ok(new MemberInfoDto
             {
                 Id = member.Id,
-                Name = member.User?.UserName ?? "測試用戶",
+                Name = member.User?.UserName ?? "訪客",
                 Avatar = member.ImageUrl, // 使用 Member 表中的 ImageUrl
                 Points = member.UserWallet?.CurrentBalance ?? 0,
                 Phone = member.User?.Mobile,

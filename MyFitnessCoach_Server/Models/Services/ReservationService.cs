@@ -31,82 +31,104 @@ namespace MyFitnessCoach_Server.Models.Services
 
             if (result.Success && result.Order != null && dto.PaymentMethod != "CreditCard")
             {
-                try
-                {
-                    // 1. 取得發信及同步所需的會員與使用者資料
-                    var member = await _db.Members
-                        .Include(m => m.User)
-                        .FirstOrDefaultAsync(m => m.Id == memberId);
-                    
-                    var memberUser = member?.User;
-                    var instructor = await _db.Instructors
-                        .Include(i => i.User)
-                        .FirstOrDefaultAsync(i => i.Id == dto.InstructorId);
-
-                    if (memberUser != null && !string.IsNullOrEmpty(memberUser.Email))
-                    {
-                        // 2. 解析時間
-                        DateTime startTime;
-                        var rawDate = DateTime.Parse(dto.Date);
-                        var rawTime = dto.Time.Split('-')[0].Trim();
-                        if (rawTime.Contains("(")) rawTime = rawTime.Split('(')[0].Trim();
-                        
-                        if (int.TryParse(rawTime, out int hour))
-                        {
-                            startTime = new DateTime(rawDate.Year, rawDate.Month, rawDate.Day, hour, 0, 0);
-                        }
-                        else
-                        {
-                            startTime = DateTime.Parse($"{dto.Date} {rawTime}");
-                        }
-
-                        // 3. 非同步發送郵件
-                        try 
-                        {
-                            await _emailService.SendReservationConfirmationEmailAsync(
-                                memberUser.Email,
-                                memberUser.UserName,
-                                instructor?.User?.UserName ?? "教練",
-                                startTime,
-                                dto.Target ?? "一般健身諮詢"
-                            );
-                        }
-                        catch (Exception ex) 
-                        {
-                            System.Diagnostics.Debug.WriteLine($"郵件發送失敗: {ex.Message}");
-                        }
-
-                        // 4. 嘗試同步到 Google 日曆 (如果使用者已授權)
-                        try 
-                        {
-                            var googleEventId = await _googleService.AddEventAsync(
-                                memberUser.Id,
-                                $"MyFitnessCoach 課程 - 教練: {instructor?.User?.UserName}",
-                                $"您的預約目標: {dto.Target ?? "一般健身諮詢"}",
-                                startTime,
-                                startTime.AddHours(1)
-                            );
-
-                            if (!string.IsNullOrEmpty(googleEventId))
-                            {
-                                // 關鍵：直接操作剛剛建立的 Order 物件，確保 100% 寫入
-                                result.Order.GoogleEventId = googleEventId;
-                                await _db.SaveChangesAsync();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"日曆同步失敗: {ex.Message}");
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"主流程異常: {ex.Message}");
-                }
+                await CompleteReservationAsync(result.Order.Id);
             }
 
             return (result.Success, result.Order?.Id ?? 0);
+        }
+
+        public async Task<bool> CompleteReservationAsync(int reservationId)
+        {
+            try
+            {
+                // 1. 取得預約紀錄與相關導覽屬性
+                var order = await _db.ReserveOrders
+                    .Include(ro => ro.Member).ThenInclude(m => m.User)
+                    .Include(ro => ro.Shift).ThenInclude(s => s.Instructor).ThenInclude(i => i.User)
+                    .FirstOrDefaultAsync(ro => ro.Id == reservationId);
+
+                if (order == null) return false;
+
+                // 2. 更新狀態為「已預約」（如果原本是「待付款」）
+                if (order.Status == "待付款")
+                {
+                    order.Status = "已預約";
+                    await _db.SaveChangesAsync();
+                }
+                // 避免重複執行（例如 Callback 與 Result 同時觸發）
+                else if (order.Status == "已預約" && !string.IsNullOrEmpty(order.GoogleEventId))
+                {
+                    return true;
+                }
+
+                if (order.Status != "已預約") return false;
+
+                // 3. 取得發信及同步所需的會員與使用者資料
+                var memberUser = order.Member?.User;
+                var instructorUser = order.Shift?.Instructor?.User;
+
+                if (memberUser != null && !string.IsNullOrEmpty(memberUser.Email))
+                {
+                    // 4. 解析時間
+                    DateTime startTime;
+                    var scheduleDate = order.Shift.ScheduleDate;
+                    var rawTime = order.Shift.TimeSlot.Split('-')[0].Trim();
+                    if (rawTime.Contains("(")) rawTime = rawTime.Split('(')[0].Trim();
+
+                    if (int.TryParse(rawTime, out int hour))
+                    {
+                        startTime = new DateTime(scheduleDate.Year, scheduleDate.Month, scheduleDate.Day, hour, 0, 0);
+                    }
+                    else
+                    {
+                        startTime = DateTime.Parse($"{scheduleDate.ToString("yyyy-MM-dd")} {rawTime}");
+                    }
+
+                    // 5. 非同步發送郵件
+                    try
+                    {
+                        await _emailService.SendReservationConfirmationEmailAsync(
+                            memberUser.Email,
+                            memberUser.UserName,
+                            instructorUser?.UserName ?? "教練",
+                            startTime,
+                            order.Target ?? "一般健身諮詢"
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"郵件發送失敗: {ex.Message}");
+                    }
+
+                    // 6. 嘗試同步到 Google 日曆 (如果使用者已授權)
+                    try
+                    {
+                        var googleEventId = await _googleService.AddEventAsync(
+                            memberUser.Id,
+                            $"MyFitnessCoach 課程 - 教練: {instructorUser?.UserName}",
+                            $"您的預約目標: {order.Target ?? "一般健身諮詢"}",
+                            startTime,
+                            startTime.AddHours(1)
+                        );
+
+                        if (!string.IsNullOrEmpty(googleEventId))
+                        {
+                            order.GoogleEventId = googleEventId;
+                            await _db.SaveChangesAsync();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"日曆同步失敗: {ex.Message}");
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"主流程異常: {ex.Message}");
+                return false;
+            }
         }
 
         public async Task<(bool Success, string Message)> CancelReservationAsync(int memberId, int reservationId)
