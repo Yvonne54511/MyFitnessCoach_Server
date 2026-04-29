@@ -74,8 +74,8 @@ namespace MyFitnessCoach_Server.Controllers
 				var product = await _productService.GetProductAsync(id);
 				string dbPath = product?.ImageUrl ?? "";
 
-				// 4. 路徑修正：DB 存的是 /images/products/... 但實體資料夾叫 /img/products/
-				string mappedPath = dbPath.Replace("/images/", "/img/");
+				// 4. 路徑修正：DB 存的是 /images/products/... 實體檔在 StaticFiles/img/products/
+				string mappedPath = dbPath.Replace("/images/", "/StaticFiles/img/");
 
 				// 5. 拼接實體路徑 (去除開頭斜線)
 				string relativePath = mappedPath.TrimStart('/');

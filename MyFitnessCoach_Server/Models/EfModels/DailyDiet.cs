@@ -5,27 +5,29 @@ using System.Collections.Generic;
 
 namespace MyFitnessCoach_Server.Models.EfModels;
 
-public partial class BodyRecord
+public partial class DailyDiet
 {
     public int Id { get; set; }
 
     public int MemberId { get; set; }
 
-    public double Weight { get; set; }
+    public DateOnly? EatDT { get; set; }
 
-    public decimal? BodyFat { get; set; }
+    public string MealType { get; set; }
 
-    public decimal? SkeletalMuscle { get; set; }
+    public int? FoodId { get; set; }
 
-    public decimal? WaistCircumference { get; set; }
+    public decimal? Amount { get; set; }
 
-    public DateTime CreateAt { get; set; }
+    public string Measure { get; set; }
+
+    public DateTime CreatedAt { get; set; }
 
     public string Note { get; set; }
 
     public string ImageUrl { get; set; }
 
-    public decimal? HipCircumference { get; set; }
+    public virtual Food Food { get; set; }
 
     public virtual Member Member { get; set; }
 }
