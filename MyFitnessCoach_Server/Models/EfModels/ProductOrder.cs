@@ -31,7 +31,14 @@ public partial class ProductOrder
 
     public decimal? FinalAmount { get; set; }
 
-    // 綠界交易編號，Callback 時用來精確比對此筆訂單
+    public int PaymentMethod { get; set; }
+
+    public string StoreId { get; set; }
+
+    public string StoreName { get; set; }
+
+    public string LogisticsOrderNo { get; set; }
+
     public string MerchantTradeNo { get; set; }
 
     public virtual Member Member { get; set; }

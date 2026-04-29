@@ -19,6 +19,8 @@ public partial class MyFitnessCoachDbContext : DbContext
 
     public virtual DbSet<CartItem> CartItems { get; set; }
 
+    public virtual DbSet<Coupon> Coupons { get; set; }
+
     public virtual DbSet<Department> Departments { get; set; }
 
     public virtual DbSet<Employee> Employees { get; set; }
@@ -54,6 +56,8 @@ public partial class MyFitnessCoachDbContext : DbContext
     public virtual DbSet<LeaveType> LeaveTypes { get; set; }
 
     public virtual DbSet<Member> Members { get; set; }
+
+    public virtual DbSet<MemberCoupon> MemberCoupons { get; set; }
 
     public virtual DbSet<MemberViolation> MemberViolations { get; set; }
 
@@ -169,6 +173,34 @@ public partial class MyFitnessCoachDbContext : DbContext
                 .HasConstraintName("FK_CartItems_Products");
         });
 
+        modelBuilder.Entity<Coupon>(entity =>
+        {
+            entity.HasIndex(e => e.Code, "UX_Coupons_Code").IsUnique();
+
+            entity.Property(e => e.BannerImageUrl).HasMaxLength(500);
+            entity.Property(e => e.Code)
+                .IsRequired()
+                .HasMaxLength(32);
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(0)
+                .HasDefaultValueSql("(getdate())")
+                .HasAnnotation("Relational:DefaultConstraintName", "DF_Coupons_CreatedAt");
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.DiscountValue).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.EndAt).HasPrecision(0);
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .HasAnnotation("Relational:DefaultConstraintName", "DF_Coupons_IsActive");
+            entity.Property(e => e.MaxDiscount).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.MinSpend)
+                .HasAnnotation("Relational:DefaultConstraintName", "DF_Coupons_MinSpend")
+                .HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+            entity.Property(e => e.StartAt).HasPrecision(0);
+        });
+
         modelBuilder.Entity<Department>(entity =>
         {
             entity.Property(e => e.Name)
@@ -207,7 +239,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Food>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Foods__3214EC0755F29CFB");
+            entity.HasKey(e => e.Id).HasName("PK__Foods__3214EC07CC4B328B");
 
             entity.Property(e => e.FoodName)
                 .IsRequired()
@@ -221,7 +253,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<FoodCategory>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__FoodCate__3214EC07C7F03968");
+            entity.HasKey(e => e.Id).HasName("PK__FoodCate__3214EC078E174E43");
 
             entity.Property(e => e.CategoryName)
                 .IsRequired()
@@ -231,7 +263,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<FoodRecord>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__FoodReco__3214EC076E18C41B");
+            entity.HasKey(e => e.Id).HasName("PK__FoodReco__3214EC072B55D792");
 
             entity.Property(e => e.EatDT)
                 .HasPrecision(0)
@@ -256,7 +288,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Function>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Function__3214EC0747238338");
+            entity.HasKey(e => e.Id).HasName("PK__Function__3214EC07F5DDBBE3");
 
             entity.Property(e => e.Api_path).HasMaxLength(255);
             entity.Property(e => e.FunctionName)
@@ -266,7 +298,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Holiday>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Holidays__3214EC0706822174");
+            entity.HasKey(e => e.Id).HasName("PK__Holidays__3214EC077ABBA05A");
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.Name)
@@ -276,7 +308,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Instructor>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Instruct__3214EC072B9C5386");
+            entity.HasKey(e => e.Id).HasName("PK__Instruct__3214EC07BE0F24C0");
 
             entity.Property(e => e.CancelCount).HasDefaultValue(1);
             entity.Property(e => e.Description)
@@ -298,7 +330,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<InstructorWallet>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Instruct__3214EC075B7F1AB6");
+            entity.HasKey(e => e.Id).HasName("PK__Instruct__3214EC07AA3721A2");
 
             entity.Property(e => e.CurrentBalance).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.LastUpdated).HasPrecision(0);
@@ -311,7 +343,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<InstructorWalletDetail>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Instruct__3214EC070A23C7F0");
+            entity.HasKey(e => e.Id).HasName("PK__Instruct__3214EC0793E4AC7F");
 
             entity.Property(e => e.Category)
                 .IsRequired()
@@ -330,7 +362,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<KeyWord>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__KeyWords__3214EC07E6B62C1E");
+            entity.HasKey(e => e.Id).HasName("PK__KeyWords__3214EC07F0F823B3");
 
             entity.Property(e => e.Word)
                 .IsRequired()
@@ -339,7 +371,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<LeaveApprovalDelegation>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__LeaveApp__3214EC07F6B58303");
+            entity.HasKey(e => e.Id).HasName("PK__LeaveApp__3214EC07F6F39EA2");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
@@ -403,7 +435,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<LeaveBalanceHistory>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__LeaveBal__3214EC071DE2A247");
+            entity.HasKey(e => e.Id).HasName("PK__LeaveBal__3214EC073A85047F");
 
             entity.Property(e => e.ChangeDays).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.ChangeType)
@@ -479,7 +511,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Member>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Members__3214EC075CCE5F71");
+            entity.HasKey(e => e.Id).HasName("PK__Members__3214EC0724CFF017");
 
             entity.Property(e => e.ActivityLevel).HasMaxLength(50);
             entity.Property(e => e.CancelCount).HasDefaultValue(1);
@@ -493,9 +525,36 @@ public partial class MyFitnessCoachDbContext : DbContext
                 .HasConstraintName("FK_Members_Users");
         });
 
+        modelBuilder.Entity<MemberCoupon>(entity =>
+        {
+            entity.HasIndex(e => new { e.MemberId, e.CouponId, e.ClaimYearMonth }, "UX_MemberCoupons_Member_Coupon_Month").IsUnique();
+
+            entity.Property(e => e.ClaimYearMonth)
+                .HasMaxLength(7)
+                .IsUnicode(false)
+                .HasComputedColumnSql("(CONVERT([char](7),[ClaimedAt],(120)))", true)
+                .IsFixedLength();
+            entity.Property(e => e.ClaimedAt)
+                .HasPrecision(0)
+                .HasDefaultValueSql("(getdate())")
+                .HasAnnotation("Relational:DefaultConstraintName", "DF_MemberCoupons_ClaimedAt");
+            entity.Property(e => e.ExpiresAt).HasPrecision(0);
+            entity.Property(e => e.UsedAt).HasPrecision(0);
+
+            entity.HasOne(d => d.Coupon).WithMany(p => p.MemberCoupons)
+                .HasForeignKey(d => d.CouponId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MemberCoupons_Coupons");
+
+            entity.HasOne(d => d.Member).WithMany(p => p.MemberCoupons)
+                .HasForeignKey(d => d.MemberId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MemberCoupons_Members");
+        });
+
         modelBuilder.Entity<MemberViolation>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__MemberVi__3214EC07E494DE88");
+            entity.HasKey(e => e.Id).HasName("PK__MemberVi__3214EC07AC935036");
 
             entity.HasIndex(e => e.MemberId, "UQ_MemberViolations_MemberId").IsUnique();
 
@@ -511,7 +570,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Notifica__3214EC0789CB243C");
+            entity.HasKey(e => e.Id).HasName("PK__Notifica__3214EC077531166B");
 
             entity.Property(e => e.Content).IsRequired();
             entity.Property(e => e.CreatedAt)
@@ -536,7 +595,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Nutrient>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Nutrient__3214EC07E9DE9258");
+            entity.HasKey(e => e.Id).HasName("PK__Nutrient__3214EC076122B008");
 
             entity.Property(e => e.Measure)
                 .IsRequired()
@@ -556,6 +615,7 @@ public partial class MyFitnessCoachDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasAnnotation("Relational:DefaultConstraintName", "DF__PointOrde__Creat__70DDC3D8");
             entity.Property(e => e.DiscountedPrice).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.MerchantTradeNo).HasMaxLength(20);
             entity.Property(e => e.OriginalPrice).HasColumnType("decimal(18, 0)");
 
             entity.HasOne(d => d.Member).WithMany(p => p.PointOrders)
@@ -571,18 +631,18 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<PointsRecordDetail>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PointsRe__3214EC074FFFBBE8");
+            entity.HasKey(e => e.Id).HasName("PK__PointsRe__3214EC07FAF428E1");
 
             entity.Property(e => e.CreateAt)
                 .HasPrecision(0)
-                .HasDefaultValueSql("(getdate())");
+                .HasDefaultValueSql("(getdate())")
+                .HasAnnotation("Relational:DefaultConstraintName", "DF__PointsRec__Creat__367C1819");
             entity.Property(e => e.MerchandiseCategory)
                 .IsRequired()
                 .HasMaxLength(50);
 
             entity.HasOne(d => d.PointOrder).WithMany(p => p.PointsRecordDetails)
                 .HasForeignKey(d => d.PointOrderId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_PointsRecordDetails_PointOrders");
 
             entity.HasOne(d => d.ReserveOrder).WithMany(p => p.PointsRecordDetails)
@@ -616,7 +676,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<ProductCategory>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__ProductC__3214EC07F340808E");
+            entity.HasKey(e => e.Id).HasName("PK__ProductC__3214EC071EEBC892");
 
             entity.Property(e => e.CategoryName)
                 .IsRequired()
@@ -626,7 +686,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<ProductOrder>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__ProductO__3214EC076CBC0109");
+            entity.HasKey(e => e.Id).HasName("PK__ProductO__3214EC0759711193");
 
             entity.Property(e => e.Address)
                 .IsRequired()
@@ -636,7 +696,9 @@ public partial class MyFitnessCoachDbContext : DbContext
             entity.Property(e => e.FinalAmount)
                 .HasComputedColumnSql("([OriginalAmount]-[DiscountAmount])", false)
                 .HasColumnType("decimal(19, 0)");
+            entity.Property(e => e.LogisticsOrderNo).HasMaxLength(20);
             entity.Property(e => e.Memo).HasMaxLength(50);
+            entity.Property(e => e.MerchantTradeNo).HasMaxLength(25);
             entity.Property(e => e.Mobile)
                 .IsRequired()
                 .HasMaxLength(20)
@@ -645,7 +707,8 @@ public partial class MyFitnessCoachDbContext : DbContext
             entity.Property(e => e.Receiver)
                 .IsRequired()
                 .HasMaxLength(30);
-            entity.Property(e => e.MerchantTradeNo).HasMaxLength(25);
+            entity.Property(e => e.StoreId).HasMaxLength(6);
+            entity.Property(e => e.StoreName).HasMaxLength(60);
 
             entity.HasOne(d => d.Member).WithMany(p => p.ProductOrders)
                 .HasForeignKey(d => d.MemberId)
@@ -655,7 +718,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<ProductOrderDetail>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__ProductO__3214EC07C1D054DC");
+            entity.HasKey(e => e.Id).HasName("PK__ProductO__3214EC07DDE6663D");
 
             entity.Property(e => e.DiscountedPrice).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.ImageURL).HasMaxLength(300);
@@ -689,18 +752,19 @@ public partial class MyFitnessCoachDbContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.RequestedAt)
                 .HasPrecision(0)
-                .HasDefaultValueSql("(getdate())");
+                .HasDefaultValueSql("(getdate())")
+                .HasAnnotation("Relational:DefaultConstraintName", "DF_RateLimitLogs_RequestedAt");
         });
 
         modelBuilder.Entity<ReserveOrder>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__ReserveO__3214EC07387E65D4");
+            entity.HasKey(e => e.Id).HasName("PK__ReserveO__3214EC07368AE248");
 
             entity.Property(e => e.CreateAt)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.GoogleEventId).HasMaxLength(100);
             entity.Property(e => e.Memorandum).HasMaxLength(100);
-            entity.Property(e => e.GoogleEventId).HasMaxLength(255);
             entity.Property(e => e.PaymentMethod)
                 .IsRequired()
                 .HasMaxLength(10);
@@ -723,7 +787,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Review>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Reviews__3214EC0732380126");
+            entity.HasKey(e => e.Id).HasName("PK__Reviews__3214EC07961A8C29");
 
             entity.Property(e => e.Comment).HasMaxLength(500);
             entity.Property(e => e.CreatedAt)
@@ -749,7 +813,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Roles__3214EC0752750EBD");
+            entity.HasKey(e => e.Id).HasName("PK__Roles__3214EC076132FF34");
 
             entity.HasIndex(e => e.RoleName, "UQ_Roles_RoleName").IsUnique();
 
@@ -760,7 +824,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<RoleFunction>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__RoleFunc__3214EC07EC508446");
+            entity.HasKey(e => e.Id).HasName("PK__RoleFunc__3214EC074716691F");
 
             entity.HasIndex(e => new { e.RoleId, e.FunctionId }, "UQ_RoleFunctions").IsUnique();
 
@@ -777,7 +841,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Shift>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Shifts__3214EC0798FAEE22");
+            entity.HasKey(e => e.Id).HasName("PK__Shifts__3214EC078D1F37A5");
 
             entity.Property(e => e.TimeSlot)
                 .IsRequired()
@@ -805,7 +869,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Users__3214EC076F59FCED");
+            entity.HasKey(e => e.Id).HasName("PK__Users__3214EC075032DB17");
 
             entity.HasIndex(e => e.Email, "UQ_Users_Email").IsUnique();
 
@@ -832,7 +896,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<UserExternalLogin>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__UserExte__3214EC076FAADA9F");
+            entity.HasKey(e => e.Id).HasName("PK__UserExte__3214EC07FD0376B5");
 
             entity.Property(e => e.LoginProvider)
                 .IsRequired()
@@ -863,7 +927,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<UserRole>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__UserRole__3214EC07E43AE623");
+            entity.HasKey(e => e.Id).HasName("PK__UserRole__3214EC0742FFD6AF");
 
             entity.HasIndex(e => new { e.UserId, e.RoleId }, "UQ_UserRoles").IsUnique();
 
@@ -880,7 +944,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<UserWallet>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__UserWall__3214EC07D7998A03");
+            entity.HasKey(e => e.Id).HasName("PK__UserWall__3214EC07CC022314");
 
             entity.HasIndex(e => e.MemberId, "UQ_UserWallets_Member").IsUnique();
 
