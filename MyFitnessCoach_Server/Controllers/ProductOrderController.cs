@@ -29,35 +29,38 @@ namespace MyFitnessCoach_Server.Controllers
             var member = await _context.Members.FirstOrDefaultAsync(m => m.UserId == userId);
             if (member == null) return Unauthorized();
 
-            var orders = await _context.ProductOrders
+            // 先從 DB 取出資料，再於記憶體中組合 ImageURL
+            // 直接使用 /api/StoreApi/ProductImage/{productId}，與 Cart/Store 頁面一致
+            var rawOrders = await _context.ProductOrders
                 .Where(o => o.MemberId == member.Id)
                 .Include(o => o.ProductOrderDetails)
                 .OrderByDescending(o => o.CreateAt)
-                .Select(o => new
-                {
-                    o.Id,
-                    o.CreateAt,
-                    o.OriginalAmount,
-                    o.DiscountAmount,
-                    o.FinalAmount,
-                    o.Status,
-                    o.PaymentMethod,
-                    o.Receiver,
-                    o.Address,
-                    o.Mobile,
-                    o.StoreName,
-                    o.LogisticsOrderNo,
-                    o.Memo,
-                    Details = o.ProductOrderDetails.Select(d => new
-                    {
-                        d.ProductName,
-                        d.UnitPrice,
-                        d.Qty,
-                        d.SubTotal,
-                        d.ImageURL,
-                    })
-                })
                 .ToListAsync();
+
+            var orders = rawOrders.Select(o => new
+            {
+                o.Id,
+                o.CreateAt,
+                o.OriginalAmount,
+                o.DiscountAmount,
+                o.FinalAmount,
+                o.Status,
+                o.PaymentMethod,
+                o.Receiver,
+                o.Address,
+                o.Mobile,
+                o.StoreName,
+                o.LogisticsOrderNo,
+                o.Memo,
+                Details = o.ProductOrderDetails.Select(d => new
+                {
+                    d.ProductName,
+                    d.UnitPrice,
+                    d.Qty,
+                    d.SubTotal,
+                    ImageURL = $"/api/StoreApi/ProductImage/{d.ProductId}",
+                })
+            });
 
             return Ok(orders);
         }

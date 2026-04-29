@@ -90,7 +90,7 @@ namespace MyFitnessCoach_Server.Repositories
                 MemberId = memberId,
                 ShiftId = shift.Id,
                 CreateAt = DateTime.Now,
-                Status = "已預約", // 修正為您的狀態：已預約
+                Status = dto.PaymentMethod == "信用卡" ? "待付款" : "已預約",
                 PaymentMethod = dto.PaymentMethod,
                 Target = dto.Target ?? dto.Note,
                 Price = 1200, 

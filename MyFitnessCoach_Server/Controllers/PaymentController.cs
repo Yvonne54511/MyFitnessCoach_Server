@@ -212,6 +212,71 @@ namespace MyFitnessCoach_Server.Controllers
         }
 
         // ──────────────────────────────────────────────────────────────
+        // POST /api/Payment/ReservationSendToEcPay
+        // 預約信用卡付款：建立綠界表單參數，CustomField3 存 reservationId
+        // ──────────────────────────────────────────────────────────────
+        [Authorize]
+        [HttpPost("ReservationSendToEcPay")]
+        public async Task<IActionResult> ReservationSendToEcPay([FromForm] int reservationId)
+        {
+            try
+            {
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(userIdStr, out int userId))
+                    return Unauthorized(new { error = "無法識別登入用戶" });
+
+                var member = await _context.Members.FirstOrDefaultAsync(m => m.UserId == userId);
+                if (member == null)
+                    return NotFound(new { error = "找不到會員資料" });
+
+                var reservation = await _context.ReserveOrders
+                    .Include(r => r.Shift)
+                    .ThenInclude(s => s.Instructor)
+                    .ThenInclude(i => i.User)
+                    .FirstOrDefaultAsync(r => r.Id == reservationId && r.MemberId == member.Id && r.Status == "待付款");
+
+                if (reservation == null)
+                    return NotFound(new { error = "找不到待付款的預約紀錄" });
+
+                int totalAmount = (int)(reservation.Price ?? 1200);
+                string instructorName = reservation.Shift?.Instructor?.User?.UserName ?? "營養師";
+                string itemName = $"營養師諮詢 - {instructorName}";
+                string tradeNo = "MFR" + DateTime.Now.ToString("yyyyMMddHHmmssfff");
+
+                var parameters = new Dictionary<string, string>
+                {
+                    { "MerchantID",        _merchantID },
+                    { "MerchantTradeNo",   tradeNo },
+                    { "MerchantTradeDate", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") },
+                    { "PaymentType",       "aio" },
+                    { "TotalAmount",       totalAmount.ToString() },
+                    { "TradeDesc",         "MyFitnessCoach_Reservation" },
+                    { "ItemName",          itemName },
+                    { "ReturnURL",         $"{_ngrokUrl}/api/Payment/Callback" },
+                    { "ClientBackURL",     $"{_frontendUrl}/reserve" },
+                    { "OrderResultURL",    $"{_ngrokUrl}/api/Payment/Result" },
+                    { "ChoosePayment",     "Credit" },
+                    { "EncryptType",       "1" },
+                    { "CustomField1",      "" },
+                    { "CustomField2",      "" },
+                    { "CustomField3",      reservationId.ToString() },
+                };
+
+                parameters["CheckMacValue"] = GenerateCheckMacValue(parameters);
+
+                return Ok(new
+                {
+                    action     = "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5",
+                    parameters
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // ──────────────────────────────────────────────────────────────
         // POST /api/Payment/Callback
         // 綠界伺服器付款完成後主動通知（ReturnURL，非瀏覽器）
         // 更新訂單狀態並將點數存入錢包
@@ -282,6 +347,19 @@ namespace MyFitnessCoach_Server.Controllers
                             });
                         }
 
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                // ── 處理預約付款（CustomField3）────────────────────────
+                string customField3 = form["CustomField3"].ToString();
+                if (rtnCode == "1" && int.TryParse(customField3, out int cbReservationId) && cbReservationId > 0)
+                {
+                    var reservation = await _context.ReserveOrders
+                        .FirstOrDefaultAsync(r => r.Id == cbReservationId && r.Status == "待付款");
+                    if (reservation != null)
+                    {
+                        reservation.Status = "已預約";
                         await _context.SaveChangesAsync();
                     }
                 }
@@ -393,6 +471,19 @@ namespace MyFitnessCoach_Server.Controllers
                     }
                 }
 
+                // ── 處理預約付款（CustomField3）────────────────────────
+                string resultCustomField3 = form["CustomField3"].ToString();
+                if (macValid && rtnCode == "1" && int.TryParse(resultCustomField3, out int resultReservationId) && resultReservationId > 0)
+                {
+                    var reservation = await _context.ReserveOrders
+                        .FirstOrDefaultAsync(r => r.Id == resultReservationId && r.Status == "待付款");
+                    if (reservation != null)
+                    {
+                        reservation.Status = "已預約";
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
                 // ── 處理商品訂單：優先用 MerchantTradeNo，備援用 CustomField2 ──
                 if (macValid && rtnCode == "1")
                 {
@@ -420,9 +511,11 @@ namespace MyFitnessCoach_Server.Controllers
             catch { /* 入帳失敗不影響頁面跳轉，錯誤由 Callback 補救 */ }
 
             // 依訂單類型跳轉不同頁面
+            string cf3Check = form["CustomField3"].ToString();
             string resultCustomField2Check = form["CustomField2"].ToString();
-            bool isProductOrder = int.TryParse(resultCustomField2Check, out _);
-            string resultPage = isProductOrder ? "checkout-result" : "lesson-result";
+            bool isReservation = int.TryParse(cf3Check, out int _reserveId) && _reserveId > 0;
+            bool isProductOrder = !isReservation && int.TryParse(resultCustomField2Check, out _);
+            string resultPage = isReservation ? "reserve-result" : (isProductOrder ? "checkout-result" : "lesson-result");
 
             return Redirect(
                 $"{_frontendUrl}/{resultPage}" +
