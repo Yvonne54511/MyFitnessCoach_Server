@@ -127,22 +127,26 @@ app.UseRouting();
 app.UseCors("MyFitnessCoach_Client");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles(); // 預設的 wwwroot (如果有)
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
         Path.Combine(builder.Environment.ContentRootPath, "StaticFiles")),
     RequestPath = "/StaticFiles"
 });
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
         Path.Combine(builder.Environment.ContentRootPath, "images")),
     RequestPath = "/images"
 });
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
-        Path.Combine(builder.Environment.ContentRootPath, "img")),
+        Path.Combine(builder.Environment.ContentRootPath, "StaticFiles", "img")),
     RequestPath = "/img"
 });
 
