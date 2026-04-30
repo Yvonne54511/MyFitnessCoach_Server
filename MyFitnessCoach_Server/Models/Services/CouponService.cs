@@ -33,8 +33,16 @@ namespace MyFitnessCoach_Server.Models.Services
 				.Select(mc => new { mc.CouponId, mc.ClaimedAt })
 				.ToListAsync();
 
+			// 該會員是否已有付款訂單(首購券判定用)
+			var hasPaidOrder = await _db.ProductOrders
+				.AsNoTracking()
+				.AnyAsync(po => po.MemberId == memberId && po.Status >= 1);
+
 			return actives.Where(c =>
 			{
+				// 首購券:已有付款訂單者直接藏起來,避免領了卻無法使用
+				if (c.Code == "WELCOME100" && hasPaidOrder) return false;
+
 				if (c.VisibleOnlyOnDayOfMonth.HasValue)
 				{
 					// 每月可重領:只擋本月已領
@@ -72,6 +80,15 @@ namespace MyFitnessCoach_Server.Models.Services
 				throw new InvalidOperationException(monthlyRecurring
 					? "您本月已領取過此優惠券"
 					: "您已領取過此優惠券");
+
+			// 首購券:已有付款訂單者不能領(deep-defense,避免直接打 API 繞過清單過濾)
+			if (coupon.Code == "WELCOME100")
+			{
+				var hasPaid = await _db.ProductOrders
+					.AsNoTracking()
+					.AnyAsync(po => po.MemberId == memberId && po.Status >= 1);
+				if (hasPaid) throw new InvalidOperationException("此券限首次消費的新會員領取");
+			}
 
 			// 個人到期日:資料驅動 — 由 Coupon.ValidDaysAfterClaim 決定
 			DateTime? expiresAt = coupon.ValidDaysAfterClaim.HasValue
