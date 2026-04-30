@@ -111,14 +111,15 @@ namespace MyFitnessCoach_Server.Models.Services
                 }
                 else if (order.Status == "已預約")
                 {
-                    // 如果已經是「已預約」，且是信用卡/線上支付（會觸發 Callback/Result 的類型）
-                    // 則代表之前已經有請求處理過了，這裡直接回傳 true，避免重複發信。
-                    if (order.PaymentMethod == "CreditCard" || order.PaymentMethod == "線上支付" || !string.IsNullOrEmpty(paymentMethod))
+                    // 如果已經是「已預約」，且已經有 GoogleEventId，則代表完全處理過了
+                    if (!string.IsNullOrEmpty(order.GoogleEventId))
                     {
-                        // 但如果是點數預約（非金流，沒 Callback），或是第一次處理，則不應在這裡回傳
-                        // 這裡為了防止金流重複發信：
-                        return true; 
+                        return true;
                     }
+                    
+                    // 如果沒有 GoogleEventId，我們應該繼續執行下方的同步邏輯
+                    // 但為了避免重複發送 Email，我們需要一個標記
+                    isFirstTimeProcessing = false; 
                 }
                 else
                 {
@@ -126,11 +127,8 @@ namespace MyFitnessCoach_Server.Models.Services
                     return false;
                 }
 
-                // 3. 避免重複執行 (已有 GoogleEventId 則代表已處理過)
-                if (!string.IsNullOrEmpty(order.GoogleEventId))
-                {
-                    return true;
-                }
+                // 3. 執行發送與同步
+                // 注意：這裡不再檢查 !string.IsNullOrEmpty(order.GoogleEventId)，因為上方已經檢查過了
 
                 // 4. 發送 Email 與 Google 同步
                 var instructorUser = order.Shift?.Instructor?.User;
@@ -167,18 +165,21 @@ namespace MyFitnessCoach_Server.Models.Services
                         startTime = scheduleDate.ToDateTime(TimeOnly.MinValue);
                     }
 
-                    // A. 發送 Email (現在不論是否授權 Google Calendar 都發送系統郵件)
-                    try
+                    // A. 發送 Email (如果是第一次處理，或是狀態轉換時發送)
+                    if (isFirstTimeProcessing)
                     {
-                        await _emailService.SendReservationConfirmationEmailAsync(
-                            toEmail,
-                            memberName,
-                            instructorUser?.UserName ?? "教練",
-                            startTime,
-                            order.Target ?? "一般健身諮詢"
-                        );
+                        try
+                        {
+                            await _emailService.SendReservationConfirmationEmailAsync(
+                                toEmail,
+                                memberName,
+                                instructorUser?.UserName ?? "教練",
+                                startTime,
+                                order.Target ?? "一般健身諮詢"
+                            );
+                        }
+                        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"郵件發送失敗: {ex.Message}"); }
                     }
-                    catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"郵件發送失敗: {ex.Message}"); }
 
                     // B. 同步到 Google 日曆 (僅當使用者有授權且非訪客時才嘗試自動同步)
                     // 訪客將透過前端手動按鈕加入日曆
@@ -197,16 +198,16 @@ namespace MyFitnessCoach_Server.Models.Services
 
                             if (!string.IsNullOrEmpty(googleEventId))
                             {
-                                // 再次從 DB 讀取最新狀態，確保沒有被其他人更新過
-                                var latestOrder = await _db.ReserveOrders.FindAsync(reservationId);
-                                if (latestOrder != null && string.IsNullOrEmpty(latestOrder.GoogleEventId))
+                                // 直接使用追蹤中的 order 物件更新，確保一致性
+                                if (string.IsNullOrEmpty(order.GoogleEventId))
                                 {
-                                    latestOrder.GoogleEventId = googleEventId;
+                                    order.GoogleEventId = googleEventId;
                                     await _db.SaveChangesAsync();
+                                    System.Diagnostics.Debug.WriteLine($"[Google Sync] 已成功將 EventId {googleEventId} 寫入預約紀錄 ID {reservationId}");
                                 }
-                                else if (latestOrder != null && !string.IsNullOrEmpty(latestOrder.GoogleEventId))
+                                else if (order.GoogleEventId != googleEventId)
                                 {
-                                    // 如果不幸發生重複建立，刪除多餘的那個
+                                    // 如果不幸發生重複建立且 ID 不同，刪除多餘的那個
                                     await _googleService.DeleteEventAsync(order.Member.UserId, googleEventId);
                                 }
                             }

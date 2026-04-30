@@ -57,12 +57,14 @@ namespace MyFitnessCoach_Server.Controllers
             return Ok(new MemberInfoDto
             {
                 Id = member.Id,
-                Name = member.User?.UserName ?? "訪客",
+                Name = member.User?.UserName ?? "未設定",
+                Email = member.User?.Email,
                 Avatar = member.ImageUrl, // 使用 Member 表中的 ImageUrl
                 Points = member.UserWallet?.CurrentBalance ?? 0,
                 Phone = member.User?.Mobile,
                 CancelCount = member.CancelCount
             });
+
         }
     }
 }

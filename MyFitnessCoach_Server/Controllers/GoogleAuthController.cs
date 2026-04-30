@@ -78,7 +78,7 @@ namespace MyFitnessCoach_Server.Controllers
                     {
                         var latestReservation = await _db.ReserveOrders
                             .Include(ro => ro.Member)
-                            .Where(ro => ro.Member.UserId == userId)
+                            .Where(ro => ro.Member.UserId == userId && ro.Status == "已預約")
                             .OrderByDescending(ro => ro.CreateAt)
                             .FirstOrDefaultAsync();
 
