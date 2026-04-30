@@ -87,18 +87,18 @@ namespace MyFitnessCoach_Server.Repositories
 
 		public async Task<IEnumerable<AvailabilityDto>> GetAvailabilityByInstructorIdAsync(int instructorId)
 		{
-			return await _context.Shifts
+			var shifts = await _context.Shifts
 				.Where(s => s.InstructorId == instructorId)
 				.AsNoTracking()
-				.Select(s => new AvailabilityDto
-				{
-					ShiftId = s.Id,
-					Date = s.ScheduleDate.ToDateTime(TimeOnly.MinValue),
-					TimeSlot = s.TimeSlot,
-					// 直接使用實體中的 IsBooked 欄位
-					IsReserved = s.IsBooked
-				})
 				.ToListAsync();
+
+			return shifts.Select(s => new AvailabilityDto
+			{
+				ShiftId = s.Id,
+				Date = s.ScheduleDate.ToString("yyyy-MM-dd"),
+				TimeSlot = s.TimeSlot,
+				IsReserved = s.IsBooked
+			});
 		}
 	}
 }
