@@ -9,4 +9,5 @@ public interface IDailyDietService
     Task<FoodRecordDto?> UpdateFoodRecordAsync(int memberId, int id, UpdateFoodRecordRequest request);
     Task<bool> DeleteFoodRecordAsync(int memberId, int id);
     Task<DailyDietPageDto> CopyDailyDietAsync(int memberId, CopyDailyDietRequest request);
+    Task<int> UpdateWaterLogAsync(int memberId, UpdateWaterLogRequest request);
 }

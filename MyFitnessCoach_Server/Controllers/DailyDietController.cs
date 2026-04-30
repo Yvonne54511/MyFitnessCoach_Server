@@ -62,6 +62,17 @@ public class DailyDietController : ControllerBase
         return NoContent();
     }
 
+    // PUT /api/DailyDiet/water-log
+    [HttpPut("water-log")]
+    public async Task<IActionResult> UpdateWaterLog([FromBody] UpdateWaterLogRequest request)
+    {
+        var memberId = GetMemberId();
+        if (memberId is null) return Unauthorized();
+
+        var amount = await _service.UpdateWaterLogAsync(memberId.Value, request);
+        return Ok(new { logDate = request.LogDate, amount });
+    }
+
     // POST /api/DailyDiet/copy-from-date
     [HttpPost("copy-from-date")]
     public async Task<ActionResult<DailyDietPageDto>> CopyFromDate([FromBody] CopyDailyDietRequest request)

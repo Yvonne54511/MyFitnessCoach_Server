@@ -35,11 +35,14 @@ public sealed class DailyNutritionSummaryDto
     public decimal TargetFat { get; set; }
     public decimal ConsumedFat { get; set; }
     public decimal RemainingFat { get; set; }
+
+    public int TargetWater { get; set; }
 }
 
 public sealed class DailyDietPageDto
 {
     public DateOnly EatDate { get; set; }
+    public int WaterAmount { get; set; }
     public List<FoodRecordDto> Records { get; set; } = [];
     public DailyNutritionSummaryDto Summary { get; set; } = new();
 }
@@ -90,4 +93,13 @@ public sealed class CopyDailyDietRequest
     public DateOnly TargetDate { get; set; }
 
     public bool OverwriteTargetDate { get; set; }
+}
+
+public sealed class UpdateWaterLogRequest
+{
+    [Required]
+    public DateOnly LogDate { get; set; }
+
+    [Range(0, 100000)]
+    public int Amount { get; set; }
 }

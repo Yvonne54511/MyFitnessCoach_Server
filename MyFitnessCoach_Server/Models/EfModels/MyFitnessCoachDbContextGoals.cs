@@ -6,6 +6,7 @@ public partial class MyFitnessCoachDbContext
 {
     public virtual DbSet<MemberGoal> MemberGoals { get; set; }
     public virtual DbSet<DailyDiet> DailyDiets { get; set; }
+    public virtual DbSet<WaterLog> WaterLogs { get; set; }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
@@ -53,6 +54,21 @@ public partial class MyFitnessCoachDbContext
                 .HasForeignKey(e => e.FoodId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_DailyDiets_Foods");
+        });
+
+        modelBuilder.Entity<WaterLog>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_WaterLogs");
+
+            entity.HasIndex(e => new { e.MemberId, e.LogDate }, "UX_WaterLogs_Member_Date").IsUnique();
+
+            entity.Property(e => e.LogDate).HasColumnType("date");
+
+            entity.HasOne(e => e.Member)
+                .WithMany()
+                .HasForeignKey(e => e.MemberId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_WaterLogs_Members");
         });
     }
 }

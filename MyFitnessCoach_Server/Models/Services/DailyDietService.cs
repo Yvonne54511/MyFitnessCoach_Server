@@ -23,10 +23,12 @@ public class DailyDietService : IDailyDietService
     {
         var records = await _repo.GetDailyFoodRecordsAsync(memberId, eatDate);
         var summary = await BuildSummaryAsync(memberId, records);
+        var waterAmount = await _repo.GetWaterAmountAsync(memberId, eatDate);
 
         return new DailyDietPageDto
         {
             EatDate = eatDate,
+            WaterAmount = waterAmount,
             Records = records.ToList(),
             Summary = summary,
         };
@@ -65,6 +67,12 @@ public class DailyDietService : IDailyDietService
         return await GetDailyDietPageAsync(memberId, request.TargetDate);
     }
 
+    public async Task<int> UpdateWaterLogAsync(int memberId, UpdateWaterLogRequest request)
+    {
+        await _repo.UpsertWaterLogAsync(memberId, request);
+        return await _repo.GetWaterAmountAsync(memberId, request.LogDate);
+    }
+
     // ── helpers ────────────────────────────────────────────────────
     private async Task<DailyNutritionSummaryDto> BuildSummaryAsync(
         int memberId, IReadOnlyList<FoodRecordDto> records)
@@ -75,6 +83,7 @@ public class DailyDietService : IDailyDietService
         decimal targetProtein = goal?.Protein ?? 0;
         decimal targetCarbs   = goal?.Carbs ?? 0;
         decimal targetFat     = goal?.Fat ?? 0;
+        int targetWater       = goal?.Water ?? 0;
 
         decimal consumedCal     = records.Sum(r => r.Calories);
         decimal consumedProtein = records.Sum(r => r.Protein);
@@ -98,6 +107,8 @@ public class DailyDietService : IDailyDietService
             TargetFat    = targetFat,
             ConsumedFat  = consumedFat,
             RemainingFat = targetFat - consumedFat,
+
+            TargetWater = targetWater,
         };
     }
 }

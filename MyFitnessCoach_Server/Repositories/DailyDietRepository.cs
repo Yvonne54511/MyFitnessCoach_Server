@@ -34,7 +34,11 @@ public class DailyDietRepository : IDailyDietRepository
                 FoodName = f.FoodName,
                 Amount   = d.Amount ?? 0m,
                 Measure  = d.Measure ?? string.Empty,
-                MealType = d.MealType ?? string.Empty,
+                MealType = d.MealType == "早餐" ? "breakfast"
+                         : d.MealType == "午餐" ? "lunch"
+                         : d.MealType == "晚餐" ? "dinner"
+                         : d.MealType == "點心" || d.MealType == "點心/宵夜" ? "snack"
+                         : d.MealType ?? string.Empty,
                 Calories = (d.Amount!.Value / n.BaseAmount) * (n.Kcal ?? 0m),
                 Protein  = (d.Amount!.Value / n.BaseAmount) * (n.ProteinGram ?? 0m),
                 Carbs    = (d.Amount!.Value / n.BaseAmount) * (n.CarbGram ?? 0m),
@@ -130,6 +134,34 @@ public class DailyDietRepository : IDailyDietRepository
         }
     }
 
+    public async Task<int> GetWaterAmountAsync(int memberId, DateOnly date)
+        => await _db.WaterLogs
+            .Where(w => w.MemberId == memberId && w.LogDate == date)
+            .Select(w => (int?)w.Amount)
+            .FirstOrDefaultAsync() ?? 0;
+
+    public async Task UpsertWaterLogAsync(int memberId, UpdateWaterLogRequest request)
+    {
+        var entity = await _db.WaterLogs
+            .FirstOrDefaultAsync(w => w.MemberId == memberId && w.LogDate == request.LogDate);
+
+        if (entity is null)
+        {
+            _db.WaterLogs.Add(new WaterLog
+            {
+                MemberId = memberId,
+                LogDate = request.LogDate,
+                Amount = request.Amount,
+            });
+        }
+        else
+        {
+            entity.Amount = request.Amount;
+        }
+
+        await _db.SaveChangesAsync();
+    }
+
     // ── shared nutrition join query ────────────────────────────────
     private IQueryable<FoodRecordDto> FoodRecordBaseQuery(int memberId) =>
         from d in _db.DailyDiets
@@ -145,7 +177,11 @@ public class DailyDietRepository : IDailyDietRepository
             FoodName = f.FoodName,
             Amount   = d.Amount ?? 0m,
             Measure  = d.Measure ?? string.Empty,
-            MealType = d.MealType ?? string.Empty,
+            MealType = d.MealType == "早餐" ? "breakfast"
+                     : d.MealType == "午餐" ? "lunch"
+                     : d.MealType == "晚餐" ? "dinner"
+                     : d.MealType == "點心" || d.MealType == "點心/宵夜" ? "snack"
+                     : d.MealType ?? string.Empty,
             Calories = (d.Amount!.Value / n.BaseAmount) * (n.Kcal ?? 0m),
             Protein  = (d.Amount!.Value / n.BaseAmount) * (n.ProteinGram ?? 0m),
             Carbs    = (d.Amount!.Value / n.BaseAmount) * (n.CarbGram ?? 0m),

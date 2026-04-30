@@ -11,4 +11,6 @@ public interface IDailyDietRepository
     Task<bool> DeleteFoodRecordAsync(int memberId, int id);
     Task<bool> HasFoodRecordsAsync(int memberId, DateOnly date);
     Task CopyFoodRecordsAsync(int memberId, DateOnly sourceDate, DateOnly targetDate, bool overwrite);
+    Task<int> GetWaterAmountAsync(int memberId, DateOnly date);
+    Task UpsertWaterLogAsync(int memberId, UpdateWaterLogRequest request);
 }
