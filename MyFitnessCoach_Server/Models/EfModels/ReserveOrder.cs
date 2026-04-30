@@ -29,7 +29,7 @@ public partial class ReserveOrder
 
     public string GoogleEventId { get; set; }
 
-    public DateTime? CompletedAt { get; set; }
+    // public DateTime? CompletedAt { get; set; }
 
     public virtual Member Member { get; set; }
 

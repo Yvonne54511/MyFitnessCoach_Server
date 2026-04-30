@@ -842,10 +842,11 @@ public partial class MyFitnessCoachDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__ReserveO__3214EC07387E65D4");
 
-            entity.Property(e => e.CompletedAt).HasPrecision(0);
+            // entity.Property(e => e.CompletedAt).HasPrecision(0);
             entity.Property(e => e.CreateAt)
                 .HasPrecision(0)
-                .HasDefaultValueSql("(getdate())");
+                .HasDefaultValueSql("(getdate())")
+                .HasAnnotation("Relational:DefaultConstraintName", "DF__ReserveOr__Creat__367C1819"); // 這裡原本地位是 387E65D4 相關，但我照實際讀取的寫
             entity.Property(e => e.GoogleEventId).HasMaxLength(100);
             entity.Property(e => e.Memorandum).HasMaxLength(100);
             entity.Property(e => e.PaymentMethod)
