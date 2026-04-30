@@ -42,4 +42,6 @@ public partial class Coupon
     public string BannerImageUrl { get; set; }
 
     public virtual ICollection<MemberCoupon> MemberCoupons { get; set; } = new List<MemberCoupon>();
+
+    public virtual ICollection<ProductOrder> ProductOrders { get; set; } = new List<ProductOrder>();
 }

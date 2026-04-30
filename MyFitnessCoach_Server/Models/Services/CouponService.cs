@@ -156,6 +156,31 @@ namespace MyFitnessCoach_Server.Models.Services
 			};
 		}
 
+		/// <summary>
+		/// 結帳建單時呼叫(給隊友的建單流程用):驗證優惠券,有效則寫入 ProductOrder.CouponId / DiscountAmount。
+		/// memberCouponId 為 null 時直接 return,不動 order。驗證失敗丟 InvalidOperationException。
+		/// 注意:呼叫方自己算 FinalAmount = subtotal - order.DiscountAmount + shipping。
+		/// </summary>
+		/// <param name="memberId">當前會員 Id</param>
+		/// <param name="memberCouponId">前端帶上來的 MemberCoupon.Id;沒選券就傳 null</param>
+		/// <param name="order">尚未 SaveChanges 的 ProductOrder 實體</param>
+		/// <param name="subtotal">商品小計(未含運費)</param>
+		public async Task ApplyCouponToOrderAsync(
+			int memberId,
+			int? memberCouponId,
+			ProductOrder order,
+			decimal subtotal)
+		{
+			if (memberCouponId == null) return;
+
+			var preview = await PreviewDiscountAsync(memberId, memberCouponId.Value, subtotal);
+			if (!preview.IsValid)
+				throw new InvalidOperationException(preview.Message ?? "優惠券驗證失敗");
+
+			order.CouponId       = memberCouponId;
+			order.DiscountAmount = preview.DiscountAmount;
+		}
+
 		/// <summary>結帳成功時呼叫(給隊友的結帳/付款流程用),標記 UsedAt + OrderId。</summary>
 		public async Task ConsumeAsync(int memberCouponId, int orderId)
 		{
