@@ -68,6 +68,10 @@ builder.Services.AddSingleton<IHashHelper, HashHelper>();
 builder.Services.AddScoped<IGoalRepository, GoalRepository>();
 builder.Services.AddScoped<IGoalService, GoalService>();
 
+// Daily Diet
+builder.Services.AddScoped<IDailyDietRepository, DailyDietRepository>();
+builder.Services.AddScoped<IDailyDietService, DailyDietService>();
+
 // Food Library
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<FoodLibraryCacheStore>();
