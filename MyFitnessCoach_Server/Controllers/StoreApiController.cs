@@ -64,36 +64,52 @@ namespace MyFitnessCoach_Server.Controllers
 		{
 			try
 			{
-				// 1. 取得專案根目錄
 				string rootPath = _env.ContentRootPath;
-
-				// 2. 預設圖片路徑 (仍在 StaticFiles 下)
 				string noImgPath = Path.Combine(rootPath, "StaticFiles", "images", "NoImage.jpg");
 
-				// 3. 從資料庫取得路徑 (例如: /images/products/chicken_01.jpg)
 				var product = await _productService.GetProductAsync(id);
 				string dbPath = product?.ImageUrl ?? "";
 
-				// 4. 路徑修正：DB 存的是 /images/products/... 但實體資料夾叫 /img/products/
-				string mappedPath = dbPath.Replace("/images/", "/img/");
-
-				// 5. 拼接實體路徑 (去除開頭斜線)
-				string relativePath = mappedPath.TrimStart('/');
-				string fullPath = Path.Combine(rootPath, relativePath);
-
-				// 6. 檢查與讀取
-				if (!string.IsNullOrEmpty(dbPath) && System.IO.File.Exists(fullPath))
+				if (!string.IsNullOrEmpty(dbPath))
 				{
-					// 根據副檔名判斷 MIME
-					string contentType = fullPath.EndsWith(".png") ? "image/png" : "image/jpeg";
-					return PhysicalFile(fullPath, contentType);
+					// DB 存的路徑格式：/images/products/xxx.jpg
+					// 實體檔案可能在多個位置，依序嘗試
+					string trimmed = dbPath.TrimStart('/');                          // images/products/xxx.jpg
+					string mapped  = dbPath.Replace("/images/", "/img/").TrimStart('/'); // img/products/xxx.jpg
+
+					// MVC 後台上傳的路徑
+					string mvcRoot = Path.Combine(rootPath, "..", "MyFitnessCoach", "Project-MyFitnessCoach", "wwwroot");
+
+					var candidates = new[]
+					{
+						Path.Combine(rootPath, "StaticFiles", trimmed),   // StaticFiles/images/products/xxx.jpg
+						Path.Combine(rootPath, "StaticFiles", mapped),    // StaticFiles/img/products/xxx.jpg
+						Path.Combine(rootPath, trimmed),                  // images/products/xxx.jpg
+						Path.Combine(rootPath, mapped),                   // img/products/xxx.jpg
+						Path.Combine(mvcRoot, trimmed),                   // MVC wwwroot/images/products/xxx.jpg
+					};
+
+					foreach (var path in candidates)
+					{
+						string fullPath = Path.GetFullPath(path);
+						if (System.IO.File.Exists(fullPath))
+						{
+							string contentType = Path.GetExtension(fullPath).ToLower() switch
+							{
+								".png"  => "image/png",
+								".webp" => "image/webp",
+								".avif" => "image/avif",
+								".gif"  => "image/gif",
+								_       => "image/jpeg"
+							};
+							return PhysicalFile(fullPath, contentType);
+						}
+					}
 				}
 
-				// 7. 備援：回傳預設圖
+				// 備援：回傳預設圖
 				if (System.IO.File.Exists(noImgPath))
-				{
 					return PhysicalFile(noImgPath, "image/jpeg");
-				}
 
 				return NotFound("Image not found on server.");
 			}
