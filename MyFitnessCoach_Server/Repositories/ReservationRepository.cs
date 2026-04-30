@@ -167,7 +167,8 @@ namespace MyFitnessCoach_Server.Repositories
                 PaymentMethod = dto.PaymentMethod,
                 Target = dto.Target ?? dto.Note,
                 Price = dto.PaymentMethod == "Points" ? 0 : 1200, 
-                Memorandum = "" 
+                Memorandum = "",
+                GuestEmail = memberId == 6 ? dto.Email : null
             };
 
             // 點數扣款邏輯

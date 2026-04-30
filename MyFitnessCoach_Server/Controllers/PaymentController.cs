@@ -218,25 +218,32 @@ namespace MyFitnessCoach_Server.Controllers
         // POST /api/Payment/ReservationSendToEcPay
         // 預約信用卡付款：建立綠界表單參數，CustomField3 存 reservationId
         // ──────────────────────────────────────────────────────────────
-        [Authorize]
         [HttpPost("ReservationSendToEcPay")]
         public async Task<IActionResult> ReservationSendToEcPay([FromForm] int reservationId)
         {
             try
             {
+                int memberId;
                 var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (!int.TryParse(userIdStr, out int userId))
-                    return Unauthorized(new { error = "無法識別登入用戶" });
 
-                var member = await _context.Members.FirstOrDefaultAsync(m => m.UserId == userId);
-                if (member == null)
-                    return NotFound(new { error = "找不到會員資料" });
+                if (int.TryParse(userIdStr, out int userId))
+                {
+                    var member = await _context.Members.FirstOrDefaultAsync(m => m.UserId == userId);
+                    if (member == null)
+                        return NotFound(new { error = "找不到會員資料" });
+                    memberId = member.Id;
+                }
+                else
+                {
+                    // 訪客模式：預設為 MemberId = 6
+                    memberId = 6;
+                }
 
                 var reservation = await _context.ReserveOrders
                     .Include(r => r.Shift)
                     .ThenInclude(s => s.Instructor)
                     .ThenInclude(i => i.User)
-                    .FirstOrDefaultAsync(r => r.Id == reservationId && r.MemberId == member.Id && r.Status == "待付款");
+                    .FirstOrDefaultAsync(r => r.Id == reservationId && r.MemberId == memberId && r.Status == "待付款");
 
                 if (reservation == null)
                     return NotFound(new { error = "找不到待付款的預約紀錄" });

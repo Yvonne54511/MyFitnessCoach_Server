@@ -6,10 +6,12 @@ namespace MyFitnessCoach_Server.Models.Services
 	public class InstructorService
 	{
 		private readonly IInstructorRepository _repository;
+		private readonly ReservationService _reservationService;
 
-		public InstructorService(IInstructorRepository repository)
+		public InstructorService(IInstructorRepository repository, ReservationService reservationService)
 		{
 			_repository = repository;
+			_reservationService = reservationService;
 		}
 
 		public async Task<IEnumerable<InstructorDto>> GetInstructorsAsync(string? name = null, int? year = null, int? month = null)
@@ -34,7 +36,11 @@ namespace MyFitnessCoach_Server.Models.Services
 
 		public async Task<IEnumerable<AvailabilityDto>> GetAvailabilityAsync(int instructorId)
 		{
-			// 呼叫 Repository 取得特定營養師的排班與預約狀態
+			// 1. 在查詢可用性之前，先執行過期預約的清理
+			// 這樣可以確保「待付款」超時的時段會立刻被標記為可預約 (IsBooked = false)
+			await _reservationService.CleanupAllExpiredReservationsAsync();
+
+			// 2. 呼叫 Repository 取得特定營養師的排班與預約狀態
 			return await _repository.GetAvailabilityByInstructorIdAsync(instructorId);
 		}
 	}

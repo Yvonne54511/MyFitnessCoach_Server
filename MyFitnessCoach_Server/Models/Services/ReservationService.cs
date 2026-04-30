@@ -20,14 +20,13 @@ namespace MyFitnessCoach_Server.Models.Services
             _db = db;
         }
 
-        public async Task<IEnumerable<ReservationDto>> GetMemberReservationsAsync(int memberId)
+        public async Task CleanupAllExpiredReservationsAsync()
         {
-            // 1. 處理「待付款」超時自動清理 (測試設定 30 秒)
-            // 放在 Service 層清理，確保未來如果「待付款」有外部關聯時也能一併處理。
             var now = DateTime.Now;
+            // 全域清理所有「待付款」且超時的預約 (測試設定 30 秒)
             var expiredOrders = await _db.ReserveOrders
                 .Include(ro => ro.Shift)
-                .Where(ro => ro.MemberId == memberId && ro.Status == "待付款" && ro.CreateAt.AddSeconds(30) < now)
+                .Where(ro => ro.Status == "待付款" && ro.CreateAt.AddSeconds(30) < now)
                 .ToListAsync();
 
             if (expiredOrders.Any())
@@ -52,7 +51,14 @@ namespace MyFitnessCoach_Server.Models.Services
                     _db.ReserveOrders.Remove(order);
                 }
                 await _db.SaveChangesAsync();
+                System.Diagnostics.Debug.WriteLine($"[自動清理] 已清理 {expiredOrders.Count} 筆超時預約紀錄。");
             }
+        }
+
+        public async Task<IEnumerable<ReservationDto>> GetMemberReservationsAsync(int memberId)
+        {
+            // 執行全域清理，確保數據準確
+            await CleanupAllExpiredReservationsAsync();
 
             return await _repo.GetByMemberIdAsync(memberId);
         }
@@ -74,7 +80,7 @@ namespace MyFitnessCoach_Server.Models.Services
         {
             try
             {
-                // 1. 取得預約紀錄 (不追蹤，稍後用更新的方式確保狀態正確)
+                // 1. 取得預約紀錄
                 var order = await _db.ReserveOrders
                     .Include(ro => ro.Member).ThenInclude(m => m.User)
                     .Include(ro => ro.Shift).ThenInclude(s => s.Instructor).ThenInclude(i => i.User)
@@ -82,9 +88,12 @@ namespace MyFitnessCoach_Server.Models.Services
 
                 if (order == null) return false;
 
-                // 2. 嚴格時效檢查 (針對「待付款」狀態)
+                bool isFirstTimeProcessing = false;
+
+                // 2. 狀態轉換與重複檢查
                 if (order.Status == "待付款")
                 {
+                    // 嚴格時效檢查 (測試設定 30 秒)
                     if (order.CreateAt.AddSeconds(30) < DateTime.Now)
                     {
                         System.Diagnostics.Debug.WriteLine($"[逾時攔截] 預約 ID {reservationId} 已過期，拒絕轉為已預約。");
@@ -98,24 +107,50 @@ namespace MyFitnessCoach_Server.Models.Services
                         order.PaymentMethod = paymentMethod;
                     }
                     await _db.SaveChangesAsync();
+                    isFirstTimeProcessing = true; // 標記：這次請求完成了狀態轉換
                 }
-                else if (order.Status != "已預約")
+                else if (order.Status == "已預約")
+                {
+                    // 如果已經是「已預約」，且是信用卡/線上支付（會觸發 Callback/Result 的類型）
+                    // 則代表之前已經有請求處理過了，這裡直接回傳 true，避免重複發信。
+                    if (order.PaymentMethod == "CreditCard" || order.PaymentMethod == "線上支付" || !string.IsNullOrEmpty(paymentMethod))
+                    {
+                        // 但如果是點數預約（非金流，沒 Callback），或是第一次處理，則不應在這裡回傳
+                        // 這裡為了防止金流重複發信：
+                        return true; 
+                    }
+                }
+                else
                 {
                     // 如果已經是「已完成」或「已取消」，不應繼續
                     return false;
                 }
 
-                // 3. 避免重複執行 Google Sync
+                // 3. 避免重複執行 (已有 GoogleEventId 則代表已處理過)
                 if (!string.IsNullOrEmpty(order.GoogleEventId))
                 {
                     return true;
                 }
 
                 // 4. 發送 Email 與 Google 同步
-                var memberUser = order.Member?.User;
                 var instructorUser = order.Shift?.Instructor?.User;
+                string toEmail = "";
+                string memberName = "會員";
 
-                if (memberUser != null && !string.IsNullOrEmpty(memberUser.Email))
+                // 優先檢查是否有訪客 Email (GuestEmail 欄位)
+                if (order.MemberId == 6 && !string.IsNullOrEmpty(order.GuestEmail))
+                {
+                    toEmail = order.GuestEmail;
+                    memberName = "訪客"; 
+                }
+                else
+                {
+                    var memberUser = order.Member?.User;
+                    toEmail = memberUser?.Email ?? "";
+                    memberName = memberUser?.UserName ?? "會員";
+                }
+
+                if (!string.IsNullOrEmpty(toEmail))
                 {
                     // 解析時間
                     DateTime startTime;
@@ -132,27 +167,28 @@ namespace MyFitnessCoach_Server.Models.Services
                         startTime = scheduleDate.ToDateTime(TimeOnly.MinValue);
                     }
 
-                    // 發送 Email (已授權才發)
-                    var isAuthorized = await _db.UserExternalLogins.AnyAsync(l => l.UserId == memberUser.Id && l.LoginProvider == "GoogleCalendar");
+                    // A. 發送 Email (現在不論是否授權 Google Calendar 都發送系統郵件)
+                    try
+                    {
+                        await _emailService.SendReservationConfirmationEmailAsync(
+                            toEmail,
+                            memberName,
+                            instructorUser?.UserName ?? "教練",
+                            startTime,
+                            order.Target ?? "一般健身諮詢"
+                        );
+                    }
+                    catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"郵件發送失敗: {ex.Message}"); }
+
+                    // B. 同步到 Google 日曆 (僅當使用者有授權且非訪客時才嘗試自動同步)
+                    // 訪客將透過前端手動按鈕加入日曆
+                    var isAuthorized = order.MemberId != 6 && await _db.UserExternalLogins.AnyAsync(l => l.UserId == order.Member.UserId && l.LoginProvider == "GoogleCalendar");
                     if (isAuthorized)
                     {
                         try
                         {
-                            await _emailService.SendReservationConfirmationEmailAsync(
-                                memberUser.Email,
-                                memberUser.UserName,
-                                instructorUser?.UserName ?? "教練",
-                                startTime,
-                                order.Target ?? "一般健身諮詢"
-                            );
-                        }
-                        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"郵件發送失敗: {ex.Message}"); }
-
-                        // 同步到 Google 日曆
-                        try
-                        {
                             var googleEventId = await _googleService.AddEventAsync(
-                                memberUser.Id,
+                                order.Member.UserId,
                                 $"MyFitnessCoach 課程 - 教練: {instructorUser?.UserName}",
                                 $"您的預約目標: {order.Target ?? "一般健身諮詢"}",
                                 startTime,
@@ -171,7 +207,7 @@ namespace MyFitnessCoach_Server.Models.Services
                                 else if (latestOrder != null && !string.IsNullOrEmpty(latestOrder.GoogleEventId))
                                 {
                                     // 如果不幸發生重複建立，刪除多餘的那個
-                                    await _googleService.DeleteEventAsync(memberUser.Id, googleEventId);
+                                    await _googleService.DeleteEventAsync(order.Member.UserId, googleEventId);
                                 }
                             }
                         }

@@ -29,7 +29,7 @@ namespace MyFitnessCoach_Server.Controllers
             }
             else
             {
-                // 2. 如果沒有 MemberId Claim，檢查是否有 UserId (可能剛註冊尚未在 Token 更新 MemberId)
+                // 2. 如果沒有 MemberId Claim，檢查是否有 UserId
                 var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int uid))
                 {
@@ -41,10 +41,10 @@ namespace MyFitnessCoach_Server.Controllers
                 }
             }
 
-            // 3. 如果依然沒找到，則視為訪客，預設為 MemberId = 6 (對應 UserId 13)
+            // 3. 如果依然沒找到且非登入狀態，不應回傳 Member 6 資料給訪客
             if (memberId == 0)
             {
-                memberId = 6;
+                return Unauthorized(new { message = "請先登入會員" });
             }
 
             var member = await _db.Members
