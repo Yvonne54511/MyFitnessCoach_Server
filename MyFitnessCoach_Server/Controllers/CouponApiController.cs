@@ -35,6 +35,15 @@ namespace MyFitnessCoach_Server.Controllers
 				.FirstOrDefaultAsync();
 		}
 
+		// GET /api/CouponApi/public/banners — 公開端點(商城頁未登入訪客也要看)
+		[HttpGet("public/banners")]
+		[AllowAnonymous]
+		public async Task<ActionResult<List<CouponDto>>> GetBanners()
+		{
+			var list = await _couponService.GetBannerCouponsAsync();
+			return Ok(list);
+		}
+
 		// GET /api/CouponApi/available
 		[HttpGet("available")]
 		public async Task<ActionResult<List<CouponDto>>> GetAvailable()

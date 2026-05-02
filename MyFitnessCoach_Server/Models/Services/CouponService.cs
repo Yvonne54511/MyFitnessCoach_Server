@@ -59,6 +59,9 @@ namespace MyFitnessCoach_Server.Models.Services
 		public Task<List<MemberCouponDto>> GetMyCouponsAsync(int memberId)
 			=> _repo.GetMyCouponsAsync(memberId);
 
+		/// <summary>取得商城頁 banner 區要展示的券。公開端點呼叫,不需 memberId。</summary>
+		public Task<List<CouponDto>> GetBannerCouponsAsync() => _repo.GetBannerCouponsAsync();
+
 		/// <summary>用 Code 領取一張券。</summary>
 		public async Task<MemberCouponDto> ClaimByCodeAsync(int memberId, string code)
 		{
