@@ -72,6 +72,15 @@ builder.Services.AddScoped<IGoalService, GoalService>();
 builder.Services.AddScoped<IDailyDietRepository, DailyDietRepository>();
 builder.Services.AddScoped<IDailyDietService, DailyDietService>();
 
+// Body Records
+builder.Services.AddScoped<IBodyRecordRepository, BodyRecordRepository>();
+builder.Services.AddScoped<IBodyRecordService, BodyRecordService>();
+
+// Health Report
+builder.Services.AddScoped<IHealthReportRepository, HealthReportRepository>();
+builder.Services.AddSingleton<HealthReportTrendCalculator>();
+builder.Services.AddScoped<IHealthReportService, HealthReportService>();
+
 // Food Library
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<FoodLibraryCacheStore>();
@@ -142,6 +151,12 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(
         Path.Combine(builder.Environment.ContentRootPath, "images")),
     RequestPath = "/images"
+});
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "img")),
+    RequestPath = "/img"
 });
 
 app.MapControllers();
