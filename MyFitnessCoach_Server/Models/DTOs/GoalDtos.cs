@@ -12,13 +12,6 @@ public class BasicInfoDto
     public double? TargetWeight { get; set; }
 
     [Required]
-    public DateOnly DateOfBirth { get; set; }
-
-    [Required]
-    [RegularExpression("^[MF]$")]
-    public string Gender { get; set; } = string.Empty;
-
-    [Required]
     [RegularExpression(@"^(1\.2|1\.375|1\.55|1\.725|1\.9)$")]
     public string ActivityLevel { get; set; } = string.Empty;
 

@@ -12,8 +12,24 @@ namespace MyFitnessCoach_Server.Controllers;
 public class DailyDietController : ControllerBase
 {
     private readonly IDailyDietService _service;
+    private readonly IDietPrerequisiteService _prerequisite;
 
-    public DailyDietController(IDailyDietService service) => _service = service;
+    public DailyDietController(IDailyDietService service, IDietPrerequisiteService prerequisite)
+    {
+        _service      = service;
+        _prerequisite = prerequisite;
+    }
+
+    // GET /api/DailyDiet/prerequisites
+    [HttpGet("prerequisites")]
+    public async Task<ActionResult<DietPrerequisiteStatusDto>> GetPrerequisites()
+    {
+        var memberId = GetMemberId();
+        if (memberId is null) return Unauthorized();
+
+        var status = await _prerequisite.CheckAsync(memberId.Value);
+        return Ok(status);
+    }
 
     // GET /api/DailyDiet?eatDate=yyyy-MM-dd
     [HttpGet]
@@ -21,6 +37,10 @@ public class DailyDietController : ControllerBase
     {
         var memberId = GetMemberId();
         if (memberId is null) return Unauthorized();
+
+        var status = await _prerequisite.CheckAsync(memberId.Value);
+        if (!status.CanUseDailyDiet)
+            return StatusCode(412, status);
 
         var result = await _service.GetDailyDietPageAsync(memberId.Value, eatDate);
         return Ok(result);
@@ -32,6 +52,10 @@ public class DailyDietController : ControllerBase
     {
         var memberId = GetMemberId();
         if (memberId is null) return Unauthorized();
+
+        var status = await _prerequisite.CheckAsync(memberId.Value);
+        if (!status.CanUseDailyDiet)
+            return StatusCode(412, status);
 
         var result = await _service.CreateFoodRecordAsync(memberId.Value, request);
         return CreatedAtAction(nameof(GetDailyDiet),
@@ -45,6 +69,10 @@ public class DailyDietController : ControllerBase
         var memberId = GetMemberId();
         if (memberId is null) return Unauthorized();
 
+        var status = await _prerequisite.CheckAsync(memberId.Value);
+        if (!status.CanUseDailyDiet)
+            return StatusCode(412, status);
+
         var result = await _service.UpdateFoodRecordAsync(memberId.Value, id, request);
         if (result is null) return NotFound();
         return Ok(result);
@@ -56,6 +84,10 @@ public class DailyDietController : ControllerBase
     {
         var memberId = GetMemberId();
         if (memberId is null) return Unauthorized();
+
+        var status = await _prerequisite.CheckAsync(memberId.Value);
+        if (!status.CanUseDailyDiet)
+            return StatusCode(412, status);
 
         var deleted = await _service.DeleteFoodRecordAsync(memberId.Value, id);
         if (!deleted) return NotFound();
@@ -69,6 +101,10 @@ public class DailyDietController : ControllerBase
         var memberId = GetMemberId();
         if (memberId is null) return Unauthorized();
 
+        var status = await _prerequisite.CheckAsync(memberId.Value);
+        if (!status.CanUseDailyDiet)
+            return StatusCode(412, status);
+
         var amount = await _service.UpdateWaterLogAsync(memberId.Value, request);
         return Ok(new { logDate = request.LogDate, amount });
     }
@@ -79,6 +115,10 @@ public class DailyDietController : ControllerBase
     {
         var memberId = GetMemberId();
         if (memberId is null) return Unauthorized();
+
+        var status = await _prerequisite.CheckAsync(memberId.Value);
+        if (!status.CanUseDailyDiet)
+            return StatusCode(412, status);
 
         try
         {

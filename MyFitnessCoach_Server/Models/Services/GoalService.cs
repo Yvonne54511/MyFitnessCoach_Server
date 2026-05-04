@@ -26,35 +26,36 @@ public class GoalService : IGoalService
 
     public async Task<GoalPageResponseDto> SaveBasicInfoAsync(int memberId, BasicInfoDto dto)
     {
-        var member = await _repo.GetMemberAsync(memberId);
+        var member = await _repo.GetMemberAsync(memberId)
+            ?? throw new InvalidOperationException("Member not found");
 
-        if (member is null)
+        await _repo.UpdateMemberInfoAsync(member, dto);
+
+        var goal = await _repo.GetMemberGoalAsync(memberId);
+
+        if (goal is null)
         {
-            // 首次設定：建立 Member 基本資料，並自動計算初始 MemberGoals
-            await _repo.CreateMemberInfoAsync(memberId, dto);
-
+            // 首次設定目標：用 Member 現有的 Gender/DateOfBirth 計算初始 MemberGoals
             var currentWeight = await _repo.GetLatestWeightAsync(memberId) ?? dto.TargetWeight ?? 60;
-            var age    = GoalCalculator.CalculateAge(dto.DateOfBirth);
-            var bmr    = GoalCalculator.CalculateBMR(currentWeight, dto.Height, age, dto.Gender);
+            var dob    = member.DateOfBirth.HasValue
+                ? DateOnly.FromDateTime(member.DateOfBirth.Value)
+                : throw new InvalidOperationException("Member DateOfBirth is required");
+            var gender = GoalRepository.GenderToString(member.Gender)
+                ?? throw new InvalidOperationException("Member Gender is required");
+            var age    = GoalCalculator.CalculateAge(dob);
+            var bmr    = GoalCalculator.CalculateBMR(currentWeight, dto.Height, age, gender);
             var tdee   = GoalCalculator.CalculateTDEE(bmr, dto.ActivityLevel);
             var macros = GoalCalculator.CalculateMacros(tdee, currentWeight, dto.HealthGoal);
 
             await _repo.CreateMemberGoalAsync(memberId, macros);
-
             return new GoalPageResponseDto { Info = dto, Goals = macros };
         }
-        else
-        {
-            // 後續更新：只更新 Member 基本資料，MemberGoals 不變
-            await _repo.UpdateMemberInfoAsync(member, dto);
-            var goal = await _repo.GetMemberGoalAsync(memberId);
 
-            return new GoalPageResponseDto
-            {
-                Info  = dto,
-                Goals = goal is not null ? GoalToDto(goal) : null,
-            };
-        }
+        return new GoalPageResponseDto
+        {
+            Info  = dto,
+            Goals = GoalToDto(goal),
+        };
     }
 
     public async Task SaveTargetCaloriesAsync(int memberId, TargetCaloriesDto dto)
@@ -72,10 +73,6 @@ public class GoalService : IGoalService
     {
         Height        = m.Height ?? 0,
         TargetWeight  = m.TargetWeight,
-        DateOfBirth   = m.DateOfBirth.HasValue
-            ? DateOnly.FromDateTime(m.DateOfBirth.Value)
-            : DateOnly.FromDateTime(DateTime.Today.AddYears(-30)),
-        Gender        = GoalRepository.GenderToString(m.Gender),
         ActivityLevel = m.ActivityLevel ?? "1.55",
         HealthGoal    = m.HealthPlan ?? "健康飲食",
     };

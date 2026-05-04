@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore.Storage;
+using MyFitnessCoach_Server.Models.DTOs;
 using MyFitnessCoach_Server.Models.EfModels;
 
 namespace MyFitnessCoach_Server.Models.Repositories;
@@ -29,9 +30,17 @@ public interface IAccountRepository
     Task<int> CountPasswordChangesInPeriodAsync(int userId, DateTime since);
 
     // Register / Activate
+    Task CreateMemberAsync(Member member);
     Task<bool> AccountOrEmailExistsAsync(string account, string email);
     Task<bool> MobileExistsAsync(string mobile);
     Task CreateUserAsync(User user);
+
+    // PersonalInfo
+    Task<User?> GetUserWithMemberAsync(int userId);
+    Task<bool> EmailExistsExceptUserAsync(string email, int userId);
+    Task<bool> MobileExistsExceptUserAsync(string mobile, int userId);
+    Task UpdatePersonalInfoAsync(int userId, int memberId, UpdatePersonalInfoRequest request);
+    Task UpdateMemberImageAsync(int memberId, string imageUrl);
     Task<User?> GetByActivationCodeHashAsync(string hash);
     Task ActivateUserAsync(int userId);
     Task ActivateAndEnsureMemberAsync(int userId);

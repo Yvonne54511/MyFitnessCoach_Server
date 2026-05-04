@@ -26,6 +26,13 @@ public class RegisterDto
     [Required(ErrorMessage = "手機號碼為必填")]
     [RegularExpression(@"^09\d{8}$", ErrorMessage = "手機號碼格式不正確")]
     public string Mobile { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "性別為必填")]
+    [RegularExpression("^[MF]$", ErrorMessage = "性別格式不正確")]
+    public string Gender { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "生日為必填")]
+    public DateOnly DateOfBirth { get; set; }
 }
 
 public class ActivateAccountResultDto

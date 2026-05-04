@@ -69,16 +69,12 @@ public class GoalRepository : IGoalRepository
     // ── helpers ──────────────────────────────────────────────────
     private static void ApplyInfoToMember(Member member, BasicInfoDto dto)
     {
-        member.Height       = dto.Height;
-        member.TargetWeight = dto.TargetWeight;
-        member.DateOfBirth  = dto.DateOfBirth.ToDateTime(TimeOnly.MinValue);
-        member.Gender       = GenderToByte(dto.Gender);
+        member.Height        = dto.Height;
+        member.TargetWeight  = dto.TargetWeight;
         member.ActivityLevel = dto.ActivityLevel;
-        member.HealthPlan   = dto.HealthGoal;
+        member.HealthPlan    = dto.HealthGoal;
     }
 
-    // DB convention: 1 = Male, 2 = Female
-    private static byte GenderToByte(string gender) => gender == "M" ? (byte)1 : (byte)2;
-
-    public static string GenderToString(byte? gender) => gender == 1 ? "M" : "F";
+    // DB convention: 1 = Male, 2 = Female; null for unknown
+    public static string? GenderToString(byte? gender) => gender switch { 1 => "M", 2 => "F", _ => null };
 }

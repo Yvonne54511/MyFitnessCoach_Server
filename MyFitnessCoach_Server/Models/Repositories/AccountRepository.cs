@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using MyFitnessCoach_Server.Models.DTOs;
 using MyFitnessCoach_Server.Models.EfModels;
 
 namespace MyFitnessCoach_Server.Models.Repositories;
@@ -123,6 +124,12 @@ public class AccountRepository : IAccountRepository
 
     // ── Register / Activate ────────────────────────────────────────────────
 
+    public async Task CreateMemberAsync(Member member)
+    {
+        _db.Members.Add(member);
+        await _db.SaveChangesAsync();
+    }
+
     public async Task<bool> AccountOrEmailExistsAsync(string account, string email)
     {
         return await _db.Users.AnyAsync(u => u.Account == account || u.Email == email);
@@ -201,6 +208,42 @@ public class AccountRepository : IAccountRepository
         return await _db.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email && u.IsConfirmed == false);
+    }
+
+    // ── PersonalInfo ───────────────────────────────────────────────────────
+
+    public async Task<User?> GetUserWithMemberAsync(int userId)
+        => await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+    public async Task<bool> EmailExistsExceptUserAsync(string email, int userId)
+        => await _db.Users.AnyAsync(u => u.Email == email && u.Id != userId);
+
+    public async Task<bool> MobileExistsExceptUserAsync(string mobile, int userId)
+        => await _db.Users.AnyAsync(u => u.Mobile == mobile && u.Id != userId);
+
+    public async Task UpdatePersonalInfoAsync(int userId, int memberId, UpdatePersonalInfoRequest request)
+    {
+        using var tx = await _db.Database.BeginTransactionAsync();
+
+        await _db.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(u => u.UserName, request.UserName.Trim()));
+
+        await _db.Members
+            .Where(m => m.Id == memberId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(m => m.Gender, request.Gender == "M" ? (byte?)1 : (byte?)2)
+                .SetProperty(m => m.DateOfBirth, request.DateOfBirth.ToDateTime(TimeOnly.MinValue)));
+
+        await tx.CommitAsync();
+    }
+
+    public async Task UpdateMemberImageAsync(int memberId, string imageUrl)
+    {
+        await _db.Members
+            .Where(m => m.Id == memberId)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.ImageUrl, imageUrl));
     }
 
     // ── Rate limit ─────────────────────────────────────────────────────────

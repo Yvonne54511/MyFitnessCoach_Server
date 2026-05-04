@@ -71,6 +71,7 @@ builder.Services.AddScoped<IGoalService, GoalService>();
 // Daily Diet
 builder.Services.AddScoped<IDailyDietRepository, DailyDietRepository>();
 builder.Services.AddScoped<IDailyDietService, DailyDietService>();
+builder.Services.AddScoped<IDietPrerequisiteService, DietPrerequisiteService>();
 
 // Body Records
 builder.Services.AddScoped<IBodyRecordRepository, BodyRecordRepository>();

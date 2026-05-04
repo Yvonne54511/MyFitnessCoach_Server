@@ -274,6 +274,15 @@ public class AccountService : IAccountService
 
         await _accountRepository.CreateUserAsync(user);
 
+        await _accountRepository.CreateMemberAsync(new Member
+        {
+            UserId      = user.Id,
+            Gender      = dto.Gender == "M" ? (byte)1 : (byte)2,
+            DateOfBirth = dto.DateOfBirth.ToDateTime(TimeOnly.MinValue),
+            ImageUrl    = "/images/members/default.jpg",
+            CancelCount = 1
+        });
+
         var activationUrl = $"{_config["FrontEnd:BaseUrl"]}/activate?token={rawToken}";
         await _emailService.SendActivationEmailAsync(user.Email, activationUrl);
 
