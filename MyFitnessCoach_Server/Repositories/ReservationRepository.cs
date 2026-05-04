@@ -103,8 +103,8 @@ namespace MyFitnessCoach_Server.Repositories
                 order.Shift.IsBooked = false;
             }
 
-            // 增加會員的取消次數 (前面已經檢查過 member 且確認過次數)
-            if (member != null)
+            // 增加會員的取消次數 (只有正式預約才算入取消次數，待付款不算)
+            if (member != null && order.Status == "已預約")
             {
                 member.CancelCount += 1;
             }
@@ -167,8 +167,9 @@ namespace MyFitnessCoach_Server.Repositories
                 Status = dto.PaymentMethod == "CreditCard" ? "待付款" : "已預約",
                 PaymentMethod = dto.PaymentMethod,
                 Target = dto.Target ?? dto.Note,
-                Price = dto.PaymentMethod == "Points" ? 0 : 1200,
-                Memorandum = ""
+                Price = dto.PaymentMethod == "Points" ? 0 : 1200, 
+                Memorandum = "",
+                GuestEmail = memberId == 6 ? dto.Email : null
             };
 
             // 點數扣款邏輯
@@ -215,7 +216,7 @@ namespace MyFitnessCoach_Server.Repositories
         {
             var now = DateTime.Now;
 
-            // 1. 抓取該會員所有「已預約」的紀錄
+            // 1. 處理「已預約」轉「已完成」 (諮詢時間已過)
             var pendingOrders = await _db.ReserveOrders
                 .Include(ro => ro.Shift)
                 .Where(ro => ro.MemberId == memberId && ro.Status == "已預約")
@@ -270,7 +271,7 @@ namespace MyFitnessCoach_Server.Repositories
                 .Include(ro => ro.Shift)
                 .ThenInclude(s => s.Instructor)
                 .ThenInclude(i => i.User)
-                .Where(ro => ro.MemberId == memberId && ro.Status != "待付款")
+                .Where(ro => ro.MemberId == memberId)
                 .OrderByDescending(ro => ro.Shift.ScheduleDate)
                 .ThenByDescending(ro => ro.Shift.TimeSlot)
                 .Select(ro => new ReservationDto

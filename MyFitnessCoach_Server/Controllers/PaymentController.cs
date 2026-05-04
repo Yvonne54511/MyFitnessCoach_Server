@@ -220,28 +220,42 @@ namespace MyFitnessCoach_Server.Controllers
         // POST /api/Payment/ReservationSendToEcPay
         // 預約信用卡付款：建立綠界表單參數，CustomField3 存 reservationId
         // ──────────────────────────────────────────────────────────────
-        [Authorize]
         [HttpPost("ReservationSendToEcPay")]
         public async Task<IActionResult> ReservationSendToEcPay([FromForm] int reservationId)
         {
             try
             {
+                int memberId;
                 var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (!int.TryParse(userIdStr, out int userId))
-                    return Unauthorized(new { error = "無法識別登入用戶" });
 
-                var member = await _context.Members.FirstOrDefaultAsync(m => m.UserId == userId);
-                if (member == null)
-                    return NotFound(new { error = "找不到會員資料" });
+                if (int.TryParse(userIdStr, out int userId))
+                {
+                    var member = await _context.Members.FirstOrDefaultAsync(m => m.UserId == userId);
+                    if (member == null)
+                        return NotFound(new { error = "找不到會員資料" });
+                    memberId = member.Id;
+                }
+                else
+                {
+                    // 訪客模式：預設為 MemberId = 6
+                    memberId = 6;
+                }
 
                 var reservation = await _context.ReserveOrders
                     .Include(r => r.Shift)
                     .ThenInclude(s => s.Instructor)
                     .ThenInclude(i => i.User)
-                    .FirstOrDefaultAsync(r => r.Id == reservationId && r.MemberId == member.Id && r.Status == "待付款");
+                    .FirstOrDefaultAsync(r => r.Id == reservationId && r.MemberId == memberId && r.Status == "待付款");
 
                 if (reservation == null)
                     return NotFound(new { error = "找不到待付款的預約紀錄" });
+
+                // ── 嚴格逾時檢查 ────────────────────────────────────
+                // 不給予展延，直接檢查是否已超過 30 秒 (配合目前測試設定)
+                if (reservation.CreateAt.AddSeconds(30) < DateTime.Now)
+                {
+                    return BadRequest(new { error = "預約已逾時，請重新預約" });
+                }
 
                 int totalAmount = (int)(reservation.Price ?? 1200);
                 string instructorName = reservation.Shift?.Instructor?.User?.UserName ?? "營養師";
@@ -260,8 +274,7 @@ namespace MyFitnessCoach_Server.Controllers
                     { "ReturnURL",         $"{_ngrokUrl}/api/Payment/Callback" },
                     { "ClientBackURL",     $"{_frontendUrl}/reserve" },
                     { "OrderResultURL",    $"{_ngrokUrl}/api/Payment/Result" },
-                    { "ChoosePayment",     "Credit" },
-                    { "IgnorePayment",     "WebATM#ATM#CVS#BARCODE#ApplePay#TWQR#EZPay#BNPL" },
+                    { "ChoosePayment",     "ALL" }, // 改為 ALL 以支援街口支付等
                     { "EncryptType",       "1" },
                     { "CustomField1",      "" },
                     { "CustomField2",      "" },
@@ -303,6 +316,8 @@ namespace MyFitnessCoach_Server.Controllers
 
                 string rtnCode     = form["RtnCode"].ToString();
                 string customField = form["CustomField1"].ToString();
+                string paymentType = form["PaymentType"].ToString();
+                string actualMethod = GetFriendlyPaymentMethod(paymentType);
 
                 if (rtnCode == "1" && !string.IsNullOrEmpty(customField))
                 {
@@ -361,8 +376,8 @@ namespace MyFitnessCoach_Server.Controllers
                 string customField3 = form["CustomField3"].ToString();
                 if (rtnCode == "1" && int.TryParse(customField3, out int cbReservationId) && cbReservationId > 0)
                 {
-                    // 使用 Service 處理：更新狀態、發信、同步日曆
-                    await _reservationService.CompleteReservationAsync(cbReservationId);
+                    // 使用 Service 處理：更新狀態、發信、同步日曆，並帶入實際支付方式
+                    await _reservationService.CompleteReservationAsync(cbReservationId, actualMethod);
                 }
 
                 // ── 處理商品訂單：優先用 MerchantTradeNo，備援用 CustomField2 ──
@@ -412,6 +427,8 @@ namespace MyFitnessCoach_Server.Controllers
             string rtnMsg     = Uri.EscapeDataString(form["RtnMsg"].ToString());
             string tradeNo    = form["MerchantTradeNo"].ToString();
             string customField = form["CustomField1"].ToString();
+            string paymentType = form["PaymentType"].ToString();
+            string actualMethod = GetFriendlyPaymentMethod(paymentType);
 
             // 驗證簽章後執行入帳（與 Callback 相同邏輯，Status==0 防止重複處理）
             try
@@ -476,8 +493,8 @@ namespace MyFitnessCoach_Server.Controllers
                 string resultCustomField3 = form["CustomField3"].ToString();
                 if (macValid && rtnCode == "1" && int.TryParse(resultCustomField3, out int resultReservationId) && resultReservationId > 0)
                 {
-                    // 使用 Service 處理：更新狀態、發信、同步日曆
-                    await _reservationService.CompleteReservationAsync(resultReservationId);
+                    // 使用 Service 處理：更新狀態、發信、同步日曆，並帶入實際支付方式
+                    await _reservationService.CompleteReservationAsync(resultReservationId, actualMethod);
                 }
 
 
@@ -519,6 +536,26 @@ namespace MyFitnessCoach_Server.Controllers
                 $"?RtnCode={rtnCode}" +
                 $"&RtnMsg={rtnMsg}" +
                 $"&MerchantTradeNo={tradeNo}");
+        }
+
+        private string GetFriendlyPaymentMethod(string paymentType)
+        {
+            if (string.IsNullOrEmpty(paymentType)) return "線上支付";
+            
+            // 綠界回傳範例：Credit_CreditCard, JKOPAY_JKOPAY, APPLEPAY_APPLEPAY, IPASSPAY_IPASSPAY...
+            string type = paymentType.Split('_')[0].ToUpper();
+            
+            return type switch
+            {
+                "CREDIT"   => "信用卡",
+                "APPLEPAY" => "Apple Pay",
+                "IPASSPAY" => "iPASS Money",
+                "IPASS"    => "iPASS Money",
+                "JKOPAY"   => "街口支付",
+                "ECPAYPAY" => "綠界 Pay",
+                "TWQR"     => "綠界 Pay",
+                _          => "線上支付"
+            };
         }
 
         // ──────────────────────────────────────────────────────────────
