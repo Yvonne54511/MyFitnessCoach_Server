@@ -11,6 +11,9 @@ public class BasicInfoDto
     [Range(20, 300)]
     public double? TargetWeight { get; set; }
 
+    [Range(20, 300)]
+    public double? CurrentWeight { get; set; }
+
     [Required]
     [RegularExpression(@"^(1\.2|1\.375|1\.55|1\.725|1\.9)$")]
     public string ActivityLevel { get; set; } = string.Empty;

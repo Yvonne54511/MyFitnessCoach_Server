@@ -13,11 +13,16 @@ public class AccountController : ControllerBase
 {
     private readonly IAccountService _accountService;
     private readonly IConfiguration _config;
+    private readonly IWebHostEnvironment _env;
 
-    public AccountController(IAccountService accountService, IConfiguration config)
+    public AccountController(
+        IAccountService accountService,
+        IConfiguration config,
+        IWebHostEnvironment env)
     {
         _accountService = accountService;
         _config         = config;
+        _env            = env;
     }
 
     private const string AccessTokenCookieName = "access_token";
@@ -28,7 +33,7 @@ public class AccountController : ControllerBase
         return new CookieOptions
         {
             HttpOnly = true,
-            Secure   = true,
+            Secure   = !_env.IsDevelopment(),
             SameSite = SameSiteMode.Strict,
             Path     = "/",
             Expires  = expires ?? DateTimeOffset.UtcNow.AddMinutes(lifetime)
@@ -76,7 +81,7 @@ public class AccountController : ControllerBase
         {
             Path     = "/",
             SameSite = SameSiteMode.Strict,
-            Secure   = true,
+            Secure   = !_env.IsDevelopment(),
             HttpOnly = true
         });
         return NoContent();

@@ -12,6 +12,10 @@ public partial class MyFitnessCoachDbContext
     {
         modelBuilder.Entity<MemberGoal>(entity =>
         {
+            entity.HasKey(e => e.MemberId).HasName("PK_MemberGoals");
+
+            entity.Ignore(e => e.Id);
+
             entity.HasIndex(e => e.MemberId, "UX_MemberGoals_MemberId").IsUnique();
 
             entity.Property(e => e.UpdatedAt)

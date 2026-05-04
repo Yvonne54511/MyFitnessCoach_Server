@@ -345,6 +345,7 @@ public class AccountService : IAccountService
         return new CurrentUserDto
         {
             UserId   = user.Id,
+            MemberId = member?.Id,
             UserName = user.UserName ?? user.Account,
             ImageUrl = member?.ImageUrl ?? "/images/members/default.jpg"
         };

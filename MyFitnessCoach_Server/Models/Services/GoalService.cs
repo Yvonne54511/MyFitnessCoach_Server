@@ -16,10 +16,11 @@ public class GoalService : IGoalService
     {
         var member = await _repo.GetMemberAsync(memberId);
         var goal   = await _repo.GetMemberGoalAsync(memberId);
+        var latestWeight = await _repo.GetLatestWeightAsync(memberId);
 
         return new GoalPageResponseDto
         {
-            Info  = member is not null ? MemberToDto(member) : null,
+            Info  = member is not null ? MemberToDto(member, latestWeight) : null,
             Goals = goal   is not null ? GoalToDto(goal)     : null,
         };
     }
@@ -32,11 +33,13 @@ public class GoalService : IGoalService
         await _repo.UpdateMemberInfoAsync(member, dto);
 
         var goal = await _repo.GetMemberGoalAsync(memberId);
+        var latestWeight = await _repo.GetLatestWeightAsync(memberId);
+        var responseInfo = DtoWithCurrentWeight(dto, latestWeight);
 
         if (goal is null)
         {
             // 首次設定目標：用 Member 現有的 Gender/DateOfBirth 計算初始 MemberGoals
-            var currentWeight = await _repo.GetLatestWeightAsync(memberId) ?? dto.TargetWeight ?? 60;
+            var currentWeight = latestWeight ?? dto.TargetWeight ?? 60;
             var dob    = member.DateOfBirth.HasValue
                 ? DateOnly.FromDateTime(member.DateOfBirth.Value)
                 : throw new InvalidOperationException("Member DateOfBirth is required");
@@ -48,12 +51,12 @@ public class GoalService : IGoalService
             var macros = GoalCalculator.CalculateMacros(tdee, currentWeight, dto.HealthGoal);
 
             await _repo.CreateMemberGoalAsync(memberId, macros);
-            return new GoalPageResponseDto { Info = dto, Goals = macros };
+            return new GoalPageResponseDto { Info = responseInfo, Goals = macros };
         }
 
         return new GoalPageResponseDto
         {
-            Info  = dto,
+            Info  = responseInfo,
             Goals = GoalToDto(goal),
         };
     }
@@ -69,12 +72,22 @@ public class GoalService : IGoalService
     }
 
     // ── mapping ───────────────────────────────────────────────────
-    private static BasicInfoDto MemberToDto(Member m) => new()
+    private static BasicInfoDto MemberToDto(Member m, double? currentWeight) => new()
     {
         Height        = m.Height ?? 0,
         TargetWeight  = m.TargetWeight,
+        CurrentWeight = currentWeight,
         ActivityLevel = m.ActivityLevel ?? "1.55",
         HealthGoal    = m.HealthPlan ?? "健康飲食",
+    };
+
+    private static BasicInfoDto DtoWithCurrentWeight(BasicInfoDto dto, double? currentWeight) => new()
+    {
+        Height        = dto.Height,
+        TargetWeight  = dto.TargetWeight,
+        CurrentWeight = currentWeight,
+        ActivityLevel = dto.ActivityLevel,
+        HealthGoal    = dto.HealthGoal,
     };
 
     private static TargetCaloriesDto GoalToDto(MemberGoal g) => new()
