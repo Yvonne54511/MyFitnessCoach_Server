@@ -11,17 +11,15 @@ public partial class MemberGoal
 
     public int MemberId { get; set; }
 
-    public decimal? TargetWeight { get; set; }
+    public int TotalCalories { get; set; }
 
-    public decimal? CaloriesGoal { get; set; }
+    public int Protein { get; set; }
 
-    public decimal? ProteinGoal { get; set; }
+    public int Carbs { get; set; }
 
-    public decimal? CarbGoal { get; set; }
+    public int Fat { get; set; }
 
-    public decimal? FatGoal { get; set; }
-
-    public decimal? WaterGoal { get; set; }
+    public int Water { get; set; }
 
     public DateTime UpdatedAt { get; set; }
 

@@ -51,10 +51,6 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[FoodRecords]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[Foods]",
          "ObjectType": 0
       },
