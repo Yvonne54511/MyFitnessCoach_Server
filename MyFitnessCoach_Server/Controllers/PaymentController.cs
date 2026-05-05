@@ -124,7 +124,7 @@ namespace MyFitnessCoach_Server.Controllers
                     { "ClientBackURL",  $"{_frontendUrl}/lesson-cart" },
                     { "OrderResultURL", $"{_ngrokUrl}/api/Payment/Result" },
                     { "ChoosePayment",     "ALL" },
-                    { "IgnorePayment",     "ApplePay#TWQR#EZPay#BNPL" },
+                    { "IgnorePayment",     "ApplePay#TWQR#BNPL" },
                     { "EncryptType",       "1" },
                     { "CustomField1",      string.Join(",", orderIds) },
                 };
@@ -196,7 +196,7 @@ namespace MyFitnessCoach_Server.Controllers
                     { "ClientBackURL",  $"{_frontendUrl}/checkout" },
                     { "OrderResultURL", $"{_ngrokUrl}/api/Payment/Result" },
                     { "ChoosePayment",     "ALL" },
-                    { "IgnorePayment",     "ApplePay#TWQR#EZPay#BNPL" },
+                    { "IgnorePayment",     "ApplePay#TWQR#BNPL" },
                     { "EncryptType",       "1" },
                     { "CustomField1",      "" },
                     { "CustomField2",      productOrderId.ToString() },
