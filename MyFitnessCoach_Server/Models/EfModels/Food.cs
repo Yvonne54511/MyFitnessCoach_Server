@@ -21,9 +21,11 @@ public partial class Food
 
     public virtual FoodCategory Category { get; set; }
 
-    public virtual ICollection<MemberFavoriteFood> MemberFavoriteFoods { get; set; } = new List<MemberFavoriteFood>();
+    public virtual ICollection<DailyDiet> DailyDiets { get; set; } = new List<DailyDiet>();
 
     public virtual Member Member { get; set; }
+
+    public virtual ICollection<MemberFavoriteFood> MemberFavoriteFoods { get; set; } = new List<MemberFavoriteFood>();
 
     public virtual ICollection<NutrientReferenceValue> NutrientReferenceValues { get; set; } = new List<NutrientReferenceValue>();
 }

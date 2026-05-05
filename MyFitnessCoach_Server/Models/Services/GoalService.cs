@@ -92,10 +92,10 @@ public class GoalService : IGoalService
 
     private static TargetCaloriesDto GoalToDto(MemberGoal g) => new()
     {
-        TotalCalories = g.TotalCalories,
-        Protein       = g.Protein,
-        Carbs         = g.Carbs,
-        Fat           = g.Fat,
-        Water         = g.Water,
+        TotalCalories = g.TotalCalories ?? 0,
+        Protein       = g.Protein ?? 0,
+        Carbs         = g.Carbs ?? 0,
+        Fat           = g.Fat ?? 0,
+        Water         = g.Water ?? 0,
     };
 }
