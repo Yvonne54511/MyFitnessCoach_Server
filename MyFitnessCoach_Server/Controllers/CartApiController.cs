@@ -16,11 +16,13 @@ namespace MyFitnessCoach_Server.Controllers
 	{
 		private readonly CartService _cartService;
 		private readonly MyFitnessCoachDbContext _db;
+		private readonly CouponService _couponService;
 
-		public CartApiController(CartService cartService, MyFitnessCoachDbContext db)
+		public CartApiController(CartService cartService, MyFitnessCoachDbContext db, CouponService couponService)
 		{
 			_cartService = cartService;
 			_db = db;
+			_couponService = couponService;
 		}
 
 		/// <summary>
@@ -145,22 +147,42 @@ namespace MyFitnessCoach_Server.Controllers
 			}
 
 			// ── 計算金額 ──────────────────────────────────────────────
-			decimal originalAmount = cart.CartItems.Sum(ci => ci.Product.OriginalPrice * ci.Qty);
-			decimal finalAmount    = cart.CartItems.Sum(ci => ci.Product.UnitPrice * ci.Qty);
-			decimal discountAmount = originalAmount - finalAmount;
+			decimal originalAmount  = cart.CartItems.Sum(ci => ci.Product.OriginalPrice * ci.Qty);
+			decimal subtotal        = cart.CartItems.Sum(ci => ci.Product.UnitPrice * ci.Qty);
+			decimal productDiscount = originalAmount - subtotal;
 			var itemSummary = string.Join("、", cart.CartItems.Select(ci => $"{ci.Product.Name} x{ci.Qty}"));
+
+			// ── 優惠券試算（先驗證，不寫 DB）──────────────────────────
+			decimal couponDiscount = 0;
+			int? actualCouponId = null;
+			if (dto.MemberCouponId.HasValue)
+			{
+				var preview = await _couponService.PreviewDiscountAsync(memberId.Value, dto.MemberCouponId.Value, subtotal);
+				if (!preview.IsValid)
+					return BadRequest(new { message = preview.Message ?? "優惠券驗證失敗" });
+				couponDiscount = preview.DiscountAmount;
+
+				// CouponId FK 指向 Coupons 表，需取得 MemberCoupon 對應的真實 Coupon.Id
+				actualCouponId = await _db.MemberCoupons
+					.Where(mc => mc.Id == dto.MemberCouponId.Value)
+					.Select(mc => mc.CouponId)
+					.FirstOrDefaultAsync();
+			}
+
+			decimal totalDiscount = productDiscount + couponDiscount;
+			decimal payableAmount = subtotal - couponDiscount;
 
 			using var tx = await _db.Database.BeginTransactionAsync();
 			try
 			{
 				// ── 建立 ProductOrder ──────────────────────────────────
-				// FinalAmount 是 DB 計算欄位（OriginalAmount - DiscountAmount），不需手動設定
 				var order = new ProductOrder
 				{
 					MemberId       = memberId.Value,
 					CreateAt       = DateTime.Now,
 					OriginalAmount = originalAmount,
-					DiscountAmount = discountAmount,
+					DiscountAmount = totalDiscount,
+					CouponId       = actualCouponId,
 					Receiver       = dto.Receiver,
 					Address        = dto.Address,
 					Mobile         = dto.Mobile,
@@ -194,17 +216,24 @@ namespace MyFitnessCoach_Server.Controllers
 				await _db.SaveChangesAsync();
 				await tx.CommitAsync();
 
+				// ── 標記優惠券已使用（commit 後執行）──────────────────
+				if (dto.MemberCouponId.HasValue)
+					await _couponService.ConsumeAsync(dto.MemberCouponId.Value, order.Id);
+
 				return Ok(new CheckoutResultDto
 				{
 					ProductOrderId = order.Id,
-					FinalAmount    = finalAmount,
+					FinalAmount    = payableAmount,
 					ItemSummary    = itemSummary
 				});
 			}
 			catch (Exception ex)
 			{
 				await tx.RollbackAsync();
-				return StatusCode(500, new { message = $"建立訂單失敗：{ex.Message}" });
+				var inner = ex.InnerException?.Message ?? "(no inner)";
+				var deepest = ex;
+				while (deepest.InnerException != null) deepest = deepest.InnerException;
+				return StatusCode(500, new { message = $"建立訂單失敗：{ex.Message} | inner: {inner} | deepest: {deepest.Message}" });
 			}
 		}
 
