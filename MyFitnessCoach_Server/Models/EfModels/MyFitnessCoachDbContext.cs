@@ -613,7 +613,7 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<MemberGoal>(entity =>
         {
-            entity.HasKey(e => e.M);
+            entity.HasKey(e => e.Id);
 
             entity.HasIndex(e => e.MemberId, "UX_MemberGoals_MemberId").IsUnique();
 
