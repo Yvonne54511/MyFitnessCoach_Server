@@ -73,11 +73,12 @@ public class MemberController : ControllerBase
 
         return Ok(new MemberInfoDto
         {
-            Id     = member.Id,
-            Name   = member.User?.UserName ?? string.Empty,
-            Avatar = member.ImageUrl,
-            Points = member.UserWallet?.CurrentBalance ?? 0,
-            Phone  = member.User?.Mobile
+            Id          = member.Id,
+            Name        = member.User?.UserName ?? string.Empty,
+            Avatar      = member.ImageUrl,
+            Points      = member.UserWallet?.CurrentBalance ?? 0,
+            Phone       = member.User?.Mobile,
+            CancelCount = member.CancelCount
         });
     }
 

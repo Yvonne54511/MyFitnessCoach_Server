@@ -1,0 +1,1 @@
+ALTER TABLE ReserveOrders ADD GuestEmail NVARCHAR(255) NULL;
