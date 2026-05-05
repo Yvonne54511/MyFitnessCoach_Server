@@ -38,34 +38,44 @@ public class GoogleCalendarService
             var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
             {
                 ClientSecrets = new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
-                Scopes = new[] { CalendarService.Scope.CalendarEvents }
+                Scopes = new[] { 
+                    CalendarService.Scope.CalendarEvents,
+                    "https://www.googleapis.com/auth/gmail.send"
+                }
             });
 
             // 這裡最容易出錯：如果 redirectUri 與 Google Console 設定的不完全一致，會拋出 Exception
             var tokenResponse = await flow.ExchangeCodeForTokenAsync(userId.ToString(), code, redirectUri, CancellationToken.None);
 
-            if (tokenResponse != null && !string.IsNullOrEmpty(tokenResponse.RefreshToken))
+            if (tokenResponse != null)
             {
                 var existingLogin = await _db.UserExternalLogins
                     .FirstOrDefaultAsync(l => l.UserId == userId && l.LoginProvider == "GoogleCalendar");
 
-                if (existingLogin == null)
+                if (!string.IsNullOrEmpty(tokenResponse.RefreshToken))
                 {
-                    _db.UserExternalLogins.Add(new UserExternalLogin
+                    if (existingLogin == null)
                     {
-                        UserId = userId,
-                        LoginProvider = "GoogleCalendar",
-                        ProviderKey = tokenResponse.RefreshToken,
-                        ProviderDisplayName = "Google日曆同步"
-                    });
+                        _db.UserExternalLogins.Add(new UserExternalLogin
+                        {
+                            UserId = userId,
+                            LoginProvider = "GoogleCalendar",
+                            ProviderKey = tokenResponse.RefreshToken,
+                            ProviderDisplayName = "Google 同步"
+                        });
+                    }
+                    else
+                    {
+                        existingLogin.ProviderKey = tokenResponse.RefreshToken;
+                    }
+                    await _db.SaveChangesAsync();
+                    return true;
                 }
-                else
+                else if (existingLogin != null && !string.IsNullOrEmpty(existingLogin.ProviderKey))
                 {
-                    existingLogin.ProviderKey = tokenResponse.RefreshToken;
+                    // 如果沒有拿到新的 RefreshToken，但資料庫本來就有，也算成功
+                    return true;
                 }
-
-                await _db.SaveChangesAsync();
-                return true;
             }
             return false;
         }
@@ -98,7 +108,10 @@ public class GoogleCalendarService
             var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
             {
                 ClientSecrets = new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
-                Scopes = new[] { CalendarService.Scope.CalendarEvents }
+                Scopes = new[] { 
+                    CalendarService.Scope.CalendarEvents,
+                    "https://www.googleapis.com/auth/gmail.send"
+                }
             });
 
             var credential = new UserCredential(flow, userId.ToString(), tokenResponse);
@@ -163,7 +176,10 @@ public class GoogleCalendarService
             var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
             {
                 ClientSecrets = new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
-                Scopes = new[] { CalendarService.Scope.CalendarEvents }
+                Scopes = new[] { 
+                    CalendarService.Scope.CalendarEvents,
+                    "https://www.googleapis.com/auth/gmail.send"
+                }
             });
 
             var credential = new UserCredential(flow, userId.ToString(), tokenResponse);

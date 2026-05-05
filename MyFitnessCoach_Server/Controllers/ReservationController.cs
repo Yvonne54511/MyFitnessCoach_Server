@@ -43,10 +43,28 @@ namespace MyFitnessCoach_Server.Controllers
         [HttpPost]
         public async Task<ActionResult> CreateReservation(CreateReservationDto dto)
         {
-            var member = await GetCurrentMemberAsync();
-            if (member == null) return Unauthorized();
+            // 在建立新預約前先清理過期預約，釋放時段
+            await _service.CleanupAllExpiredReservationsAsync();
 
-            var (success, reservationId) = await _service.CreateReservationAsync(member.Id, dto);
+            var memberIdClaim = User.FindFirst("MemberId")?.Value;
+            int memberId;
+            
+            // 辨識身份：有 Token 則解析 MemberId，無則使用預設訪客 ID (6)
+            if (!string.IsNullOrEmpty(memberIdClaim) && int.TryParse(memberIdClaim, out int mid))
+            {
+                memberId = mid;
+            }
+            else
+            {
+                memberId = 6;
+                // 訪客強制只能使用信用卡
+                if (dto.PaymentMethod != "CreditCard")
+                {
+                    return BadRequest(new { message = "未登入狀態僅支援信用卡支付" });
+                }
+            }
+
+            var (success, reservationId) = await _service.CreateReservationAsync(memberId, dto);
             if (success)
             {
                 string message = dto.PaymentMethod == "CreditCard" ? "預約建立中，請完成付款" : "預約成功";

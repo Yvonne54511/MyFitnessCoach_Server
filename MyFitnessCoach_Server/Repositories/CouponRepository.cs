@@ -9,6 +9,9 @@ namespace MyFitnessCoach_Server.Repositories
 		/// <summary>取得所有「可領取」的優惠券：IsActive + 在效期內 + 仍有額度。</summary>
 		Task<List<CouponDto>> GetActiveCouponsAsync();
 
+		/// <summary>取得商城頁 banner 區要展示的券:GetActiveCouponsAsync 的結果再過濾 BannerImageUrl 有值。公開,不需 memberId。</summary>
+		Task<List<CouponDto>> GetBannerCouponsAsync();
+
 		/// <summary>用 Code 找優惠券主檔(回 Entity 不是 DTO,給領取流程用)。</summary>
 		Task<Coupon?> GetByCodeAsync(string code);
 
@@ -41,6 +44,38 @@ namespace MyFitnessCoach_Server.Repositories
 			return await _context.Coupons
 				.AsNoTracking()
 				.Where(c => c.IsActive
+				         && c.StartAt <= now
+				         && c.EndAt > now
+				         && (c.RemainingQuota == null || c.RemainingQuota > 0)
+				         && (c.VisibleOnlyOnDayOfMonth == null || c.VisibleOnlyOnDayOfMonth == todayDay))
+				.OrderBy(c => c.EndAt)
+				.Select(c => new CouponDto
+				{
+					Id             = c.Id,
+					Code           = c.Code,
+					Name           = c.Name,
+					Description    = c.Description,
+					DiscountType   = c.DiscountType,
+					DiscountValue  = c.DiscountValue,
+					MinSpend       = c.MinSpend,
+					MaxDiscount    = c.MaxDiscount,
+					StartAt        = c.StartAt,
+					EndAt          = c.EndAt,
+					RemainingQuota = c.RemainingQuota,
+					BannerImageUrl = c.BannerImageUrl,
+					VisibleOnlyOnDayOfMonth = c.VisibleOnlyOnDayOfMonth
+				})
+				.ToListAsync();
+		}
+
+		public async Task<List<CouponDto>> GetBannerCouponsAsync()
+		{
+			var now = DateTime.Now;
+			var todayDay = (byte)now.Day;
+			return await _context.Coupons
+				.AsNoTracking()
+				.Where(c => c.IsActive
+				         && !string.IsNullOrEmpty(c.BannerImageUrl)
 				         && c.StartAt <= now
 				         && c.EndAt > now
 				         && (c.RemainingQuota == null || c.RemainingQuota > 0)

@@ -842,7 +842,6 @@ public partial class MyFitnessCoachDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__ReserveO__3214EC07387E65D4");
 
-            entity.Property(e => e.CompletedAt).HasPrecision(0);
             entity.Property(e => e.CreateAt)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(getdate())");
