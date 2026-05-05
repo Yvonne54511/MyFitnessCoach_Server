@@ -207,6 +207,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[FoodCalories]",
+         "ObjectType": 3
+      },
+      {
          "Name": "[dbo].[vw_EmployeeDeptInfo]",
          "ObjectType": 3
       },

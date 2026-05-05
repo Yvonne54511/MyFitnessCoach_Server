@@ -29,6 +29,8 @@ public partial class MyFitnessCoachDbContext : DbContext
 
     public virtual DbSet<Food> Foods { get; set; }
 
+    public virtual DbSet<FoodCalory> FoodCalories { get; set; }
+
     public virtual DbSet<FoodCategory> FoodCategories { get; set; }
 
     public virtual DbSet<Function> Functions { get; set; }
@@ -64,8 +66,6 @@ public partial class MyFitnessCoachDbContext : DbContext
     public virtual DbSet<MemberGoal> MemberGoals { get; set; }
 
     public virtual DbSet<MemberViolation> MemberViolations { get; set; }
-
-    public virtual DbSet<NutrientReferenceValue> NutrientReferenceValues { get; set; }
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
@@ -123,6 +123,8 @@ public partial class MyFitnessCoachDbContext : DbContext
     {
         modelBuilder.Entity<BodyRecord>(entity =>
         {
+            entity.HasIndex(e => new { e.MemberId, e.CreateAt }, "IX_BodyRecords_MemberId_CreateAt").IsDescending(false, true);
+
             entity.Property(e => e.BodyFat).HasColumnType("decimal(4, 1)");
             entity.Property(e => e.CreateAt)
                 .HasPrecision(0)
@@ -212,6 +214,8 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<DailyDiet>(entity =>
         {
+            entity.HasIndex(e => new { e.MemberId, e.EatDT }, "IX_MemberId_EatDT");
+
             entity.Property(e => e.Amount).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.CreatedAt)
                 .HasPrecision(0)
@@ -290,6 +294,19 @@ public partial class MyFitnessCoachDbContext : DbContext
             entity.HasOne(d => d.Member).WithMany(p => p.Foods)
                 .HasForeignKey(d => d.MemberId)
                 .HasConstraintName("FK_Foods_Members");
+        });
+
+        modelBuilder.Entity<FoodCalory>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("FoodCalories");
+
+            entity.Property(e => e.CategoryName)
+                .IsRequired()
+                .HasMaxLength(50);
+            entity.Property(e => e.FoodName).HasMaxLength(50);
+            entity.Property(e => e.Kcal).HasColumnType("decimal(10, 2)");
         });
 
         modelBuilder.Entity<FoodCategory>(entity =>
@@ -596,18 +613,29 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<MemberGoal>(entity =>
         {
+            entity.HasKey(e => e.M);
+
             entity.HasIndex(e => e.MemberId, "UX_MemberGoals_MemberId").IsUnique();
 
-            entity.Property(e => e.CaloriesGoal).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.CarbGoal).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.FatGoal).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.ProteinGoal).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.TargetWeight).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.Carbs)
+                .HasDefaultValue(0)
+                .HasAnnotation("Relational:DefaultConstraintName", "DF__MemberGoa__Carbs__1699586C");
+            entity.Property(e => e.Fat)
+                .HasDefaultValue(0)
+                .HasAnnotation("Relational:DefaultConstraintName", "DF__MemberGoals__Fat__178D7CA5");
+            entity.Property(e => e.Protein)
+                .HasDefaultValue(0)
+                .HasAnnotation("Relational:DefaultConstraintName", "DF__MemberGoa__Prote__15A53433");
+            entity.Property(e => e.TotalCalories)
+                .HasDefaultValue(0)
+                .HasAnnotation("Relational:DefaultConstraintName", "DF__MemberGoa__Total__14B10FFA");
             entity.Property(e => e.UpdatedAt)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(getdate())")
                 .HasAnnotation("Relational:DefaultConstraintName", "DF_MemberGoals_UpdatedAt");
-            entity.Property(e => e.WaterGoal).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.Water)
+                .HasDefaultValue(2000)
+                .HasAnnotation("Relational:DefaultConstraintName", "DF__MemberGoa__Water__1881A0DE");
 
             entity.HasOne(d => d.Member).WithOne(p => p.MemberGoal)
                 .HasForeignKey<MemberGoal>(d => d.MemberId)
@@ -658,8 +686,6 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<NutrientReferenceValue>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK_NutrientReferenceValues");
-
             entity.Property(e => e.BaseAmount).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.CarbGram).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.FatGram).HasColumnType("decimal(10, 2)");
@@ -704,7 +730,7 @@ public partial class MyFitnessCoachDbContext : DbContext
             entity.Property(e => e.CreateAt)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(getdate())")
-                .HasAnnotation("Relational:DefaultConstraintName", "DF__PointsRec__Creat__367C1819");
+                .HasAnnotation("Relational:DefaultConstraintName", "DF__PointsRec__Creat__2EDAF651");
             entity.Property(e => e.MerchandiseCategory)
                 .IsRequired()
                 .HasMaxLength(50);

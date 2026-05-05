@@ -12,15 +12,22 @@ public partial class DailyDiet
     public int MemberId { get; set; }
 
     public DateOnly? EatDT { get; set; }
-    public string? MealType { get; set; }
+
+    public string MealType { get; set; }
+
     public int? FoodId { get; set; }
 
     public decimal? Amount { get; set; }
-    public string? Measure { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public string? Note { get; set; }
-    public string? ImageUrl { get; set; }
 
-    public virtual Member Member { get; set; } = null!;
-    public virtual Food? Food { get; set; }
+    public string Measure { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+
+    public string Note { get; set; }
+
+    public string ImageUrl { get; set; }
+
+    public virtual Food Food { get; set; }
+
+    public virtual Member Member { get; set; }
 }

@@ -31,13 +31,13 @@ public partial class Member
 
     public int CancelCount { get; set; }
 
+    public double? TargetWeight { get; set; }
+
     public virtual ICollection<BodyRecord> BodyRecords { get; set; } = new List<BodyRecord>();
 
     public virtual Cart Cart { get; set; }
 
     public virtual ICollection<DailyDiet> DailyDiets { get; set; } = new List<DailyDiet>();
-
-    public virtual ICollection<FoodRecord> FoodRecords { get; set; } = new List<FoodRecord>();
 
     public virtual ICollection<Food> Foods { get; set; } = new List<Food>();
 
