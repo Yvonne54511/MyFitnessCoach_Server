@@ -29,6 +29,8 @@ public partial class ProductOrder
 
     public string Memo { get; set; }
 
+    public string MerchantTradeNo { get; set; }
+
     public decimal? FinalAmount { get; set; }
 
     public int PaymentMethod { get; set; }
@@ -38,8 +40,6 @@ public partial class ProductOrder
     public string StoreName { get; set; }
 
     public string LogisticsOrderNo { get; set; }
-
-    public string MerchantTradeNo { get; set; }
 
     public int? CouponId { get; set; }
 

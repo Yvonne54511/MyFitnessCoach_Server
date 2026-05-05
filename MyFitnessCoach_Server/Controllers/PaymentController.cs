@@ -259,8 +259,8 @@ namespace MyFitnessCoach_Server.Controllers
                     return NotFound(new { error = "找不到待付款的預約紀錄" });
 
                 // ── 嚴格逾時檢查 ────────────────────────────────────
-                // 不給予展延，直接檢查是否已超過 30 秒 (配合目前測試設定)
-                if (reservation.CreateAt.AddSeconds(30) < DateTime.Now)
+                // 不給予展延，直接檢查是否已超過 10 秒 (配合目前測試設定)
+                if (reservation.CreateAt.AddSeconds(10) < DateTime.Now)
                 {
                     return BadRequest(new { error = "預約已逾時，請重新預約" });
                 }

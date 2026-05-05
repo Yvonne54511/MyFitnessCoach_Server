@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyFitnessCoach_Server.Models.DTOs;
 using MyFitnessCoach_Server.Models.Services;
+using MyFitnessCoach_Server.Utilities;
 
 namespace MyFitnessCoach_Server.Controllers;
 
@@ -10,15 +12,37 @@ namespace MyFitnessCoach_Server.Controllers;
 public class AccountController : ControllerBase
 {
     private readonly IAccountService _accountService;
+    private readonly IConfiguration _config;
+    private readonly IWebHostEnvironment _env;
 
-    public AccountController(IAccountService accountService)
+    public AccountController(
+        IAccountService accountService,
+        IConfiguration config,
+        IWebHostEnvironment env)
     {
         _accountService = accountService;
+        _config         = config;
+        _env            = env;
+    }
+
+    private const string AccessTokenCookieName = "access_token";
+
+    private CookieOptions BuildAccessTokenCookieOptions(DateTimeOffset? expires = null)
+    {
+        var lifetime = int.TryParse(_config["Jwt:AccessTokenLifetimeMinutes"], out var m) ? m : 480;
+        return new CookieOptions
+        {
+            HttpOnly = true,
+            Secure   = !_env.IsDevelopment(),
+            SameSite = SameSiteMode.Strict,
+            Path     = "/",
+            Expires  = expires ?? DateTimeOffset.UtcNow.AddMinutes(lifetime)
+        };
     }
 
     /// <summary>
     /// POST /api/auth/login
-    /// 驗證帳號密碼，成功後回傳 JWT Token
+    /// 驗證帳號密碼，成功後將 JWT 寫入 HttpOnly Cookie
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
@@ -32,13 +56,78 @@ public class AccountController : ControllerBase
         if (!result.IsSuccess)
             return Unauthorized(new { message = result.Message });
 
+        // JWT 改以 HttpOnly Cookie 傳遞，避免 XSS 竊取
+        Response.Cookies.Append(AccessTokenCookieName, result.Token!, BuildAccessTokenCookieOptions());
+
         return Ok(new LoginResponseDto
         {
-            Token    = result.Token!,
+            Token    = string.Empty, // 保留欄位以相容既有前端型別，內容留空（token 已存於 cookie）
             UserId   = result.UserId,
+            MemberId = result.MemberId,
             UserName = result.UserName!,
             ImageUrl = result.ImageUrl
         });
+    }
+
+    /// <summary>
+    /// POST /api/auth/logout
+    /// 清除 JWT cookie
+    /// </summary>
+    [HttpPost("logout")]
+    [AllowAnonymous]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete(AccessTokenCookieName, new CookieOptions
+        {
+            Path     = "/",
+            SameSite = SameSiteMode.Strict,
+            Secure   = !_env.IsDevelopment(),
+            HttpOnly = true
+        });
+        return NoContent();
+    }
+
+    /// <summary>
+    /// GET /api/auth/me
+    /// 取得目前登入使用者資訊（供前端啟動時同步使用者狀態）
+    /// </summary>
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var current = await _accountService.GetCurrentUserAsync(userId);
+        if (current == null) return Unauthorized();
+
+        return Ok(current);
+    }
+
+    /// <summary>
+    /// POST /api/auth/ChangePassword
+    /// 已登入用戶修改自己的密碼
+    /// </summary>
+    [HttpPost("ChangePassword")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _accountService.ChangePasswordAsync(dto, userId);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Message == "OLD_PASSWORD_WRONG")
+                return Unauthorized(new { message = "舊密碼不正確" });
+
+            return BadRequest(new { message = result.Message });
+        }
+
+        return Ok(new { message = result.Message });
     }
 
     /// <summary>
@@ -95,14 +184,24 @@ public class AccountController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
         try
         {
-            await _accountService.RegisterAsync(dto);
+            await _accountService.RegisterAsync(dto, ip);
             return StatusCode(201, new { message = "註冊成功，請至信箱收取啟用信" });
         }
-        catch (InvalidOperationException)
+        catch (RateLimitException ex)
+        {
+            return StatusCode(429, new { retryAfterSeconds = ex.RetryAfterSeconds });
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "ACCOUNT_OR_EMAIL_EXISTS")
         {
             return Conflict(new { message = "帳號或信箱已被使用" });
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "MOBILE_EXISTS")
+        {
+            return Conflict(new { message = "手機號碼已被使用" });
         }
     }
 

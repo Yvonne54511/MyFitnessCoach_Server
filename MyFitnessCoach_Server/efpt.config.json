@@ -51,10 +51,6 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[FoodRecords]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[Foods]",
          "ObjectType": 0
       },
@@ -209,6 +205,10 @@
       {
          "Name": "[dbo].[WaterLogs]",
          "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FoodCalories]",
+         "ObjectType": 3
       },
       {
          "Name": "[dbo].[vw_EmployeeDeptInfo]",

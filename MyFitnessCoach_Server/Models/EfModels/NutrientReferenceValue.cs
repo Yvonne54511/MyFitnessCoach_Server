@@ -17,13 +17,13 @@ public partial class NutrientReferenceValue
 
     public int WeightInGrams { get; set; }
 
-    public decimal Kcal { get; set; }
+    public decimal? Kcal { get; set; }
 
-    public decimal ProteinGram { get; set; }
+    public decimal? ProteinGram { get; set; }
 
-    public decimal CarbGram { get; set; }
+    public decimal? CarbGram { get; set; }
 
-    public decimal FatGram { get; set; }
+    public decimal? FatGram { get; set; }
 
     public virtual Food Food { get; set; }
 }

@@ -17,11 +17,11 @@ public partial class Food
 
     public int? MemberId { get; set; }
 
+    public DateTime UpdatedAt { get; set; }
+
     public virtual FoodCategory Category { get; set; }
 
     public virtual ICollection<DailyDiet> DailyDiets { get; set; } = new List<DailyDiet>();
-
-    public virtual ICollection<FoodRecord> FoodRecords { get; set; } = new List<FoodRecord>();
 
     public virtual Member Member { get; set; }
 

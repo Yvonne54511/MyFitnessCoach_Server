@@ -41,6 +41,7 @@ namespace MyFitnessCoach_Server.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<ActionResult> CreateReservation(CreateReservationDto dto)
         {
             // 在建立新預約前先清理過期預約，釋放時段

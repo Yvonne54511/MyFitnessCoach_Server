@@ -1,8 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using MyFitnessCoach_Server.Models.DTOs;
 using MyFitnessCoach_Server.Models.EfModels;
@@ -11,30 +9,29 @@ using MyFitnessCoach_Server.Utilities;
 
 namespace MyFitnessCoach_Server.Models.Services;
 
-public class RateLimitException : Exception
-{
-    public int RetryAfterSeconds { get; }
-    public RateLimitException(int retryAfterSeconds) : base("Too many requests")
-        => RetryAfterSeconds = retryAfterSeconds;
-}
-
 public class AccountService : IAccountService
 {
     private readonly IAccountRepository _accountRepository;
-    private readonly IPasswordHasher<User> _passwordHasher;
-    private readonly ILoginEmailService _emailService;
+    private readonly IAccountRateLimitService _accountRateLimitService;
+    private readonly IHashHelper _hashHelper;
+    private readonly IPasswordEmailService _emailService;
     private readonly IConfiguration _config;
+    private readonly IVerifyPasswordRequirements _passwordPolicy;
 
     public AccountService(
         IAccountRepository accountRepository,
-        IPasswordHasher<User> passwordHasher,
-        ILoginEmailService emailService,
-        IConfiguration config)
+        IAccountRateLimitService accountRateLimitService,
+        IHashHelper hashHelper,
+        IPasswordEmailService emailService,
+        IConfiguration config,
+        IVerifyPasswordRequirements passwordPolicy)
     {
-        _accountRepository = accountRepository;
-        _passwordHasher    = passwordHasher;
-        _emailService      = emailService;
-        _config            = config;
+        _accountRepository        = accountRepository;
+        _accountRateLimitService  = accountRateLimitService;
+        _hashHelper               = hashHelper;
+        _emailService             = emailService;
+        _config                   = config;
+        _passwordPolicy           = passwordPolicy;
     }
 
     // ── Login ──────────────────────────────────────────────────────────────
@@ -46,8 +43,7 @@ public class AccountService : IAccountService
         if (user == null || string.IsNullOrWhiteSpace(user.HashedPassword))
             return new LoginResultDto { IsSuccess = false, Message = "帳號或密碼錯誤" };
 
-        var result = _passwordHasher.VerifyHashedPassword(user, user.HashedPassword, dto.Password);
-        if (result == PasswordVerificationResult.Failed)
+        if (!_hashHelper.VerifyPassword(user.HashedPassword, dto.Password))
             return new LoginResultDto { IsSuccess = false, Message = "帳號或密碼錯誤" };
 
         if (!user.IsConfirmed)
@@ -55,6 +51,8 @@ public class AccountService : IAccountService
 
         if (!user.IsActive)
             return new LoginResultDto { IsSuccess = false, Message = "此帳號目前停用中，請洽管理員" };
+
+        await _accountRepository.EnsureMemberAsync(user.Id);
 
         var instructor = await _accountRepository.GetInstructorByUserIdAsync(user.Id);
         var employee   = await _accountRepository.GetEmployeeByUserIdAsync(user.Id);
@@ -75,11 +73,11 @@ public class AccountService : IAccountService
             new("Account", user.Account)
         };
 
-        if (instructor?.Id is int instructorId)
-            claims.Add(new Claim("InstructorId", instructorId.ToString()));
-
         if (member?.Id is int memberId)
             claims.Add(new Claim("MemberId", memberId.ToString()));
+
+        if (instructor?.Id is int instructorId)
+            claims.Add(new Claim("InstructorId", instructorId.ToString()));
 
         if (employee?.Id is int employeeId)
             claims.Add(new Claim("EmployeeId", employeeId.ToString()));
@@ -95,7 +93,11 @@ public class AccountService : IAccountService
 
         var key     = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds   = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.UtcNow.AddHours(8);
+        var lifetimeMinutes = int.TryParse(_config["Jwt:AccessTokenLifetimeMinutes"], out var minutes)
+            ? minutes
+            : 480;
+
+        var expires = DateTime.UtcNow.AddMinutes(lifetimeMinutes);
 
         var token = new JwtSecurityToken(
             issuer:             _config["Jwt:Issuer"],
@@ -111,9 +113,41 @@ public class AccountService : IAccountService
             Message   = "登入成功",
             Token     = new JwtSecurityTokenHandler().WriteToken(token),
             UserId    = user.Id,
+            MemberId  = member?.Id,
             UserName  = user.UserName ?? user.Account,
             ImageUrl  = member?.ImageUrl ?? "/images/members/default.jpg"
         };
+    }
+
+    // ── Change password ────────────────────────────────────────────────────
+
+    public async Task<ChangePasswordResultDto> ChangePasswordAsync(ChangePasswordDto dto, int userId)
+    {
+        var user = await _accountRepository.GetByIdAsync(userId);
+        if (user == null || string.IsNullOrWhiteSpace(user.HashedPassword))
+            return new ChangePasswordResultDto { IsSuccess = false, Message = "使用者不存在" };
+
+        if (!_hashHelper.VerifyPassword(user.HashedPassword, dto.OldPassword))
+            return new ChangePasswordResultDto { IsSuccess = false, Message = "OLD_PASSWORD_WRONG" };
+
+        var policyResult = await _passwordPolicy.VerifyAsync(dto.NewPassword, userId);
+        if (!policyResult.IsSuccess)
+            return new ChangePasswordResultDto { IsSuccess = false, Message = policyResult.Message };
+
+        var now = DateTime.UtcNow;
+        var newHashedPassword = _hashHelper.HashPassword(dto.NewPassword);
+        await _accountRepository.UpdatePasswordAsync(userId, newHashedPassword);
+
+        await _accountRepository.AddPasswordHistoryAsync(new UserPasswordHistory
+        {
+            UserId         = userId,
+            HashedPassword = newHashedPassword,
+            CreatedAt      = now
+        });
+
+        await _emailService.SendPasswordChangedNotificationAsync(user.Email);
+
+        return new ChangePasswordResultDto { IsSuccess = true, Message = "密碼已成功修改" };
     }
 
     // ── Forgot password ────────────────────────────────────────────────────
@@ -124,55 +158,17 @@ public class AccountService : IAccountService
         var now   = DateTime.UtcNow;
         var email = dto.Email.Trim().ToLower();
 
-        // IP rate limit：1 小時 5 次
-        var ipCount = await _accountRepository.CountRateLimitAsync(ipAddress, endPoint, byIp: true, since: now.AddHours(-1));
-        if (ipCount >= 100)
-        {
-            var oldest = await _accountRepository.GetOldestRateLimitTimeAsync(ipAddress, endPoint, since: now.AddHours(-1));
-            var retryAfter = oldest.HasValue
-                ? (int)Math.Ceiling((oldest.Value.AddHours(1) - now).TotalSeconds)
-                : 3600;
-            throw new RateLimitException(Math.Max(retryAfter, 1));
-        }
-
-        // Email rate limit：60 秒冷卻
-        var recentCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddSeconds(-60));
-        if (recentCount >= 100)
-        {
-            var latest = await _accountRepository.GetLatestRateLimitTimeAsync(email, endPoint, since: now.AddSeconds(-60));
-            var retryAfter = latest.HasValue
-                ? (int)Math.Ceiling((latest.Value.AddSeconds(60) - now).TotalSeconds)
-                : 60;
-            throw new RateLimitException(Math.Max(retryAfter, 1));
-        }
-
-        // Email rate limit：1 小時 5 次
-        var hourCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddHours(-1));
-        if (hourCount >= 100)
-            throw new RateLimitException(3600);
-
-        // Email rate limit：24 小時 10 次
-        var dayCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddHours(-24));
-        if (dayCount >= 100)
-            throw new RateLimitException(86400);
+        await _accountRateLimitService.VerifyIPRequestRateLimit(ipAddress, email, now);
 
         // 記錄請求（防止 enumeration，不論帳號是否存在都記錄）
-        await _accountRepository.LogRateLimitAsync(new RateLimitLog
-        {
-            IpAddress   = ipAddress,
-            EndPoint    = endPoint,
-            Identity    = email,
-            IsSuccess   = true,
-            RequestedAt = now
-        });
+        await _accountRateLimitService.VerifyEmailSendRateLimit(ipAddress, endPoint, email, now);
 
         // 查帳號（silent fail，防止 enumeration attack）
         var user = await _accountRepository.GetByEmailAsync(email);
         if (user == null) return;
 
-        // 產生 token 並存入 DB（SHA256 hash）
-        var rawToken = Guid.NewGuid().ToString("N");
-        var hash     = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken))).ToLower();
+        // 產生 token 並存入 DB（hash 儲存）
+        var (rawToken, hash) = _hashHelper.ProduceConfirmCode();
 
         await _accountRepository.UpdateResetTokenAsync(user.Id, hash, now.AddMinutes(15));
 
@@ -186,7 +182,7 @@ public class AccountService : IAccountService
     public async Task<ResetPasswordResultDto> ResetPasswordAsync(ResetPasswordDto dto)
     {
         var now  = DateTime.UtcNow;
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(dto.Token.Trim()))).ToLower();
+        var hash = _hashHelper.HashConfirmCode(dto.Token);
 
         // 取得 user 並驗證 token 狀態（未使用、未過期）
         var user = await _accountRepository.GetByResetCodeHashAsync(hash);
@@ -196,14 +192,10 @@ public class AccountService : IAccountService
             || user.ResetPasswordConfirmCodeExpiry <= now)
             return new ResetPasswordResultDto { IsSuccess = false, Message = "連結已失效或過期，請重新申請" };
 
-        // 密碼歷史比對（最近 3 次）
-        var history = await _accountRepository.GetPasswordHistoryAsync(user.Id, 3);
-        foreach (var record in history)
-        {
-            var verifyResult = _passwordHasher.VerifyHashedPassword(user, record.HashedPassword, dto.NewPassword);
-            if (verifyResult != PasswordVerificationResult.Failed)
-                return new ResetPasswordResultDto { IsSuccess = false, Message = "新密碼不可與近三次使用過的密碼相同" };
-        }
+        // 密碼規則驗證（長度 > 8、一個月內修改 < 3 次、不可與近 3 次相同）
+        var policyResult = await _passwordPolicy.VerifyAsync(dto.NewPassword, user.Id);
+        if (!policyResult.IsSuccess)
+            return new ResetPasswordResultDto { IsSuccess = false, Message = policyResult.Message! };
 
         // 所有檢查都通過才原子地把 token 標為已使用（防 race condition：併發請求只有一個會成功）
         var affected = await _accountRepository.MarkResetTokenUsedAsync(hash, now);
@@ -211,7 +203,7 @@ public class AccountService : IAccountService
             return new ResetPasswordResultDto { IsSuccess = false, Message = "連結已失效或過期，請重新申請" };
 
         // 更新密碼
-        var newHashedPassword = _passwordHasher.HashPassword(user, dto.NewPassword);
+        var newHashedPassword = _hashHelper.HashPassword(dto.NewPassword);
         await _accountRepository.UpdatePasswordAsync(user.Id, newHashedPassword);
 
         // 新增密碼歷史紀錄
@@ -230,41 +222,78 @@ public class AccountService : IAccountService
 
     // ── Register ───────────────────────────────────────────────────────────
 
-    public async Task RegisterAsync(RegisterDto dto)
+    public async Task RegisterAsync(RegisterDto dto, string ipAddress)
     {
-        var exists = await _accountRepository.AccountOrEmailExistsAsync(dto.Account, dto.Email);
-        if (exists)
+        const string endPoint = "register";
+        var now = DateTime.UtcNow;
+
+        await _accountRateLimitService.EnsureRegisterAllowedAsync(ipAddress, now);
+
+        // 記錄請求（即使後續驗證失敗也計入，防止枚舉攻擊）
+        await _accountRateLimitService.VerifyEmailSendRateLimit(ipAddress, endPoint, dto.Email.Trim().ToLower(), now);
+
+        // 正規化輸入
+        var account = dto.Account.Trim();
+        var email   = dto.Email.Trim().ToLower();
+        var mobile  = dto.Mobile.Trim();
+
+        // 驗證帳號/信箱唯一性
+        if (await _accountRepository.AccountOrEmailExistsAsync(account, email))
             throw new InvalidOperationException("ACCOUNT_OR_EMAIL_EXISTS");
 
-        var (rawToken, hash) = HashHelper.ProduceConfirmCode();
+        // 驗證手機唯一性
+        if (await _accountRepository.MobileExistsAsync(mobile))
+            throw new InvalidOperationException("MOBILE_EXISTS");
 
-        var tempUser = new User();
-        var hashedPassword = _passwordHasher.HashPassword(tempUser, dto.Password);
+        // 密碼規則驗證（長度 > 8）
+        var policyResult = await _passwordPolicy.VerifyAsync(dto.Password);
+        if (!policyResult.IsSuccess)
+            throw new InvalidOperationException(policyResult.Message);
+
+        // 雜湊密碼
+        var hashedPassword = _hashHelper.HashPassword(dto.Password);
+
+        // 產生啟用 token
+        var (rawToken, hash) = _hashHelper.ProduceConfirmCode();
 
         var user = new User
         {
-            Account                  = dto.Account,
-            HashedPassword           = hashedPassword,
-            Email                    = dto.Email,
-            UserName                 = dto.UserName,
-            Mobile                   = dto.Mobile,
-            IsConfirmed              = false,
-            IsActive                 = true,
-            NewMemberConfirmCode     = hash,
-            NewMemberConfirmCodeExpiry = DateTime.UtcNow.AddHours(24)
+            Account                    = account,
+            HashedPassword             = hashedPassword,
+            Email                      = email,
+            UserName                   = dto.UserName.Trim(),
+            Mobile                     = mobile,
+            IsConfirmed                = false,
+            IsActive                   = true,
+            NewMemberConfirmCode       = hash,
+            NewMemberConfirmCodeExpiry = now.AddHours(24)
         };
+
+        // 用交易包住「建立帳號 + 寄送啟用信」：寄信失敗時回滾，避免產生無法啟用的孤兒帳號
+        using var transaction = await _accountRepository.BeginTransactionAsync();
 
         await _accountRepository.CreateUserAsync(user);
 
+        await _accountRepository.CreateMemberAsync(new Member
+        {
+            UserId      = user.Id,
+            Gender      = dto.Gender == "M" ? (byte)1 : (byte)2,
+            DateOfBirth = dto.DateOfBirth.ToDateTime(TimeOnly.MinValue),
+            ImageUrl    = "/images/members/default.jpg",
+            CancelCount = 1
+        });
+
         var activationUrl = $"{_config["FrontEnd:BaseUrl"]}/activate?token={rawToken}";
         await _emailService.SendActivationEmailAsync(user.Email, activationUrl);
+
+        await transaction.CommitAsync();
     }
 
     // ── Activate account ───────────────────────────────────────────────────
 
     public async Task<ActivateAccountResultDto> ActivateAccountAsync(string rawToken)
     {
-        var hash = HashHelper.HashConfirmCode(rawToken);
+        var hash = _hashHelper.HashConfirmCode(rawToken);
 
         var user = await _accountRepository.GetByActivationCodeHashAsync(hash);
 
@@ -277,7 +306,7 @@ public class AccountService : IAccountService
         if (DateTime.UtcNow > user.NewMemberConfirmCodeExpiry)
             return new ActivateAccountResultDto { IsSuccess = false, ErrorCode = "TOKEN_EXPIRED" };
 
-        await _accountRepository.ActivateUserAsync(user.Id);
+        await _accountRepository.ActivateAndEnsureMemberAsync(user.Id);
         return new ActivateAccountResultDto { IsSuccess = true };
     }
 
@@ -289,45 +318,36 @@ public class AccountService : IAccountService
         var now   = DateTime.UtcNow;
         var email = dto.Email.Trim().ToLower();
 
-        // IP 限流：1 小時 5 次
-        var ipCount = await _accountRepository.CountRateLimitAsync(ipAddress, endPoint, byIp: true, since: now.AddHours(-1));
-        if (ipCount >= 5)
-        {
-            var oldest = await _accountRepository.GetOldestRateLimitTimeAsync(ipAddress, endPoint, since: now.AddHours(-1));
-            var retryAfter = oldest.HasValue
-                ? (int)Math.Ceiling((oldest.Value.AddHours(1) - now).TotalSeconds)
-                : 3600;
-            throw new RateLimitException(Math.Max(retryAfter, 1));
-        }
+        await _accountRateLimitService.EnsureResendActivationAllowedAsync(ipAddress, email, now);
 
-        // Email 冷卻：60 秒
-        var recentCount = await _accountRepository.CountRateLimitAsync(email, endPoint, byIp: false, since: now.AddSeconds(-60));
-        if (recentCount >= 1)
-        {
-            var latest = await _accountRepository.GetLatestRateLimitTimeAsync(email, endPoint, since: now.AddSeconds(-60));
-            var retryAfter = latest.HasValue
-                ? (int)Math.Ceiling((latest.Value.AddSeconds(60) - now).TotalSeconds)
-                : 60;
-            throw new RateLimitException(Math.Max(retryAfter, 1));
-        }
-
-        await _accountRepository.LogRateLimitAsync(new RateLimitLog
-        {
-            IpAddress   = ipAddress,
-            EndPoint    = endPoint,
-            Identity    = email,
-            IsSuccess   = true,
-            RequestedAt = now
-        });
+        await _accountRateLimitService.VerifyEmailSendRateLimit(ipAddress, endPoint, email, now);
 
         // Silent fail：防止帳號枚舉
         var user = await _accountRepository.GetPendingUserByEmailAsync(email);
         if (user == null) return;
 
-        var (rawToken, hash) = HashHelper.ProduceConfirmCode();
+        var (rawToken, hash) = _hashHelper.ProduceConfirmCode();
         await _accountRepository.UpdateActivationTokenAsync(user.Id, hash, now.AddHours(24));
 
         var activationUrl = $"{_config["FrontEnd:BaseUrl"]}/activate?token={rawToken}";
         await _emailService.SendActivationEmailAsync(user.Email, activationUrl);
+    }
+
+    // ── Current user (for /api/auth/me) ────────────────────────────────────
+
+    public async Task<CurrentUserDto?> GetCurrentUserAsync(int userId)
+    {
+        var user = await _accountRepository.GetByIdAsync(userId);
+        if (user == null || !user.IsActive) return null;
+
+        var member = await _accountRepository.GetMemberByUserIdAsync(user.Id);
+
+        return new CurrentUserDto
+        {
+            UserId   = user.Id,
+            MemberId = member?.Id,
+            UserName = user.UserName ?? user.Account,
+            ImageUrl = member?.ImageUrl ?? "/images/members/default.jpg"
+        };
     }
 }
