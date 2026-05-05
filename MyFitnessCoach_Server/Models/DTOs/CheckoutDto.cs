@@ -8,6 +8,7 @@ namespace MyFitnessCoach_Server.Models.DTOs
         public string Mobile { get; set; } = string.Empty;
         public int? TaxNumber { get; set; }
         public string? Memo { get; set; }
+        public int? MemberCouponId { get; set; }
     }
 
     // 結帳成功後回傳給前端的資料（前端用 productOrderId 呼叫 ProductSendToEcPay）
