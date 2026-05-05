@@ -64,13 +64,9 @@ namespace MyFitnessCoach_Server.Controllers
 		{
 			try
 			{
-				// 1. 取得專案根目錄
 				string rootPath = _env.ContentRootPath;
-
-				// 2. 預設圖片路徑 (仍在 StaticFiles 下)
 				string noImgPath = Path.Combine(rootPath, "StaticFiles", "images", "NoImage.jpg");
 
-				// 3. 從資料庫取得路徑 (例如: /images/products/chicken_01.jpg)
 				var product = await _productService.GetProductAsync(id);
 				string dbPath = product?.ImageUrl ?? "";
 
@@ -89,11 +85,9 @@ namespace MyFitnessCoach_Server.Controllers
 					return PhysicalFile(fullPath, contentType);
 				}
 
-				// 7. 備援：回傳預設圖
+				// 備援：回傳預設圖
 				if (System.IO.File.Exists(noImgPath))
-				{
 					return PhysicalFile(noImgPath, "image/jpeg");
-				}
 
 				return NotFound("Image not found on server.");
 			}

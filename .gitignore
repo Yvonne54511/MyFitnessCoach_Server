@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# 各自本地環境設定（含 ngrok URL、金鑰等），不 commit
+appsettings.Development.json
+appsettings.*.local.json
+
 # User-specific files
 *.rsuser
 *.suo
