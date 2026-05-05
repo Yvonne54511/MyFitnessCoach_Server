@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using MyFitnessCoach_Server.Models.DTOs;
 using MyFitnessCoach_Server.Models.EfModels;
 
 namespace MyFitnessCoach_Server.Models.Repositories;
@@ -8,6 +10,11 @@ public class AccountRepository : IAccountRepository
     private readonly MyFitnessCoachDbContext _db;
 
     public AccountRepository(MyFitnessCoachDbContext db) => _db = db;
+
+    // ── Transaction ────────────────────────────────────────────────────────
+
+    public Task<IDbContextTransaction> BeginTransactionAsync()
+        => _db.Database.BeginTransactionAsync();
 
     // ── Login ──────────────────────────────────────────────────────────────
 
@@ -44,6 +51,9 @@ public class AccountRepository : IAccountRepository
     }
 
     // ── Forgot / Reset password ────────────────────────────────────────────
+
+    public async Task<User?> GetByIdAsync(int userId)
+        => await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
 
     public async Task<User?> GetByEmailAsync(string email)
     {
@@ -107,11 +117,27 @@ public class AccountRepository : IAccountRepository
         await _db.SaveChangesAsync();
     }
 
+    public async Task<int> CountPasswordChangesInPeriodAsync(int userId, DateTime since)
+        => await _db.UserPasswordHistories
+            .Where(h => h.UserId == userId && h.CreatedAt >= since)
+            .CountAsync();
+
     // ── Register / Activate ────────────────────────────────────────────────
+
+    public async Task CreateMemberAsync(Member member)
+    {
+        _db.Members.Add(member);
+        await _db.SaveChangesAsync();
+    }
 
     public async Task<bool> AccountOrEmailExistsAsync(string account, string email)
     {
         return await _db.Users.AnyAsync(u => u.Account == account || u.Email == email);
+    }
+
+    public async Task<bool> MobileExistsAsync(string mobile)
+    {
+        return await _db.Users.AnyAsync(u => u.Mobile == mobile);
     }
 
     public async Task CreateUserAsync(User user)
@@ -137,6 +163,37 @@ public class AccountRepository : IAccountRepository
                 .SetProperty(u => u.NewMemberConfirmCodeExpiry, (DateTime?)null));
     }
 
+    public async Task ActivateAndEnsureMemberAsync(int userId)
+    {
+        using var tx = await _db.Database.BeginTransactionAsync();
+
+        await _db.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(u => u.IsConfirmed, true)
+                .SetProperty(u => u.NewMemberConfirmCode, (string?)null)
+                .SetProperty(u => u.NewMemberConfirmCodeExpiry, (DateTime?)null));
+
+        var exists = await _db.Members.AnyAsync(m => m.UserId == userId);
+        if (!exists)
+        {
+            _db.Members.Add(new Member { UserId = userId, CancelCount = 1 });
+            await _db.SaveChangesAsync();
+        }
+
+        await tx.CommitAsync();
+    }
+
+    public async Task EnsureMemberAsync(int userId)
+    {
+        var exists = await _db.Members.AnyAsync(m => m.UserId == userId);
+        if (!exists)
+        {
+            _db.Members.Add(new Member { UserId = userId, CancelCount = 1 });
+            await _db.SaveChangesAsync();
+        }
+    }
+
     public async Task UpdateActivationTokenAsync(int userId, string hash, DateTime expiry)
     {
         await _db.Users
@@ -151,6 +208,42 @@ public class AccountRepository : IAccountRepository
         return await _db.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email && u.IsConfirmed == false);
+    }
+
+    // ── PersonalInfo ───────────────────────────────────────────────────────
+
+    public async Task<User?> GetUserWithMemberAsync(int userId)
+        => await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+    public async Task<bool> EmailExistsExceptUserAsync(string email, int userId)
+        => await _db.Users.AnyAsync(u => u.Email == email && u.Id != userId);
+
+    public async Task<bool> MobileExistsExceptUserAsync(string mobile, int userId)
+        => await _db.Users.AnyAsync(u => u.Mobile == mobile && u.Id != userId);
+
+    public async Task UpdatePersonalInfoAsync(int userId, int memberId, UpdatePersonalInfoRequest request)
+    {
+        using var tx = await _db.Database.BeginTransactionAsync();
+
+        await _db.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(u => u.UserName, request.UserName.Trim()));
+
+        await _db.Members
+            .Where(m => m.Id == memberId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(m => m.Gender, request.Gender == "M" ? (byte?)1 : (byte?)2)
+                .SetProperty(m => m.DateOfBirth, request.DateOfBirth.ToDateTime(TimeOnly.MinValue)));
+
+        await tx.CommitAsync();
+    }
+
+    public async Task UpdateMemberImageAsync(int memberId, string imageUrl)
+    {
+        await _db.Members
+            .Where(m => m.Id == memberId)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.ImageUrl, imageUrl));
     }
 
     // ── Rate limit ─────────────────────────────────────────────────────────

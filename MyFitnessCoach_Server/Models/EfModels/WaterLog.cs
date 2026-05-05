@@ -15,5 +15,5 @@ public partial class WaterLog
 
     public int Amount { get; set; }
 
-    public virtual Member Member { get; set; }
+    public virtual Member Member { get; set; } = null!;
 }
