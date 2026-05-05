@@ -33,8 +33,9 @@ public class AccountController : ControllerBase
         return new CookieOptions
         {
             HttpOnly = true,
-            Secure   = !_env.IsDevelopment(),
-            SameSite = SameSiteMode.Lax,
+           // Secure   = !_env.IsDevelopment(),
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
             Path     = "/",
             Expires  = expires ?? DateTimeOffset.UtcNow.AddMinutes(lifetime)
         };
