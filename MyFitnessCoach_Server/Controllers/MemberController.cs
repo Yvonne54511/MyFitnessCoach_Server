@@ -156,13 +156,13 @@ public class MemberController : ControllerBase
 
         var ext      = Path.GetExtension(file.FileName).ToLower();
         var fileName = $"{member.Id}_{Guid.NewGuid():N}{ext}";
-        var savePath = Path.Combine(_env.ContentRootPath, "images", "members", fileName);
+        var savePath = Path.Combine(_env.ContentRootPath, "img", "members", fileName);
 
         Directory.CreateDirectory(Path.GetDirectoryName(savePath)!);
         using (var stream = new FileStream(savePath, FileMode.Create))
             await file.CopyToAsync(stream);
 
-        var imageUrl = $"/images/members/{fileName}";
+        var imageUrl = $"/img/members/{fileName}";
         await _accountRepository.UpdateMemberImageAsync(member.Id, imageUrl);
 
         return Ok(new AvatarUploadResponse { ImageUrl = imageUrl });
