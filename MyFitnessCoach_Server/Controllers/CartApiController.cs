@@ -124,6 +124,21 @@ namespace MyFitnessCoach_Server.Controllers
 			if (string.IsNullOrWhiteSpace(dto.Mobile) || !Regex.IsMatch(dto.Mobile, @"^09\d{8}$"))
 				return BadRequest(new { message = "手機號碼格式錯誤（需為 09 開頭共 10 碼）" });
 
+			// ── 發票類型驗證 ──────────────────────────────────────────
+			if (dto.InvoiceType < 1 || dto.InvoiceType > 4)
+				return BadRequest(new { message = "發票類型錯誤" });
+			if (dto.InvoiceType == 2 && (dto.TaxNumber == null || !Regex.IsMatch(dto.TaxNumber.Value.ToString(), @"^\d{8}$")))
+				return BadRequest(new { message = "三聯式發票需填寫 8 碼統一編號" });
+			if (dto.InvoiceType == 3 && (string.IsNullOrWhiteSpace(dto.DonationCode) || !Regex.IsMatch(dto.DonationCode, @"^\d{3,7}$")))
+				return BadRequest(new { message = "捐贈發票需填寫 3–7 碼愛心碼" });
+			if (dto.InvoiceType == 4 && (string.IsNullOrWhiteSpace(dto.CarrierCode) || !Regex.IsMatch(dto.CarrierCode, @"^/[0-9A-Z+\-.]{7}$")))
+				return BadRequest(new { message = "手機載具格式錯誤（需為 / 開頭共 8 碼，例如 /ABC1234）" });
+
+			// 只在對應類型才保留資料，避免髒資料
+			if (dto.InvoiceType != 2) dto.TaxNumber    = null;
+			if (dto.InvoiceType != 3) dto.DonationCode = null;
+			if (dto.InvoiceType != 4) dto.CarrierCode  = null;
+
 			var memberId = await GetCurrentMemberIdAsync();
 			if (memberId == null) return Unauthorized(new { message = "找不到對應的會員資料" });
 
@@ -187,6 +202,9 @@ namespace MyFitnessCoach_Server.Controllers
 					Address        = dto.Address,
 					Mobile         = dto.Mobile,
 					TaxNumber      = dto.TaxNumber,
+					InvoiceType    = dto.InvoiceType,
+					DonationCode   = dto.DonationCode,
+					CarrierCode    = dto.CarrierCode,
 					Memo           = dto.Memo,
 					Status         = 0  // 0 = 待付款
 				};

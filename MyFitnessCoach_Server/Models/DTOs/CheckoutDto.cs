@@ -9,6 +9,11 @@ namespace MyFitnessCoach_Server.Models.DTOs
         public int? TaxNumber { get; set; }
         public string? Memo { get; set; }
         public int? MemberCouponId { get; set; }
+
+        // 發票類型：1=二聯式 2=三聯式 3=捐贈 4=手機載具
+        public byte InvoiceType { get; set; } = 1;
+        public string? DonationCode { get; set; }
+        public string? CarrierCode { get; set; }
     }
 
     // 結帳成功後回傳給前端的資料（前端用 productOrderId 呼叫 ProductSendToEcPay）
