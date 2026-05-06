@@ -31,8 +31,6 @@ public partial class Member
 
     public int CancelCount { get; set; }
 
-    public double? TargetWeight { get; set; }
-
     public virtual ICollection<BodyRecord> BodyRecords { get; set; } = new List<BodyRecord>();
 
     public virtual Cart Cart { get; set; }

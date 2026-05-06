@@ -55,7 +55,7 @@ public class GoalService : IGoalService
     private static BasicInfoDto MemberToDto(Member m, double? currentWeight) => new()
     {
         Height        = m.Height ?? 0,
-        TargetWeight  = m.TargetWeight,
+        TargetWeight  = null, // TargetWeight column does not exist in Member table
         CurrentWeight = currentWeight,
         ActivityLevel = m.ActivityLevel ?? "1.55",
         HealthGoal    = m.HealthPlan ?? "健康飲食",

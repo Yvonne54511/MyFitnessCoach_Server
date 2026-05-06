@@ -70,7 +70,7 @@ public class GoalRepository : IGoalRepository
     private static void ApplyInfoToMember(Member member, BasicInfoDto dto)
     {
         member.Height        = dto.Height;
-        member.TargetWeight  = dto.TargetWeight;
+        // member.TargetWeight  = dto.TargetWeight; // Column does not exist
         member.ActivityLevel = dto.ActivityLevel;
         member.HealthPlan    = dto.HealthGoal;
     }
