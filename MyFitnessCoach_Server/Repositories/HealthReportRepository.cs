@@ -73,8 +73,9 @@ public class HealthReportRepository : IHealthReportRepository
     {
         return await _db.WaterLogs
             .Where(w => w.MemberId == memberId && w.LogDate >= fromDate && w.LogDate <= toDate)
-            .OrderBy(w => w.LogDate)
-            .Select(w => new WaterDayRaw { Date = w.LogDate, Amount = w.Amount })
+            .GroupBy(w => w.LogDate)
+            .Select(g => new WaterDayRaw { Date = g.Key, Amount = g.Sum(w => w.Amount) })
+            .OrderBy(x => x.Date)
             .ToListAsync();
     }
 

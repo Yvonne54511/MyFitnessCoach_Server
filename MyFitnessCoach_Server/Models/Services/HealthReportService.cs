@@ -105,7 +105,7 @@ public sealed class HealthReportService : IHealthReportService
             SkeletalMuscleChange = earliest?.SkeletalMuscle != null && latest?.SkeletalMuscle != null
                                      ? latest.SkeletalMuscle - earliest.SkeletalMuscle : null,
             LatestBmi            = latest?.Bmi,
-            TargetWeight         = member?.TargetWeight,
+            TargetWeight         = null, // TargetWeight column does not exist in Member table
             AvgCalories          = calRows.Count > 0 ? calRows.Average(n => n.Calories!.Value) : null,
             AvgProtein           = calRows.Count > 0 ? calRows.Average(n => n.Protein  ?? 0m) : null,
             AvgCarbs             = calRows.Count > 0 ? calRows.Average(n => n.Carbs    ?? 0m) : null,

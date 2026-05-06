@@ -23,7 +23,7 @@ namespace MyFitnessCoach_Server.Models.Services
         public async Task CleanupAllExpiredReservationsAsync()
         {
             var now = DateTime.Now;
-            // 全域清理所有「待付款」且超時的預約 (測試設定 10 秒)
+            // 全域清理所有「待付款」且超時的預約 (演示設定改為 10 秒)
             var expiredOrders = await _db.ReserveOrders
                 .Include(ro => ro.Shift)
                 .Where(ro => ro.Status == "待付款" && ro.CreateAt.AddSeconds(10) < now)
@@ -93,13 +93,6 @@ namespace MyFitnessCoach_Server.Models.Services
                 // 2. 狀態轉換與重複檢查
                 if (order.Status == "待付款")
                 {
-                    // 嚴格時效檢查 (測試設定 10 秒)
-                    if (order.CreateAt.AddSeconds(10) < DateTime.Now)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[逾時攔截] 預約 ID {reservationId} 已過期，拒絕轉為已預約。");
-                        return false;
-                    }
-
                     // 更新狀態為已預約
                     order.Status = "已預約";
                     if (!string.IsNullOrEmpty(paymentMethod))
