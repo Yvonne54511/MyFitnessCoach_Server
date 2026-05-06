@@ -121,8 +121,6 @@ public partial class MyFitnessCoachDbContext : DbContext
     {
         modelBuilder.Entity<BodyRecord>(entity =>
         {
-            entity.HasIndex(e => new { e.MemberId, e.CreateAt }, "IX_BodyRecords_MemberId_CreateAt").IsDescending(false, true);
-
             entity.Property(e => e.BodyFat).HasColumnType("decimal(4, 1)");
             entity.Property(e => e.CreateAt)
                 .HasPrecision(0)
@@ -142,8 +140,6 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Cart>(entity =>
         {
-            entity.HasIndex(e => e.MemberId, "UX_Carts_MemberId").IsUnique();
-
             entity.Property(e => e.CreatedAt)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(getdate())")
@@ -153,16 +149,14 @@ public partial class MyFitnessCoachDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasAnnotation("Relational:DefaultConstraintName", "DF_Carts_UpdatedAt");
 
-            entity.HasOne(d => d.Member).WithOne(p => p.Cart)
-                .HasForeignKey<Cart>(d => d.MemberId)
+            entity.HasOne(d => d.Member).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.MemberId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Carts_Members");
         });
 
         modelBuilder.Entity<CartItem>(entity =>
         {
-            entity.HasIndex(e => new { e.CartId, e.ProductId }, "UX_CartItems_CartId_ProductId").IsUnique();
-
             entity.Property(e => e.CreatedAt)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(getdate())")
@@ -184,8 +178,6 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<Coupon>(entity =>
         {
-            entity.HasIndex(e => e.Code, "UX_Coupons_Code").IsUnique();
-
             entity.Property(e => e.BannerImageUrl).HasMaxLength(500);
             entity.Property(e => e.Code)
                 .IsRequired()
@@ -212,8 +204,6 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<DailyDiet>(entity =>
         {
-            entity.HasIndex(e => new { e.MemberId, e.EatDT }, "IX_MemberId_EatDT");
-
             entity.Property(e => e.Amount).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.CreatedAt)
                 .HasPrecision(0)
@@ -330,8 +320,6 @@ public partial class MyFitnessCoachDbContext : DbContext
         modelBuilder.Entity<Holiday>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Holidays__3214EC07B9482C01");
-
-            entity.HasIndex(e => e.HolidayDate, "IX_Holidays_Date").IsUnique();
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.Name)
@@ -494,10 +482,6 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<LeaveRequest>(entity =>
         {
-            entity.HasIndex(e => e.EmployeeId, "IX_LeaveRequests_EmployeeId");
-
-            entity.HasIndex(e => e.Status, "IX_LeaveRequests_Status");
-
             entity.Property(e => e.ApprovedAt).HasPrecision(0);
             entity.Property(e => e.CancelReason).HasMaxLength(300);
             entity.Property(e => e.CreatedAt)
@@ -564,8 +548,6 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<MemberCoupon>(entity =>
         {
-            entity.HasIndex(e => new { e.MemberId, e.CouponId, e.ClaimYearMonth }, "UX_MemberCoupons_Member_Coupon_Month").IsUnique();
-
             entity.Property(e => e.ClaimYearMonth)
                 .HasMaxLength(7)
                 .IsUnicode(false)
@@ -867,7 +849,6 @@ public partial class MyFitnessCoachDbContext : DbContext
                 .HasPrecision(0)
                 .HasDefaultValueSql("(getdate())");
             entity.Property(e => e.GoogleEventId).HasMaxLength(100);
-            entity.Property(e => e.GuestEmail).HasMaxLength(255);
             entity.Property(e => e.Memorandum).HasMaxLength(100);
             entity.Property(e => e.PaymentMethod)
                 .IsRequired()
@@ -976,10 +957,6 @@ public partial class MyFitnessCoachDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Users__3214EC077287376A");
 
             entity.HasIndex(e => e.Email, "UQ_Users_Email").IsUnique();
-
-            entity.HasIndex(e => e.Account, "UX_Users_Account")
-                .IsUnique()
-                .HasFilter("([Account] IS NOT NULL)");
 
             entity.Property(e => e.Account).HasMaxLength(50);
             entity.Property(e => e.Email)
