@@ -186,6 +186,8 @@ namespace MyFitnessCoach_Server.Controllers
 
 			decimal totalDiscount = productDiscount + couponDiscount;
 			decimal payableAmount = subtotal - couponDiscount;
+			decimal shippingFee   = subtotal >= 1000 ? 0 : 60;
+			decimal finalAmount   = payableAmount + shippingFee;
 
 			using var tx = await _db.Database.BeginTransactionAsync();
 			try
@@ -197,6 +199,7 @@ namespace MyFitnessCoach_Server.Controllers
 					CreateAt       = DateTime.Now,
 					OriginalAmount = originalAmount,
 					DiscountAmount = totalDiscount,
+					FinalAmount    = finalAmount,
 					CouponId       = actualCouponId,
 					Receiver       = dto.Receiver,
 					Address        = dto.Address,
@@ -241,7 +244,7 @@ namespace MyFitnessCoach_Server.Controllers
 				return Ok(new CheckoutResultDto
 				{
 					ProductOrderId = order.Id,
-					FinalAmount    = payableAmount,
+					FinalAmount    = finalAmount,
 					ItemSummary    = itemSummary
 				});
 			}
