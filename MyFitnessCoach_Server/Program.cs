@@ -21,7 +21,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("MyFitnessCoach_Client", policy =>
     {
-        policy.AllowAnyHeader().AllowAnyOrigin().AllowAnyMethod();
+        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                      ?? new[] { "https://localhost:5173", "http://localhost:5173" };
+
+        policy.WithOrigins(origins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -38,7 +44,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme       = "Bearer",
         BearerFormat = "JWT",
         In           = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description  = "請輸入 JWT Token（不需加 Bearer 前綴）"
+        Description  = "�п�J JWT Token�]���ݥ[ Bearer �e��^"
     });
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
@@ -84,8 +90,35 @@ builder.Services.AddScoped<CouponService>();
 // Add services to the container.
 // Register application services
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<IAccountRateLimitService, AccountRateLimitService>();
+builder.Services.AddScoped<IVerifyPasswordRequirements, VerifyPasswordRequirements>();
 builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<ILoginEmailService, LoginEmailService>();
+builder.Services.AddScoped<IPasswordEmailService, PasswordEmailService>();
+builder.Services.AddSingleton<IHashHelper, HashHelper>();
+
+// Goals
+builder.Services.AddScoped<IGoalRepository, GoalRepository>();
+builder.Services.AddScoped<IGoalService, GoalService>();
+
+// Daily Diet
+builder.Services.AddScoped<IDailyDietRepository, DailyDietRepository>();
+builder.Services.AddScoped<IDailyDietService, DailyDietService>();
+builder.Services.AddScoped<IDietPrerequisiteService, DietPrerequisiteService>();
+
+// Body Records
+builder.Services.AddScoped<IBodyRecordRepository, BodyRecordRepository>();
+builder.Services.AddScoped<IBodyRecordService, BodyRecordService>();
+
+// Health Report
+builder.Services.AddScoped<IHealthReportRepository, HealthReportRepository>();
+builder.Services.AddSingleton<HealthReportTrendCalculator>();
+builder.Services.AddScoped<IHealthReportService, HealthReportService>();
+
+// Food Library
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<FoodLibraryCacheStore>();
+builder.Services.AddScoped<IFoodLibraryRepository, FoodLibraryRepository>();
+builder.Services.AddScoped<FoodLibraryService>();
 builder.Services.AddScoped<IReservationEmailService, ReservationEmailService>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -109,13 +142,27 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey         = new SymmetricSecurityKey(
                                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = ctx =>
+        {
+            if (string.IsNullOrEmpty(ctx.Token) &&
+                ctx.Request.Cookies.TryGetValue("access_token", out var cookieToken) &&
+                !string.IsNullOrEmpty(cookieToken))
+            {
+                ctx.Token = cookieToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-app.UseDeveloperExceptionPage(); // 強制開啟
+app.UseDeveloperExceptionPage(); // �j��}��
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -123,11 +170,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<MyFitnessCoach_Server.Middleware.SecurityHeadersMiddleware>();
 app.UseRouting();
 app.UseCors("MyFitnessCoach_Client");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseStaticFiles(); // 預設的 wwwroot (如果有)
+app.UseStaticFiles(); // �w�]�� wwwroot (�p�G��)
 
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -141,6 +189,12 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(
         Path.Combine(builder.Environment.ContentRootPath, "images")),
     RequestPath = "/images"
+});
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "img")),
+    RequestPath = "/img"
 });
 
 app.UseStaticFiles(new StaticFileOptions

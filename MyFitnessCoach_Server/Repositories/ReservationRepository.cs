@@ -227,6 +227,8 @@ namespace MyFitnessCoach_Server.Repositories
             {
                 try 
                 {
+                    if (order.Shift?.TimeSlot == null) continue;
+
                     // 1. 處理 TimeSlot，例如 "14-15(下午)" -> 先取橫線後 "15(下午)" -> 再取括號前 "15"
                     var timeParts = order.Shift.TimeSlot.Split('-');
                     if (timeParts.Length < 2) continue;

@@ -1814,217 +1814,217 @@ SET IDENTITY_INSERT [dbo].[LeaveTypes] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Members] ON 
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (1, 1, 2, CAST(N'1995-03-15T00:00:00.0000000' AS DateTime2), 58, 163, N'輕度活動', N'維持體重', NULL, NULL, NULL, 1)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (1, 1, 2, CAST(N'1995-03-15T00:00:00.0000000' AS DateTime2), 58, 163, N'1.375', N'健康飲食', NULL, NULL, NULL, 1)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (2, 2, 1, CAST(N'1990-07-22T00:00:00.0000000' AS DateTime2), 75, 178, N'中度活動', N'增肌', NULL, NULL, NULL, 1)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (2, 2, 1, CAST(N'1990-07-22T00:00:00.0000000' AS DateTime2), 75, 178, N'1.55', N'增肌', NULL, NULL, NULL, 1)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (3, 3, 2, CAST(N'1998-11-05T00:00:00.0000000' AS DateTime2), 52, 158, N'久坐', N'減重', NULL, NULL, NULL, 1)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (3, 3, 2, CAST(N'1998-11-05T00:00:00.0000000' AS DateTime2), 52, 158, N'1.2', N'減脂', NULL, NULL, NULL, 1)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (4, 11, 1, CAST(N'1993-04-10T00:00:00.0000000' AS DateTime2), 70, 175, N'中度活動', N'增肌', NULL, NULL, NULL, 1)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (4, 11, 1, CAST(N'1993-04-10T00:00:00.0000000' AS DateTime2), 70, 175, N'1.55', N'增肌', NULL, NULL, NULL, 1)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (5, 12, 2, CAST(N'1997-09-25T00:00:00.0000000' AS DateTime2), 54, 161, N'輕度活動', N'維持體重', NULL, NULL, NULL, 1)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (5, 12, 2, CAST(N'1997-09-25T00:00:00.0000000' AS DateTime2), 54, 161, N'1.375', N'健康飲食', NULL, NULL, NULL, 1)
 GO
 INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (6, 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (7, 2052, 2, CAST(N'1999-06-27T21:04:12.0000000' AS DateTime2), 68, 180, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (7, 2052, 2, CAST(N'1999-06-27T21:04:12.0000000' AS DateTime2), 68, 180, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (8, 2053, 1, CAST(N'1982-09-25T21:04:12.0000000' AS DateTime2), 62, 169, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (8, 2053, 1, CAST(N'1982-09-25T21:04:12.0000000' AS DateTime2), 62, 169, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (9, 2054, 1, CAST(N'1985-02-14T21:04:12.0000000' AS DateTime2), 83, 179, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (9, 2054, 1, CAST(N'1985-02-14T21:04:12.0000000' AS DateTime2), 83, 179, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (10, 2055, 2, CAST(N'1988-08-02T21:04:12.0000000' AS DateTime2), 85, 170, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (10, 2055, 2, CAST(N'1988-08-02T21:04:12.0000000' AS DateTime2), 85, 170, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (11, 2056, 1, CAST(N'2000-10-22T21:04:12.0000000' AS DateTime2), 81, 182, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (11, 2056, 1, CAST(N'2000-10-22T21:04:12.0000000' AS DateTime2), 81, 182, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (12, 2057, 1, CAST(N'1983-12-31T21:04:12.0000000' AS DateTime2), 87, 173, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (12, 2057, 1, CAST(N'1983-12-31T21:04:12.0000000' AS DateTime2), 87, 173, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (13, 2058, 1, CAST(N'2005-11-26T21:04:12.0000000' AS DateTime2), 64, 184, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (13, 2058, 1, CAST(N'2005-11-26T21:04:12.0000000' AS DateTime2), 64, 184, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (14, 2059, 1, CAST(N'2002-09-18T21:04:12.0000000' AS DateTime2), 76, 181, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (14, 2059, 1, CAST(N'2002-09-18T21:04:12.0000000' AS DateTime2), 76, 181, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (15, 2060, 2, CAST(N'1994-04-19T21:04:12.0000000' AS DateTime2), 67, 184, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (15, 2060, 2, CAST(N'1994-04-19T21:04:12.0000000' AS DateTime2), 67, 184, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (16, 2061, 2, CAST(N'1985-06-12T21:04:12.0000000' AS DateTime2), 66, 179, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (16, 2061, 2, CAST(N'1985-06-12T21:04:12.0000000' AS DateTime2), 66, 179, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (17, 2062, 2, CAST(N'1985-10-11T21:04:12.0000000' AS DateTime2), 60, 174, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (17, 2062, 2, CAST(N'1985-10-11T21:04:12.0000000' AS DateTime2), 60, 174, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (18, 2063, 1, CAST(N'2003-03-20T21:04:12.0000000' AS DateTime2), 69, 176, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (18, 2063, 1, CAST(N'2003-03-20T21:04:12.0000000' AS DateTime2), 69, 176, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (19, 2064, 2, CAST(N'2000-03-18T21:04:12.0000000' AS DateTime2), 64, 182, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (19, 2064, 2, CAST(N'2000-03-18T21:04:12.0000000' AS DateTime2), 64, 182, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (20, 2065, 2, CAST(N'1999-02-20T21:04:12.0000000' AS DateTime2), 66, 182, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (20, 2065, 2, CAST(N'1999-02-20T21:04:12.0000000' AS DateTime2), 66, 182, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (21, 2066, 1, CAST(N'1981-11-19T21:04:12.0000000' AS DateTime2), 88, 176, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (21, 2066, 1, CAST(N'1981-11-19T21:04:12.0000000' AS DateTime2), 88, 176, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (22, 2067, 1, CAST(N'1994-08-04T21:04:12.0000000' AS DateTime2), 86, 170, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (22, 2067, 1, CAST(N'1994-08-04T21:04:12.0000000' AS DateTime2), 86, 170, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (23, 2068, 1, CAST(N'1999-11-19T21:04:12.0000000' AS DateTime2), 78, 169, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (23, 2068, 1, CAST(N'1999-11-19T21:04:12.0000000' AS DateTime2), 78, 169, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (24, 2069, 1, CAST(N'1993-01-12T21:04:12.0000000' AS DateTime2), 72, 178, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (24, 2069, 1, CAST(N'1993-01-12T21:04:12.0000000' AS DateTime2), 72, 178, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (25, 2070, 2, CAST(N'1991-06-14T21:04:12.0000000' AS DateTime2), 68, 172, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (25, 2070, 2, CAST(N'1991-06-14T21:04:12.0000000' AS DateTime2), 68, 172, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (26, 2071, 2, CAST(N'1981-12-30T21:04:12.0000000' AS DateTime2), 85, 177, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (26, 2071, 2, CAST(N'1981-12-30T21:04:12.0000000' AS DateTime2), 85, 177, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (27, 2072, 2, CAST(N'1990-08-09T21:04:12.0000000' AS DateTime2), 83, 170, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (27, 2072, 2, CAST(N'1990-08-09T21:04:12.0000000' AS DateTime2), 83, 170, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (28, 2073, 2, CAST(N'1982-09-13T21:04:12.0000000' AS DateTime2), 87, 178, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (28, 2073, 2, CAST(N'1982-09-13T21:04:12.0000000' AS DateTime2), 87, 178, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (29, 2074, 2, CAST(N'1981-06-18T21:04:12.0000000' AS DateTime2), 81, 170, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (29, 2074, 2, CAST(N'1981-06-18T21:04:12.0000000' AS DateTime2), 81, 170, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (30, 2075, 1, CAST(N'2001-11-26T21:04:12.0000000' AS DateTime2), 76, 167, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (30, 2075, 1, CAST(N'2001-11-26T21:04:12.0000000' AS DateTime2), 76, 167, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (31, 2076, 2, CAST(N'2003-06-23T21:04:12.0000000' AS DateTime2), 65, 160, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (31, 2076, 2, CAST(N'2003-06-23T21:04:12.0000000' AS DateTime2), 65, 160, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (32, 2077, 1, CAST(N'2006-09-24T21:04:12.0000000' AS DateTime2), 63, 160, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (32, 2077, 1, CAST(N'2006-09-24T21:04:12.0000000' AS DateTime2), 63, 160, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (33, 2078, 1, CAST(N'1990-12-20T21:04:12.0000000' AS DateTime2), 65, 164, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (33, 2078, 1, CAST(N'1990-12-20T21:04:12.0000000' AS DateTime2), 65, 164, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (34, 2079, 2, CAST(N'1989-04-22T21:04:12.0000000' AS DateTime2), 88, 162, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (34, 2079, 2, CAST(N'1989-04-22T21:04:12.0000000' AS DateTime2), 88, 162, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (35, 2080, 1, CAST(N'1988-09-25T21:04:12.0000000' AS DateTime2), 75, 181, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (35, 2080, 1, CAST(N'1988-09-25T21:04:12.0000000' AS DateTime2), 75, 181, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (36, 2081, 2, CAST(N'1998-10-10T21:04:12.0000000' AS DateTime2), 73, 182, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (36, 2081, 2, CAST(N'1998-10-10T21:04:12.0000000' AS DateTime2), 73, 182, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (37, 2082, 1, CAST(N'1990-06-18T21:04:12.0000000' AS DateTime2), 73, 177, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (37, 2082, 1, CAST(N'1990-06-18T21:04:12.0000000' AS DateTime2), 73, 177, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (38, 2083, 1, CAST(N'1987-11-02T21:04:12.0000000' AS DateTime2), 78, 170, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (38, 2083, 1, CAST(N'1987-11-02T21:04:12.0000000' AS DateTime2), 78, 170, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (39, 2084, 2, CAST(N'2000-06-08T21:04:12.0000000' AS DateTime2), 65, 168, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (39, 2084, 2, CAST(N'2000-06-08T21:04:12.0000000' AS DateTime2), 65, 168, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (40, 2085, 1, CAST(N'1982-07-25T21:04:12.0000000' AS DateTime2), 79, 182, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (40, 2085, 1, CAST(N'1982-07-25T21:04:12.0000000' AS DateTime2), 79, 182, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (41, 2086, 1, CAST(N'2006-08-04T21:04:12.0000000' AS DateTime2), 66, 179, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (41, 2086, 1, CAST(N'2006-08-04T21:04:12.0000000' AS DateTime2), 66, 179, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (42, 2087, 2, CAST(N'1996-07-30T21:04:12.0000000' AS DateTime2), 85, 169, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (42, 2087, 2, CAST(N'1996-07-30T21:04:12.0000000' AS DateTime2), 85, 169, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (43, 2088, 2, CAST(N'2006-11-18T21:04:12.0000000' AS DateTime2), 65, 160, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (43, 2088, 2, CAST(N'2006-11-18T21:04:12.0000000' AS DateTime2), 65, 160, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (44, 2089, 2, CAST(N'1997-05-15T21:04:12.0000000' AS DateTime2), 77, 164, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (44, 2089, 2, CAST(N'1997-05-15T21:04:12.0000000' AS DateTime2), 77, 164, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (45, 2090, 1, CAST(N'2005-12-29T21:04:12.0000000' AS DateTime2), 75, 165, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (45, 2090, 1, CAST(N'2005-12-29T21:04:12.0000000' AS DateTime2), 75, 165, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (46, 2091, 1, CAST(N'1999-09-24T21:04:12.0000000' AS DateTime2), 75, 160, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (46, 2091, 1, CAST(N'1999-09-24T21:04:12.0000000' AS DateTime2), 75, 160, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (47, 2092, 1, CAST(N'1992-11-13T21:04:12.0000000' AS DateTime2), 87, 164, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (47, 2092, 1, CAST(N'1992-11-13T21:04:12.0000000' AS DateTime2), 87, 164, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (48, 2093, 1, CAST(N'1980-07-20T21:04:12.0000000' AS DateTime2), 85, 168, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (48, 2093, 1, CAST(N'1980-07-20T21:04:12.0000000' AS DateTime2), 85, 168, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (49, 2094, 2, CAST(N'1991-05-21T21:04:12.0000000' AS DateTime2), 79, 175, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (49, 2094, 2, CAST(N'1991-05-21T21:04:12.0000000' AS DateTime2), 79, 175, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (50, 2095, 2, CAST(N'1989-07-16T21:04:12.0000000' AS DateTime2), 86, 176, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (50, 2095, 2, CAST(N'1989-07-16T21:04:12.0000000' AS DateTime2), 86, 176, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (51, 2096, 2, CAST(N'1997-10-27T21:04:12.0000000' AS DateTime2), 71, 172, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (51, 2096, 2, CAST(N'1997-10-27T21:04:12.0000000' AS DateTime2), 71, 172, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (52, 2097, 2, CAST(N'1985-10-09T21:04:12.0000000' AS DateTime2), 76, 171, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (52, 2097, 2, CAST(N'1985-10-09T21:04:12.0000000' AS DateTime2), 76, 171, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (53, 2098, 1, CAST(N'2006-03-13T21:04:12.0000000' AS DateTime2), 78, 179, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (53, 2098, 1, CAST(N'2006-03-13T21:04:12.0000000' AS DateTime2), 78, 179, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (54, 2099, 2, CAST(N'1990-07-04T21:04:12.0000000' AS DateTime2), 73, 169, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (54, 2099, 2, CAST(N'1990-07-04T21:04:12.0000000' AS DateTime2), 73, 169, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (55, 2100, 2, CAST(N'2006-09-07T21:04:12.0000000' AS DateTime2), 72, 175, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (55, 2100, 2, CAST(N'2006-09-07T21:04:12.0000000' AS DateTime2), 72, 175, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (56, 2101, 2, CAST(N'2001-11-01T21:04:12.0000000' AS DateTime2), 86, 163, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (56, 2101, 2, CAST(N'2001-11-01T21:04:12.0000000' AS DateTime2), 86, 163, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (57, 2102, 1, CAST(N'1985-10-24T21:04:12.0000000' AS DateTime2), 89, 180, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (57, 2102, 1, CAST(N'1985-10-24T21:04:12.0000000' AS DateTime2), 89, 180, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (58, 2103, 2, CAST(N'1996-12-16T21:04:12.0000000' AS DateTime2), 82, 168, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (58, 2103, 2, CAST(N'1996-12-16T21:04:12.0000000' AS DateTime2), 82, 168, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (59, 2104, 2, CAST(N'2002-08-01T21:04:12.0000000' AS DateTime2), 81, 172, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (59, 2104, 2, CAST(N'2002-08-01T21:04:12.0000000' AS DateTime2), 81, 172, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (60, 2105, 2, CAST(N'1997-04-21T21:04:12.0000000' AS DateTime2), 72, 163, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (60, 2105, 2, CAST(N'1997-04-21T21:04:12.0000000' AS DateTime2), 72, 163, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (61, 2106, 2, CAST(N'1980-02-17T21:04:12.0000000' AS DateTime2), 87, 164, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (61, 2106, 2, CAST(N'1980-02-17T21:04:12.0000000' AS DateTime2), 87, 164, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (62, 2107, 2, CAST(N'1992-05-01T21:04:12.0000000' AS DateTime2), 65, 177, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (62, 2107, 2, CAST(N'1992-05-01T21:04:12.0000000' AS DateTime2), 65, 177, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (63, 2108, 1, CAST(N'1981-09-19T21:04:12.0000000' AS DateTime2), 71, 175, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (63, 2108, 1, CAST(N'1981-09-19T21:04:12.0000000' AS DateTime2), 71, 175, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (64, 2109, 2, CAST(N'1995-11-12T21:04:12.0000000' AS DateTime2), 84, 164, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (64, 2109, 2, CAST(N'1995-11-12T21:04:12.0000000' AS DateTime2), 84, 164, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (65, 2110, 1, CAST(N'1998-08-18T21:04:12.0000000' AS DateTime2), 69, 164, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (65, 2110, 1, CAST(N'1998-08-18T21:04:12.0000000' AS DateTime2), 69, 164, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (66, 2111, 2, CAST(N'1984-09-26T21:04:12.0000000' AS DateTime2), 77, 184, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (66, 2111, 2, CAST(N'1984-09-26T21:04:12.0000000' AS DateTime2), 77, 184, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (67, 2112, 2, CAST(N'2006-03-27T21:04:12.0000000' AS DateTime2), 78, 168, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (67, 2112, 2, CAST(N'2006-03-27T21:04:12.0000000' AS DateTime2), 78, 168, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (68, 2113, 2, CAST(N'1997-09-24T21:04:12.0000000' AS DateTime2), 61, 162, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (68, 2113, 2, CAST(N'1997-09-24T21:04:12.0000000' AS DateTime2), 61, 162, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (69, 2114, 2, CAST(N'1979-12-15T21:04:12.0000000' AS DateTime2), 75, 167, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (69, 2114, 2, CAST(N'1979-12-15T21:04:12.0000000' AS DateTime2), 75, 167, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (70, 2115, 2, CAST(N'1994-10-30T21:04:12.0000000' AS DateTime2), 75, 165, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (70, 2115, 2, CAST(N'1994-10-30T21:04:12.0000000' AS DateTime2), 75, 165, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (71, 2116, 2, CAST(N'2004-11-08T21:04:12.0000000' AS DateTime2), 67, 170, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (71, 2116, 2, CAST(N'2004-11-08T21:04:12.0000000' AS DateTime2), 67, 170, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (72, 2117, 1, CAST(N'1998-07-15T21:04:12.0000000' AS DateTime2), 85, 180, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (72, 2117, 1, CAST(N'1998-07-15T21:04:12.0000000' AS DateTime2), 85, 180, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (73, 2118, 1, CAST(N'1989-05-22T21:04:12.0000000' AS DateTime2), 63, 172, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (73, 2118, 1, CAST(N'1989-05-22T21:04:12.0000000' AS DateTime2), 63, 172, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (74, 2119, 1, CAST(N'1982-03-09T21:04:12.0000000' AS DateTime2), 83, 171, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (74, 2119, 1, CAST(N'1982-03-09T21:04:12.0000000' AS DateTime2), 83, 171, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (75, 2120, 1, CAST(N'1996-01-03T21:04:12.0000000' AS DateTime2), 66, 169, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (75, 2120, 1, CAST(N'1996-01-03T21:04:12.0000000' AS DateTime2), 66, 169, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (76, 2121, 1, CAST(N'1983-07-30T21:04:13.0000000' AS DateTime2), 72, 173, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (76, 2121, 1, CAST(N'1983-07-30T21:04:13.0000000' AS DateTime2), 72, 173, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (77, 2122, 2, CAST(N'1986-02-26T21:04:13.0000000' AS DateTime2), 68, 165, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (77, 2122, 2, CAST(N'1986-02-26T21:04:13.0000000' AS DateTime2), 68, 165, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (78, 2123, 2, CAST(N'1991-12-04T21:04:13.0000000' AS DateTime2), 76, 179, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (78, 2123, 2, CAST(N'1991-12-04T21:04:13.0000000' AS DateTime2), 76, 179, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (79, 2124, 1, CAST(N'1997-02-18T21:04:13.0000000' AS DateTime2), 66, 160, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (79, 2124, 1, CAST(N'1997-02-18T21:04:13.0000000' AS DateTime2), 66, 160, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (80, 2125, 2, CAST(N'2004-12-27T21:04:13.0000000' AS DateTime2), 65, 184, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (80, 2125, 2, CAST(N'2004-12-27T21:04:13.0000000' AS DateTime2), 65, 184, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (81, 2126, 2, CAST(N'1995-03-23T21:04:13.0000000' AS DateTime2), 69, 169, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (81, 2126, 2, CAST(N'1995-03-23T21:04:13.0000000' AS DateTime2), 69, 169, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (82, 2127, 1, CAST(N'2003-06-11T21:04:13.0000000' AS DateTime2), 60, 163, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (82, 2127, 1, CAST(N'2003-06-11T21:04:13.0000000' AS DateTime2), 60, 163, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (83, 2128, 2, CAST(N'2005-07-27T21:04:13.0000000' AS DateTime2), 71, 174, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (83, 2128, 2, CAST(N'2005-07-27T21:04:13.0000000' AS DateTime2), 71, 174, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (84, 2129, 2, CAST(N'1996-11-01T21:04:13.0000000' AS DateTime2), 77, 180, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (84, 2129, 2, CAST(N'1996-11-01T21:04:13.0000000' AS DateTime2), 77, 180, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (85, 2130, 1, CAST(N'1996-01-30T21:04:13.0000000' AS DateTime2), 78, 173, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (85, 2130, 1, CAST(N'1996-01-30T21:04:13.0000000' AS DateTime2), 78, 173, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (86, 2131, 2, CAST(N'1983-04-01T21:04:13.0000000' AS DateTime2), 60, 175, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (86, 2131, 2, CAST(N'1983-04-01T21:04:13.0000000' AS DateTime2), 60, 175, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (87, 2132, 2, CAST(N'2002-07-29T21:04:13.0000000' AS DateTime2), 63, 161, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (87, 2132, 2, CAST(N'2002-07-29T21:04:13.0000000' AS DateTime2), 63, 161, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (88, 2133, 1, CAST(N'1981-01-04T21:04:13.0000000' AS DateTime2), 62, 161, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (88, 2133, 1, CAST(N'1981-01-04T21:04:13.0000000' AS DateTime2), 62, 161, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (89, 2134, 2, CAST(N'1997-01-04T21:04:13.0000000' AS DateTime2), 86, 183, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (89, 2134, 2, CAST(N'1997-01-04T21:04:13.0000000' AS DateTime2), 86, 183, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (90, 2135, 2, CAST(N'2001-03-13T21:04:13.0000000' AS DateTime2), 86, 163, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (90, 2135, 2, CAST(N'2001-03-13T21:04:13.0000000' AS DateTime2), 86, 163, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (91, 2136, 1, CAST(N'1982-09-20T21:04:13.0000000' AS DateTime2), 65, 184, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (91, 2136, 1, CAST(N'1982-09-20T21:04:13.0000000' AS DateTime2), 65, 184, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (92, 2137, 1, CAST(N'1991-10-06T21:04:13.0000000' AS DateTime2), 79, 161, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (92, 2137, 1, CAST(N'1991-10-06T21:04:13.0000000' AS DateTime2), 79, 161, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (93, 2138, 1, CAST(N'1996-04-15T21:04:13.0000000' AS DateTime2), 83, 174, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (93, 2138, 1, CAST(N'1996-04-15T21:04:13.0000000' AS DateTime2), 83, 174, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (94, 2139, 2, CAST(N'2004-04-09T21:04:13.0000000' AS DateTime2), 77, 168, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (94, 2139, 2, CAST(N'2004-04-09T21:04:13.0000000' AS DateTime2), 77, 168, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (95, 2140, 1, CAST(N'1991-02-02T21:04:13.0000000' AS DateTime2), 63, 171, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (95, 2140, 1, CAST(N'1991-02-02T21:04:13.0000000' AS DateTime2), 63, 171, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (96, 2141, 2, CAST(N'2006-07-23T21:04:13.0000000' AS DateTime2), 76, 181, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (96, 2141, 2, CAST(N'2006-07-23T21:04:13.0000000' AS DateTime2), 76, 181, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (97, 2142, 2, CAST(N'2005-06-05T21:04:13.0000000' AS DateTime2), 71, 183, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (97, 2142, 2, CAST(N'2005-06-05T21:04:13.0000000' AS DateTime2), 71, 183, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (98, 2143, 1, CAST(N'2002-12-20T21:04:13.0000000' AS DateTime2), 85, 180, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (98, 2143, 1, CAST(N'2002-12-20T21:04:13.0000000' AS DateTime2), 85, 180, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (99, 2144, 2, CAST(N'2004-09-24T21:04:13.0000000' AS DateTime2), 66, 172, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (99, 2144, 2, CAST(N'2004-09-24T21:04:13.0000000' AS DateTime2), 66, 172, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (100, 2145, 2, CAST(N'1986-01-19T21:04:13.0000000' AS DateTime2), 81, 168, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (100, 2145, 2, CAST(N'1986-01-19T21:04:13.0000000' AS DateTime2), 81, 168, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (101, 2146, 2, CAST(N'2005-06-14T21:04:13.0000000' AS DateTime2), 85, 179, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (101, 2146, 2, CAST(N'2005-06-14T21:04:13.0000000' AS DateTime2), 85, 179, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (102, 2147, 2, CAST(N'1990-03-07T21:04:13.0000000' AS DateTime2), 62, 167, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (102, 2147, 2, CAST(N'1990-03-07T21:04:13.0000000' AS DateTime2), 62, 167, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (103, 2148, 1, CAST(N'1985-10-15T21:04:13.0000000' AS DateTime2), 75, 177, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (103, 2148, 1, CAST(N'1985-10-15T21:04:13.0000000' AS DateTime2), 75, 177, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (104, 2149, 1, CAST(N'1983-07-28T21:04:13.0000000' AS DateTime2), 68, 175, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (104, 2149, 1, CAST(N'1983-07-28T21:04:13.0000000' AS DateTime2), 68, 175, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (105, 2150, 2, CAST(N'1991-08-07T21:04:13.0000000' AS DateTime2), 67, 173, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (105, 2150, 2, CAST(N'1991-08-07T21:04:13.0000000' AS DateTime2), 67, 173, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
-INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (106, 2151, 2, CAST(N'2000-05-18T21:04:13.0000000' AS DateTime2), 70, 170, N'中度活動', N'維持體重', 1500, 2200, N'/images/members/default.jpg', 0)
+INSERT [dbo].[Members] ([Id], [UserId], [Gender], [DateOfBirth], [Weight], [Height], [ActivityLevel], [Target], [BMR], [TDEE], [ImageUrl], [CancelCount]) VALUES (106, 2151, 2, CAST(N'2000-05-18T21:04:13.0000000' AS DateTime2), 70, 170, N'1.55', N'健康飲食', 1500, 2200, N'/images/members/default.jpg', 0)
 GO
 SET IDENTITY_INSERT [dbo].[Members] OFF
 GO

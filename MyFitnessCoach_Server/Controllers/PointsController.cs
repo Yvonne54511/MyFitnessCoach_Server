@@ -38,9 +38,11 @@ namespace MyFitnessCoach_Server.Controllers
 
             int memberId = member.Id;
 
-            // 查錢包餘額（可能尚未建立）
-            var wallet = await _context.UserWallets
-                .FirstOrDefaultAsync(w => w.MemberId == memberId);
+            try
+            {
+                // 查錢包餘額（可能尚未建立）
+                var wallet = await _context.UserWallets
+                    .FirstOrDefaultAsync(w => w.MemberId == memberId);
 
             int balance       = wallet == null ? 0 : (int)wallet.CurrentBalance;
             int totalEarned   = 0;   // 累積儲值（不含退款）

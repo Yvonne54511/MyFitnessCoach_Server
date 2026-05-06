@@ -37,8 +37,6 @@ public partial class Member
 
     public virtual ICollection<DailyDiet> DailyDiets { get; set; } = new List<DailyDiet>();
 
-    public virtual ICollection<FoodRecord> FoodRecords { get; set; } = new List<FoodRecord>();
-
     public virtual ICollection<Food> Foods { get; set; } = new List<Food>();
 
     public virtual ICollection<MemberCoupon> MemberCoupons { get; set; } = new List<MemberCoupon>();
