@@ -54,42 +54,17 @@ public class AccountService : IAccountService
 
         await _accountRepository.EnsureMemberAsync(user.Id);
 
-        var instructor = await _accountRepository.GetInstructorByUserIdAsync(user.Id);
-        var employee   = await _accountRepository.GetEmployeeByUserIdAsync(user.Id);
-        var member     = await _accountRepository.GetMemberByUserIdAsync(user.Id);
-
-        var roles     = user.UserRoles.Select(ur => ur.Role.RoleName).ToList();
-        var functions = user.UserRoles
-            .SelectMany(ur => ur.Role.RoleFunctions)
-            .Select(rf => rf.Function.FunctionName)
-            .Distinct()
-            .ToList();
+        var member = await _accountRepository.GetMemberByUserIdAsync(user.Id);
 
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.UserName ?? user.Account),
-            new(ClaimTypes.Email, user.Email),
-            new("Account", user.Account)
+            new(ClaimTypes.Name,           user.UserName ?? user.Email),
+            new(ClaimTypes.Email,          user.Email)
         };
 
         if (member?.Id is int memberId)
             claims.Add(new Claim("MemberId", memberId.ToString()));
-
-        if (instructor?.Id is int instructorId)
-            claims.Add(new Claim("InstructorId", instructorId.ToString()));
-
-        if (employee?.Id is int employeeId)
-            claims.Add(new Claim("EmployeeId", employeeId.ToString()));
-
-        if (employee?.DepartmentId is int departmentId)
-            claims.Add(new Claim("DepartmentId", departmentId.ToString()));
-
-        foreach (var role in roles)
-            claims.Add(new Claim(ClaimTypes.Role, role));
-
-        foreach (var func in functions)
-            claims.Add(new Claim("Function", func));
 
         var key     = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds   = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

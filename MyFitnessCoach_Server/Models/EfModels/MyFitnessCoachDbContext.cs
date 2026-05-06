@@ -781,6 +781,9 @@ public partial class MyFitnessCoachDbContext : DbContext
                 .HasMaxLength(30);
             entity.Property(e => e.StoreId).HasMaxLength(6);
             entity.Property(e => e.StoreName).HasMaxLength(60);
+            entity.Property(e => e.InvoiceType).HasDefaultValue((byte)1);
+            entity.Property(e => e.DonationCode).HasMaxLength(10).IsUnicode(false);
+            entity.Property(e => e.CarrierCode).HasMaxLength(10).IsUnicode(false);
 
             entity.HasOne(d => d.Coupon).WithMany(p => p.ProductOrders)
                 .HasForeignKey(d => d.CouponId)

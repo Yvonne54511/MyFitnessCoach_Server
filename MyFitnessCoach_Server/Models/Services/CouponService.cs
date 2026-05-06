@@ -214,6 +214,21 @@ namespace MyFitnessCoach_Server.Models.Services
 			await _db.SaveChangesAsync();
 		}
 
+		/// <summary>
+		/// 退款核准時呼叫:把訂單對應的會員券標記為「未使用」,讓會員可再次使用。
+		/// 訂單若未使用優惠券則靜默跳過。回傳被退還的 MemberCouponId(沒退還則為 null)。
+		/// </summary>
+		public async Task<int?> RestoreByOrderAsync(int orderId)
+		{
+			var mc = await _db.MemberCoupons.FirstOrDefaultAsync(x => x.OrderId == orderId);
+			if (mc == null) return null;
+
+			mc.UsedAt  = null;
+			mc.OrderId = null;
+			await _db.SaveChangesAsync();
+			return mc.Id;
+		}
+
 		// ---------- helpers ----------
 		private static DiscountPreviewResultDto Invalid(string msg) => new()
 		{

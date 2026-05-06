@@ -168,6 +168,14 @@ namespace MyFitnessCoach_Server.Controllers
                 if (order == null)
                     return NotFound(new { error = "找不到訂單" });
 
+                // 只允許「待付款」狀態的訂單付款（避免已付款 / 退款中訂單重複付款）
+                if (order.Status != 0)
+                    return BadRequest(new { error = "此訂單目前狀態不允許付款" });
+
+                // 超商取貨付款訂單不走線上金流
+                if (order.PaymentMethod == 1)
+                    return BadRequest(new { error = "超商取貨付款訂單請於取貨時現場付款" });
+
                 if (order.FinalAmount == null || order.FinalAmount <= 0)
                     return BadRequest(new { error = "訂單金額無效" });
 
