@@ -86,5 +86,24 @@ namespace MyFitnessCoach_Server.Controllers
 
             return BadRequest(new { message = result.Message });
         }
+
+        [HttpPut("{id}/Target")]
+        public async Task<ActionResult> UpdateTarget(int id, [FromBody] UpdateTargetDto dto)
+        {
+            var member = await GetCurrentMemberAsync();
+            if (member == null) return Unauthorized();
+
+            var order = await _context.ReserveOrders.FirstOrDefaultAsync(ro => ro.Id == id && ro.MemberId == member.Id);
+            if (order == null) return NotFound(new { message = "找不到該預約紀錄" });
+
+            order.Target = dto.Target;
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "備註更新成功" });
+        }
+    }
+
+    public class UpdateTargetDto
+    {
+        public string Target { get; set; }
     }
 }

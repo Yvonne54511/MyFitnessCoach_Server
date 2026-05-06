@@ -33,9 +33,8 @@ public class AccountController : ControllerBase
         return new CookieOptions
         {
             HttpOnly = true,
-           // Secure   = !_env.IsDevelopment(),
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure   = !_env.IsDevelopment(), // 開發環境 (HTTP) 不強制 Secure
+            SameSite = SameSiteMode.Lax,       // 改為 Lax 以提升相容性
             Path     = "/",
             Expires  = expires ?? DateTimeOffset.UtcNow.AddMinutes(lifetime)
         };
