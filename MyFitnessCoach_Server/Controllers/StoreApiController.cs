@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Net.Http.Headers;
 using MyFitnessCoach_Server.Models.DTOs;
 using MyFitnessCoach_Server.Models.Services;
 
@@ -82,7 +83,19 @@ namespace MyFitnessCoach_Server.Controllers
 				{
 					// 根據副檔名判斷 MIME
 					string contentType = fullPath.EndsWith(".png") ? "image/png" : "image/jpeg";
-					return PhysicalFile(fullPath, contentType);
+
+					// 用「檔案大小 + mtime」當 ETag,並把 ETag 設在 FileResult 上
+					// 這樣 framework 會用 ETag(而不是 Last-Modified)去判斷 304
+					// 避免用舊 mtime 的檔覆蓋新檔時被誤判為「沒變過」
+					var fileInfo = new System.IO.FileInfo(fullPath);
+					var etag = new EntityTagHeaderValue($"\"{fileInfo.Length}-{fileInfo.LastWriteTimeUtc.Ticks}\"");
+
+					Response.Headers["Cache-Control"] = "no-cache";
+
+					var result = PhysicalFile(fullPath, contentType);
+					result.LastModified = fileInfo.LastWriteTimeUtc;
+					result.EntityTag = etag;
+					return result;
 				}
 
 				// 備援：回傳預設圖

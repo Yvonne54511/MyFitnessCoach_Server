@@ -219,10 +219,6 @@
          "ObjectType": 3
       },
       {
-         "Name": "[dbo].[vw_UserMemberFoodRecord]",
-         "ObjectType": 3
-      },
-      {
          "Name": "[dbo].[vw_UserRoleFunction]",
          "ObjectType": 3
       },

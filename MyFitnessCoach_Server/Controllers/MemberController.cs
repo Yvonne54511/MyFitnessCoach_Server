@@ -73,11 +73,12 @@ public class MemberController : ControllerBase
 
         return Ok(new MemberInfoDto
         {
-            Id     = member.Id,
-            Name   = member.User?.UserName ?? string.Empty,
-            Avatar = member.ImageUrl,
-            Points = member.UserWallet?.CurrentBalance ?? 0,
-            Phone  = member.User?.Mobile
+            Id          = member.Id,
+            Name        = member.User?.UserName ?? string.Empty,
+            Avatar      = member.ImageUrl,
+            Points      = member.UserWallet?.CurrentBalance ?? 0,
+            Phone       = member.User?.Mobile,
+            CancelCount = member.CancelCount
         });
     }
 
@@ -156,13 +157,13 @@ public class MemberController : ControllerBase
 
         var ext      = Path.GetExtension(file.FileName).ToLower();
         var fileName = $"{member.Id}_{Guid.NewGuid():N}{ext}";
-        var savePath = Path.Combine(_env.ContentRootPath, "images", "members", fileName);
+        var savePath = Path.Combine(_env.ContentRootPath, "img", "members", fileName);
 
         Directory.CreateDirectory(Path.GetDirectoryName(savePath)!);
         using (var stream = new FileStream(savePath, FileMode.Create))
             await file.CopyToAsync(stream);
 
-        var imageUrl = $"/images/members/{fileName}";
+        var imageUrl = $"/img/members/{fileName}";
         await _accountRepository.UpdateMemberImageAsync(member.Id, imageUrl);
 
         return Ok(new AvatarUploadResponse { ImageUrl = imageUrl });

@@ -28,9 +28,9 @@ namespace MyFitnessCoach_Server.Repositories
 
             if (order == null) return (false, "找不到該預約紀錄或您無權限取消");
 
-            // 檢查會員取消次數
+            // 檢查會員取消次數 (如果是「待付款」，則不檢查次數，允許手動取消)
             var member = await _db.Members.FirstOrDefaultAsync(m => m.Id == memberId);
-            if (member != null && member.CancelCount >= 3)
+            if (member != null && member.CancelCount >= 3 && order.Status != "待付款")
             {
                 return (false, "您的取消預約次數已達 3 次上限，無法再進行取消。請聯繫客服處理。");
             }
@@ -227,6 +227,8 @@ namespace MyFitnessCoach_Server.Repositories
             {
                 try 
                 {
+                    if (order.Shift?.TimeSlot == null) continue;
+
                     // 1. 處理 TimeSlot，例如 "14-15(下午)" -> 先取橫線後 "15(下午)" -> 再取括號前 "15"
                     var timeParts = order.Shift.TimeSlot.Split('-');
                     if (timeParts.Length < 2) continue;

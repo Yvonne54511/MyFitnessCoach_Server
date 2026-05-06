@@ -131,30 +131,37 @@ namespace MyFitnessCoach_Server.Repositories
 
         private bool IsWithinReviewPeriod(Shift shift)
         {
-            // 從 ScheduleDate 取日期，TimeSlot 通常格式為 "09:00 - 10:00"，我們取結束時間
-            // 若 TimeSlot 解析失敗，則保守使用當天 23:59:59
+            if (shift == null) return false;
+
+            // 預設為該課程日期的 23:59:59
             DateTime shiftEndTime = shift.ScheduleDate.ToDateTime(new TimeOnly(23, 59, 59));
 
             if (!string.IsNullOrEmpty(shift.TimeSlot))
             {
                 try
                 {
-                    // 假設格式為 "HH:mm - HH:mm"
+                    // 預期格式: "09:00 - 10:00"
                     var times = shift.TimeSlot.Split('-');
                     if (times.Length == 2)
                     {
-                        var endTimeStr = times[1].Trim();
-                        if (TimeOnly.TryParse(endTimeStr, out var endTime))
+                        var endTimePart = times[1].Trim();
+                        // 嘗試多種解析方式
+                        if (TimeOnly.TryParse(endTimePart, out var endTime))
                         {
                             shiftEndTime = shift.ScheduleDate.ToDateTime(endTime);
                         }
                     }
                 }
-                catch { /* 解析失敗則沿用預設時間 */ }
+                catch 
+                { 
+                    // 解析失敗則沿用預設(當天深夜)
+                }
             }
 
-            // 超過 5 天則關閉。這裡定義為：當前時間與課程結束時間相比超過 5 天
-            return (DateTime.Now - shiftEndTime).TotalDays <= 5;
+            // 目前時間需在課程結束後的 5 天內 (TotalDays <= 5)
+            // 且必須已經結束 (DateTime.Now >= shiftEndTime) 才能評價
+            var now = DateTime.Now;
+            return now >= shiftEndTime && (now - shiftEndTime).TotalDays <= 5;
         }
     }
 }

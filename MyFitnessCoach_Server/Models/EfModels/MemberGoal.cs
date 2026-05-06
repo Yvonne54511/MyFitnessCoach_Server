@@ -7,7 +7,7 @@ namespace MyFitnessCoach_Server.Models.EfModels;
 
 public partial class MemberGoal
 {
-    public int M { get; set; }
+    public int Id { get; set; }
 
     public int MemberId { get; set; }
 
