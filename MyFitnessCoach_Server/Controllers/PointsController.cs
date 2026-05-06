@@ -34,69 +34,76 @@ namespace MyFitnessCoach_Server.Controllers
 
             int memberId = member.Id;
 
-            // 查錢包餘額（可能尚未建立）
-            var wallet = await _context.UserWallets
-                .FirstOrDefaultAsync(w => w.MemberId == memberId);
-
-            int balance = wallet == null ? 0 : (int)wallet.CurrentBalance;
-
-            // 查點數異動紀錄
-            List<object> history = new();
-            int totalCount = 0;
-
-            if (wallet != null)
+            try
             {
-                var query = _context.PointsRecordDetails
-                    .Where(r => r.UserWalletId == wallet.Id);
+                // 查錢包餘額（可能尚未建立）
+                var wallet = await _context.UserWallets
+                    .FirstOrDefaultAsync(w => w.MemberId == memberId);
 
-                totalCount = await query.CountAsync();
+                int balance = wallet == null ? 0 : (int)Math.Floor(wallet.CurrentBalance);
 
-                var records = await query
-                    .Include(r => r.PointOrder)
-                        .ThenInclude(o => o.TopUpPlan)
-                    .Include(r => r.ReserveOrder)
-                        .ThenInclude(ro => ro.Shift)
-                            .ThenInclude(s => s.Instructor)
-                                .ThenInclude(i => i.User)
-                    .OrderByDescending(r => r.CreateAt)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
+                // 查點數異動紀錄
+                List<object> history = new();
+                int totalCount = 0;
 
-                history = records.Select(r =>
+                if (wallet != null)
                 {
-                    string description = r.MerchandiseCategory switch
-                    {
-                        "Recharge" => r.PointOrder?.TopUpPlan?.PlanName ?? "購買點數",
-                        "Reserve"  => r.ReserveOrder != null
-                            ? $"課程預約 - {r.ReserveOrder.Shift?.Instructor?.User?.UserName ?? "教練"}"
-                            : "課程預約",
-                        "Cancel"   => "取消預約 (點數退回)",
-                        _          => r.MerchandiseCategory ?? "點數異動"
-                    };
+                    var query = _context.PointsRecordDetails
+                        .Where(r => r.UserWalletId == wallet.Id);
 
-                    string status = r.PointOrder != null
-                        ? r.PointOrder.Status == 1 ? "已完成" : "處理中"
-                        : "已完成";
+                    totalCount = await query.CountAsync();
 
-                    return (object)new
+                    var records = await query
+                        .Include(r => r.PointOrder)
+                            .ThenInclude(o => o.TopUpPlan)
+                        .Include(r => r.ReserveOrder)
+                            .ThenInclude(ro => ro.Shift)
+                                .ThenInclude(s => s.Instructor)
+                                    .ThenInclude(i => i.User)
+                        .OrderByDescending(r => r.CreateAt)
+                        .Skip((page - 1) * pageSize)
+                        .Take(pageSize)
+                        .ToListAsync();
+
+                    history = records.Select(r =>
                     {
-                        id          = r.Id,
-                        date        = r.CreateAt.ToString("o"),
-                        description,
-                        amount      = r.PointAmount,
-                        status
-                    };
-                }).ToList();
+                        string description = r.MerchandiseCategory switch
+                        {
+                            "Recharge" => r.PointOrder?.TopUpPlan?.PlanName ?? "購買點數",
+                            "Reserve"  => r.ReserveOrder != null
+                                ? $"課程預約 - {r.ReserveOrder.Shift?.Instructor?.User?.UserName ?? "教練"}"
+                                : "課程預約",
+                            "Cancel"   => "取消預約 (點數退回)",
+                            _          => r.MerchandiseCategory ?? "點數異動"
+                        };
+
+                        string status = r.PointOrder != null
+                            ? r.PointOrder.Status == 1 ? "已完成" : "處理中"
+                            : "已完成";
+
+                        return (object)new
+                        {
+                            id          = r.Id,
+                            date        = r.CreateAt.ToString("o"),
+                            description,
+                            amount      = r.PointAmount,
+                            status
+                        };
+                    }).ToList();
+                }
+
+                return Ok(new {
+                    balance,
+                    history,
+                    totalCount,
+                    totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
+                    currentPage = page
+                });
             }
-
-            return Ok(new { 
-                balance, 
-                history, 
-                totalCount, 
-                totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
-                currentPage = page
-            });
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "查詢點數資料失敗", detail = ex.Message });
+            }
         }
     }
 }

@@ -1,8 +1,6 @@
 using MyFitnessCoach_Server.Models.DTOs;
 using MyFitnessCoach_Server.Models.EfModels;
 using MyFitnessCoach_Server.Models.Repositories;
-using MyFitnessCoach_Server.Repositories;
-using MyFitnessCoach_Server.Utilities;
 
 namespace MyFitnessCoach_Server.Models.Services;
 
@@ -36,28 +34,10 @@ public class GoalService : IGoalService
         var latestWeight = await _repo.GetLatestWeightAsync(memberId);
         var responseInfo = DtoWithCurrentWeight(dto, latestWeight);
 
-        if (goal is null)
-        {
-            // 首次設定目標：用 Member 現有的 Gender/DateOfBirth 計算初始 MemberGoals
-            var currentWeight = latestWeight ?? dto.TargetWeight ?? 60;
-            var dob    = member.DateOfBirth.HasValue
-                ? DateOnly.FromDateTime(member.DateOfBirth.Value)
-                : throw new InvalidOperationException("Member DateOfBirth is required");
-            var gender = GoalRepository.GenderToString(member.Gender)
-                ?? throw new InvalidOperationException("Member Gender is required");
-            var age    = GoalCalculator.CalculateAge(dob);
-            var bmr    = GoalCalculator.CalculateBMR(currentWeight, dto.Height, age, gender);
-            var tdee   = GoalCalculator.CalculateTDEE(bmr, dto.ActivityLevel);
-            var macros = GoalCalculator.CalculateMacros(tdee, currentWeight, dto.HealthGoal);
-
-            await _repo.CreateMemberGoalAsync(memberId, macros);
-            return new GoalPageResponseDto { Info = responseInfo, Goals = macros };
-        }
-
         return new GoalPageResponseDto
         {
             Info  = responseInfo,
-            Goals = GoalToDto(goal),
+            Goals = goal is not null ? GoalToDto(goal) : null,
         };
     }
 

@@ -33,7 +33,8 @@ public class AccountController : ControllerBase
         return new CookieOptions
         {
             HttpOnly = true,
-            Secure   = !_env.IsDevelopment(),
+           // Secure   = !_env.IsDevelopment(),
+            Secure = true,
             SameSite = SameSiteMode.Strict,
             Path     = "/",
             Expires  = expires ?? DateTimeOffset.UtcNow.AddMinutes(lifetime)
@@ -80,7 +81,7 @@ public class AccountController : ControllerBase
         Response.Cookies.Delete(AccessTokenCookieName, new CookieOptions
         {
             Path     = "/",
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Lax,
             Secure   = !_env.IsDevelopment(),
             HttpOnly = true
         });
