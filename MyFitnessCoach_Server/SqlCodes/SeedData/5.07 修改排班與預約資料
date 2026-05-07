@@ -1,0 +1,101 @@
+USE [MyFitnessCoachDb]
+GO
+
+-- ====================================================================
+-- 1. 轉移未被預約的空班給胡青薇 (InstructorId = 2)
+-- 讓她的排班基數先多一點
+-- ====================================================================
+UPDATE [dbo].[Shifts]
+SET [InstructorId] = 2
+WHERE [IsBooked] = 0 AND [InstructorId] != 2;
+GO
+
+-- ====================================================================
+-- 2. 建立所有可用日期的時段池 (4月-5月，每個教練每日早午晚三個時段)
+-- 利用 CTE 與加權隨機數，確保時段不重複且權重著重於 5 月
+-- ====================================================================
+IF OBJECT_ID('tempdb..#InstructorSlots') IS NOT NULL DROP TABLE #InstructorSlots;
+CREATE TABLE #InstructorSlots (
+    InstructorId INT,
+    SchDate DATE,
+    TSlot NVARCHAR(20),
+    RN INT
+);
+
+;WITH Dates AS (
+    -- 產生 2026/4/1 ~ 2026/5/31 總共 61 天
+    SELECT TOP 61
+           DATEADD(DAY, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1, '2026-04-01') AS SchDate
+    FROM master.sys.all_columns
+),
+Slots AS (
+    -- 每日三個時段
+    SELECT N'09-10 (早)' AS TSlot UNION ALL
+    SELECT N'14-15 (午)' UNION ALL
+    SELECT N'18-19 (晚)'
+)
+INSERT INTO #InstructorSlots (InstructorId, SchDate, TSlot, RN)
+SELECT i.Id, d.SchDate, s.TSlot,
+       -- 透過亂數加權排序：5月份的權重為2.5倍，讓5月份的時段更容易排在前面(RN較小)
+       ROW_NUMBER() OVER (
+           PARTITION BY i.Id 
+           ORDER BY (ABS(CHECKSUM(NEWID())) % 1000) * (CASE WHEN MONTH(d.SchDate) = 5 THEN 2.5 ELSE 1.0 END) DESC
+       )
+FROM [dbo].[Instructors] i
+CROSS JOIN Dates d
+CROSS JOIN Slots s;
+GO
+
+-- ====================================================================
+-- 3. 將原有的 Shifts 對應到不重複的可用時段池，保證排班絕對不會撞期
+-- ====================================================================
+;WITH CTE_ExistingShifts AS (
+    SELECT Id, InstructorId, ScheduleDate, TimeSlot,
+           ROW_NUMBER() OVER (PARTITION BY InstructorId ORDER BY Id) as ShiftRN
+    FROM [dbo].[Shifts]
+)
+UPDATE s
+SET s.ScheduleDate = sl.SchDate,
+    s.TimeSlot = sl.TSlot
+FROM CTE_ExistingShifts s
+JOIN #InstructorSlots sl ON s.InstructorId = sl.InstructorId AND s.ShiftRN = sl.RN;
+GO
+
+-- ====================================================================
+-- 4. 針對 胡青薇 (InstructorId = 2) 額外新增 10 筆專屬的 5 月空班
+-- 從她還沒被分配到的時段池裡面往下挑選
+-- ====================================================================
+INSERT INTO [dbo].[Shifts] ([InstructorId], [ScheduleDate], [TimeSlot], [IsBooked])
+SELECT TOP 10 InstructorId, SchDate, TSlot, 0
+FROM #InstructorSlots
+WHERE InstructorId = 2
+  -- 確保 RN 大於她現有的排班數量，代表這些時段還沒被用到
+  AND RN > (SELECT COUNT(*) FROM [dbo].[Shifts] WHERE InstructorId = 2)
+  AND MONTH(SchDate) = 5
+ORDER BY RN ASC;
+GO
+
+-- 清理暫存表
+IF OBJECT_ID('tempdb..#InstructorSlots') IS NOT NULL DROP TABLE #InstructorSlots;
+GO
+
+-- ====================================================================
+-- 5. 更新 預約單 (ReserveOrders) 的時間
+-- 邏輯：預約建立時間必須在「排班日之前」，設定為排班日的提前 1~14 天，並加上隨機時分秒
+-- ====================================================================
+UPDATE ro
+SET ro.[CreateAt] = DATEADD(second, ABS(CHECKSUM(NEWID())) % 86400, CAST(DATEADD(day, - (ABS(CHECKSUM(NEWID())) % 14 + 1), s.[ScheduleDate]) AS DATETIME2(0)))
+FROM [dbo].[ReserveOrders] ro
+JOIN [dbo].[Shifts] s ON ro.[ShiftId] = s.[Id];
+GO
+
+-- ====================================================================
+-- 6. 更新 評論 (Reviews) 的時間
+-- 邏輯：評論建立時間必須在「排班日之後」，設定為排班日之後的 1~7 天，並加上隨機時分秒
+-- ====================================================================
+UPDATE rv
+SET rv.[CreatedAt] = DATEADD(second, ABS(CHECKSUM(NEWID())) % 86400, CAST(DATEADD(day, (ABS(CHECKSUM(NEWID())) % 7 + 1), s.[ScheduleDate]) AS DATETIME2(0)))
+FROM [dbo].[Reviews] rv
+JOIN [dbo].[ReserveOrders] ro ON rv.[ReserveOrderId] = ro.[Id]
+JOIN [dbo].[Shifts] s ON ro.[ShiftId] = s.[Id];
+GO 
