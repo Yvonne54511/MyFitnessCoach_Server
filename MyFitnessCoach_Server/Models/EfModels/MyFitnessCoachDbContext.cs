@@ -333,6 +333,8 @@ public partial class MyFitnessCoachDbContext : DbContext
 
             entity.HasIndex(e => e.HolidayDate, "IX_Holidays_Date").IsUnique();
 
+            entity.HasIndex(e => e.HolidayDate, "IX_Holidays_Date").IsUnique();
+
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.Name)
                 .IsRequired()
