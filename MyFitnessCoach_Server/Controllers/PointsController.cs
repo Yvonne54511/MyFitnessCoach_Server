@@ -105,9 +105,9 @@ namespace MyFitnessCoach_Server.Controllers
                         {
                             "Recharge" => r.TopUpPlanName ?? "購買點數",
                             "Reserve" => r.InstructorName != null
-                                ? $"課程預約 - {r.InstructorName}"
+                                ? $"課程預約 - {r.InstructorName}{(r.PointAmount == 0 ? " (線上支付)" : "")}"
                                 : "課程預約",
-                            "Cancel" => "取消預約（點數退回）",
+                            "Cancel" => r.PointAmount > 0 ? "取消預約（點數退回）" : "取消預約",
                             "Refund" => "退款（點數退回）",
                             _ => r.MerchandiseCategory ?? "點數異動"
                         };

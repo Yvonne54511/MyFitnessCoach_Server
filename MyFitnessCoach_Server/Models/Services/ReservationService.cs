@@ -101,6 +101,32 @@ namespace MyFitnessCoach_Server.Models.Services
                     }
                     await _db.SaveChangesAsync();
                     isFirstTimeProcessing = true; // 標記：這次請求完成了狀態轉換
+
+                    // 記錄點數明細 (即便為 0 點也記錄，以便顯示於紀錄中)
+                    // 檢查是否已有紀錄，避免重複
+                    var existingRecord = await _db.PointsRecordDetails
+                        .AnyAsync(r => r.ReserveOrderId == order.Id && r.MerchandiseCategory == "Reserve");
+                    
+                    if (!existingRecord)
+                    {
+                        var wallet = await _db.UserWallets.FirstOrDefaultAsync(w => w.MemberId == order.MemberId);
+                        if (wallet == null)
+                        {
+                            wallet = new UserWallet { MemberId = order.MemberId, CurrentBalance = 0, LastUpdated = DateTime.Now };
+                            _db.UserWallets.Add(wallet);
+                            await _db.SaveChangesAsync();
+                        }
+
+                        _db.PointsRecordDetails.Add(new PointsRecordDetail
+                        {
+                            UserWalletId = wallet.Id,
+                            CreateAt = DateTime.Now,
+                            PointAmount = -(order.PointCost ?? 0),
+                            MerchandiseCategory = "Reserve",
+                            ReserveOrderId = order.Id
+                        });
+                        await _db.SaveChangesAsync();
+                    }
                 }
                 else if (order.Status == "已預約")
                 {

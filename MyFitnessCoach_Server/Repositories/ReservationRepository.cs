@@ -69,24 +69,37 @@ namespace MyFitnessCoach_Server.Repositories
             }
 
             // 點數退還邏輯
-            if (order.PointCost.HasValue && order.PointCost.Value > 0)
+            var wallet = await _db.UserWallets.FirstOrDefaultAsync(w => w.MemberId == memberId);
+            if (wallet == null && memberId != 0) // 確保會員有錢包，若無則建立
             {
-                var wallet = await _db.UserWallets.FirstOrDefaultAsync(w => w.MemberId == memberId);
-                if (wallet != null)
+                wallet = new UserWallet
                 {
-                    wallet.CurrentBalance += order.PointCost.Value;
-                    wallet.LastUpdated = DateTime.Now;
+                    MemberId = memberId,
+                    CurrentBalance = 0,
+                    LastUpdated = DateTime.Now
+                };
+                _db.UserWallets.Add(wallet);
+                await _db.SaveChangesAsync();
+            }
 
-                    // 記錄退點明細，但不連向即將刪除的 OrderId (避免外鍵錯誤)
-                    _db.PointsRecordDetails.Add(new PointsRecordDetail
-                    {
-                        UserWalletId = wallet.Id,
-                        CreateAt = DateTime.Now,
-                        PointAmount = order.PointCost.Value,
-                        MerchandiseCategory = "手動取消預約(點數歸還)", 
-                        ReserveOrderId = null 
-                    });
+            if (wallet != null)
+            {
+                int refundAmount = order.PointCost ?? 0;
+                if (refundAmount > 0)
+                {
+                    wallet.CurrentBalance += refundAmount;
+                    wallet.LastUpdated = DateTime.Now;
                 }
+
+                // 無論點數多少，皆記錄一筆取消紀錄
+                _db.PointsRecordDetails.Add(new PointsRecordDetail
+                {
+                    UserWalletId = wallet.Id,
+                    CreateAt = DateTime.Now,
+                    PointAmount = refundAmount,
+                    MerchandiseCategory = "Cancel",
+                    ReserveOrderId = null // 斷開關聯，避免刪除 Order 時報錯
+                });
             }
 
             // 重要：斷開所有現有點數紀錄與此預約的關聯，否則資料庫不准刪除 Order
@@ -194,19 +207,29 @@ namespace MyFitnessCoach_Server.Repositories
             _db.ReserveOrders.Add(order);
             await _db.SaveChangesAsync(); // 先儲存取得 order.Id
 
-            // 記錄點數明細 (如果有扣點)
-            if (order.PointCost > 0)
+            // 記錄點數明細 (已預約狀態即記錄，即便 0 點也記錄以便顯示)
+            if (order.Status == "已預約")
             {
-                var wallet = await _db.UserWallets.FirstAsync(w => w.MemberId == memberId);
-                _db.PointsRecordDetails.Add(new PointsRecordDetail
+                var wallet = await _db.UserWallets.FirstOrDefaultAsync(w => w.MemberId == memberId);
+                if (wallet == null && memberId != 0)
                 {
-                    UserWalletId = wallet.Id,
-                    CreateAt = DateTime.Now,
-                    PointAmount = -1, // 扣除 1 點
-                    MerchandiseCategory = "Reserve", // 標記為預約扣點
-                    ReserveOrderId = order.Id
-                });
-                await _db.SaveChangesAsync();
+                    wallet = new UserWallet { MemberId = memberId, CurrentBalance = 0, LastUpdated = DateTime.Now };
+                    _db.UserWallets.Add(wallet);
+                    await _db.SaveChangesAsync();
+                }
+
+                if (wallet != null)
+                {
+                    _db.PointsRecordDetails.Add(new PointsRecordDetail
+                    {
+                        UserWalletId = wallet.Id,
+                        CreateAt = DateTime.Now,
+                        PointAmount = -(order.PointCost ?? 0),
+                        MerchandiseCategory = "Reserve", // 標記為預約扣點
+                        ReserveOrderId = order.Id
+                    });
+                    await _db.SaveChangesAsync();
+                }
             }
 
             return (true, order);
