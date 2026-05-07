@@ -1,0 +1,112 @@
+USE [MyFitnessCoachDb]
+GO
+
+-- ====================================================================
+-- 1. 幫胡青薇 (InstructorId = 2) 額外新增 15 筆空班基數
+-- (先隨便押一個假日期，下一步的 CTE 會將所有班表重新精準分配至4-5月)
+-- ====================================================================
+INSERT INTO [dbo].[Shifts] ([InstructorId], [ScheduleDate], [TimeSlot], [IsBooked])
+SELECT TOP 15 2, '2026-01-01', N'09-10 (早)', 0
+FROM master.sys.all_columns;
+GO
+
+-- ====================================================================
+-- 2. 建立所有可用日期的「時段池 (網格)」 (4月-5月，每個教練每日三個時段)
+-- 並區分為 'PAST' (5/7以前) 與 'FUTURE' (5/8以後)
+-- ====================================================================
+IF OBJECT_ID('tempdb..#AllSlots') IS NOT NULL DROP TABLE #AllSlots;
+CREATE TABLE #AllSlots (
+    InstructorId INT,
+    SchDate DATE,
+    TSlot NVARCHAR(20),
+    TargetBucket NVARCHAR(10),
+    BucketRN INT
+);
+
+;WITH Dates AS (
+    -- 產生 2026/4/1 ~ 2026/5/31 總共 61 天
+    SELECT TOP 61 DATEADD(DAY, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1, '2026-04-01') AS SchDate
+    FROM master.sys.all_columns
+),
+Slots AS (
+    SELECT N'09-10 (早)' AS TSlot UNION ALL
+    SELECT N'14-15 (午)' UNION ALL
+    SELECT N'18-19 (晚)'
+)
+INSERT INTO #AllSlots (InstructorId, SchDate, TSlot, TargetBucket, BucketRN)
+SELECT i.Id, d.SchDate, s.TSlot,
+       -- 以今天 5/7 為界線劃分過去與未來
+       CASE WHEN d.SchDate <= '2026-05-07' THEN 'PAST' ELSE 'FUTURE' END,
+       -- 給予池中每一筆資料一個獨立編號，權重依然著重在5月份 (乘上3倍亂數)
+       ROW_NUMBER() OVER (
+           PARTITION BY i.Id, CASE WHEN d.SchDate <= '2026-05-07' THEN 'PAST' ELSE 'FUTURE' END
+           ORDER BY (ABS(CHECKSUM(NEWID())) % 1000) * (CASE WHEN MONTH(d.SchDate) = 5 THEN 3.0 ELSE 1.0 END) DESC
+       )
+FROM [dbo].[Instructors] i
+CROSS JOIN Dates d
+CROSS JOIN Slots s;
+GO
+
+-- ====================================================================
+-- 3. 將現有 Shifts 分類，並一對一配對進剛剛產生的時段池
+-- 有評論的絕對放 PAST，其餘盡量放 FUTURE，保證排班絕對不會撞期
+-- ====================================================================
+;WITH ShiftData AS (
+    SELECT s.Id, s.InstructorId,
+           -- 如果這個排班有關聯的「評論」，必須放在過去的時間
+           CASE WHEN EXISTS (SELECT 1 FROM Reviews rv JOIN ReserveOrders ro ON rv.ReserveOrderId = ro.Id WHERE ro.ShiftId = s.Id) 
+                THEN 'PAST' ELSE 'FUTURE' END as TargetBucket,
+           -- 產生配對用的流水號
+           ROW_NUMBER() OVER (
+               PARTITION BY s.InstructorId, 
+                            CASE WHEN EXISTS (SELECT 1 FROM Reviews rv JOIN ReserveOrders ro ON rv.ReserveOrderId = ro.Id WHERE ro.ShiftId = s.Id) THEN 'PAST' ELSE 'FUTURE' END
+               ORDER BY NEWID()
+           ) as BucketRN
+    FROM [dbo].[Shifts] s
+)
+UPDATE s
+SET s.ScheduleDate = sl.SchDate,
+    s.TimeSlot = sl.TSlot
+FROM [dbo].[Shifts] s
+JOIN ShiftData sd ON s.Id = sd.Id
+JOIN #AllSlots sl ON sd.InstructorId = sl.InstructorId 
+                 AND sd.TargetBucket = sl.TargetBucket 
+                 AND sd.BucketRN = sl.BucketRN;
+GO
+
+-- ====================================================================
+-- 4. 更新 預約單 (ReserveOrders) 的時間與狀態
+-- ====================================================================
+UPDATE ro
+SET 
+    -- 狀態修復：排班日在 5/7 之後的強制為 '已預約'，之前則為 '已完成'
+    ro.[Status] = CASE WHEN s.ScheduleDate > '2026-05-07' THEN N'已預約' ELSE N'已完成' END,
+    
+    -- 預約建立時間：絕對在排班日的前 1~14 天之間 (減去天數後再加上隨機秒數)
+    ro.[CreateAt] = DATEADD(second, ABS(CHECKSUM(NEWID())) % 86400, CAST(DATEADD(day, - (ABS(CHECKSUM(NEWID())) % 14 + 1), s.[ScheduleDate]) AS DATETIME2(0)))
+FROM [dbo].[ReserveOrders] ro
+JOIN [dbo].[Shifts] s ON ro.[ShiftId] = s.[Id];
+GO
+
+-- ====================================================================
+-- 5. 更新 評論 (Reviews) 的時間
+-- 邏輯：建立時間必須在「排班日之後 1~5 天」，且絕對不能超過今天 5/7
+-- ====================================================================
+UPDATE rv
+SET rv.[CreatedAt] = 
+    CASE 
+        -- 如果加上隨機天數後會超過 5/7，就強制壓在 5/7 當天
+        WHEN DATEADD(day, (ABS(CHECKSUM(NEWID())) % 5 + 1), s.[ScheduleDate]) > '2026-05-07'
+        THEN DATEADD(second, ABS(CHECKSUM(NEWID())) % 43200, CAST('2026-05-07 08:00:00' AS DATETIME2(0)))
+        
+        -- 正常情況：排班日之後的隨機日期與隨機秒數
+        ELSE DATEADD(second, ABS(CHECKSUM(NEWID())) % 86400, CAST(DATEADD(day, (ABS(CHECKSUM(NEWID())) % 5 + 1), s.[ScheduleDate]) AS DATETIME2(0)))
+    END
+FROM [dbo].[Reviews] rv
+JOIN [dbo].[ReserveOrders] ro ON rv.[ReserveOrderId] = ro.[Id]
+JOIN [dbo].[Shifts] s ON ro.[ShiftId] = s.[Id];
+GO
+
+-- 清理暫存表
+IF OBJECT_ID('tempdb..#AllSlots') IS NOT NULL DROP TABLE #AllSlots;
+GO
