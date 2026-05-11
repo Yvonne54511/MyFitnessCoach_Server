@@ -73,25 +73,28 @@ namespace MyFitnessCoach_Server.Controllers
                 
                 if (success) 
                 {
-                    // 授權成功後，主動補做最新一筆預約的「郵件發送」與「日曆同步」
+                    // 授權成功後，主動補做所有「已預約」但「尚未同步日曆」的紀錄
                     try
                     {
-                        var latestReservation = await _db.ReserveOrders
+                        var unsyncedReservations = await _db.ReserveOrders
                             .Include(ro => ro.Member)
-                            .Where(ro => ro.Member.UserId == userId && ro.Status == "已預約")
+                            .Where(ro => ro.Member.UserId == userId 
+                                         && ro.Status == "已預約" 
+                                         && string.IsNullOrEmpty(ro.GoogleEventId))
                             .OrderByDescending(ro => ro.CreateAt)
-                            .FirstOrDefaultAsync();
+                            .ToListAsync();
 
-                        if (latestReservation != null)
+                        foreach (var res in unsyncedReservations)
                         {
                             // 呼叫 ReservationService 的完整補完邏輯 (包含發信 + 同步)
-                            await _reservationService.CompleteReservationAsync(latestReservation.Id);
+                            // 內部會自動檢查是否重複發信或同步
+                            await _reservationService.CompleteReservationAsync(res.Id);
                         }
                     }
                     catch (Exception syncEx)
                     {
                         // 補做失敗不應影響授權結果，僅記錄日誌
-                        System.Diagnostics.Debug.WriteLine($"授權後補做通知失敗: {syncEx.Message}");
+                        System.Diagnostics.Debug.WriteLine($"授權後補做同步失敗: {syncEx.Message}");
                     }
 
                     return Ok(new { message = "Google 授權成功！以後您的預約將自動同步並發送郵件通知。" });
