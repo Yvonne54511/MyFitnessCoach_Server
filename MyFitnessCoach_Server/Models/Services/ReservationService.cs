@@ -136,9 +136,17 @@ namespace MyFitnessCoach_Server.Models.Services
                         return true;
                     }
                     
-                    // 如果沒有 GoogleEventId，代表是點數支付剛建立或是尚未完成後續動作
-                    // 我們將其視為第一次處理，以觸發 Email 發送與日曆同步
-                    isFirstTimeProcessing = true; 
+                    // 關鍵修復：只有點數支付才允許在「已預約」狀態下進入處理流程。
+                    // 信用卡支付會從「待付款」轉為「已預約」，若進到此區塊代表是 Callback/Result 的重複呼叫。
+                    // 這解決了未登入狀態（訪客）下預約會傳送兩次 Email 的問題。
+                    if (order.PaymentMethod == "Points")
+                    {
+                        isFirstTimeProcessing = true;
+                    }
+                    else
+                    {
+                        return true;
+                    }
                 }
                 else
                 {
