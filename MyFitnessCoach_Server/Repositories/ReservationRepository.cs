@@ -9,6 +9,7 @@ namespace MyFitnessCoach_Server.Repositories
         Task<IEnumerable<ReservationDto>> GetByMemberIdAsync(int memberId);
         Task<(bool Success, ReserveOrder? Order)> CreateAsync(int memberId, CreateReservationDto dto);
         Task<(bool Success, string Message)> CancelAsync(int memberId, int reservationId);
+        Task<(bool Success, string Message)> UpdateTargetAsync(int memberId, int reservationId, string newTarget);
     }
 
     public class ReservationRepository : IReservationRepository
@@ -18,6 +19,57 @@ namespace MyFitnessCoach_Server.Repositories
         public ReservationRepository(MyFitnessCoachDbContext db)
         {
             _db = db;
+        }
+
+        public async Task<(bool Success, string Message)> UpdateTargetAsync(int memberId, int reservationId, string newTarget)
+        {
+            var order = await _db.ReserveOrders
+                .Include(ro => ro.Shift)
+                .FirstOrDefaultAsync(ro => ro.Id == reservationId && ro.MemberId == memberId);
+
+            if (order == null) return (false, "找不到該預約紀錄");
+
+            if (order.Status == "已完成")
+            {
+                return (false, "諮詢已完成，無法修改預約目標");
+            }
+
+            // 檢查是否已開始
+            if (order.Shift != null)
+            {
+                try
+                {
+                    var timeParts = order.Shift.TimeSlot.Split('-');
+                    if (timeParts.Length >= 1)
+                    {
+                        var rawStartTime = timeParts[0].Trim();
+                        if (rawStartTime.Contains("("))
+                        {
+                            rawStartTime = rawStartTime.Split('(')[0].Trim();
+                        }
+                        string finalStartTimePart = rawStartTime.Contains(":") ? rawStartTime : $"{rawStartTime}:00";
+
+                        var scheduleDateStr = order.Shift.ScheduleDate.ToString("yyyy-MM-dd");
+                        var startDateTimeStr = $"{scheduleDateStr} {finalStartTimePart}";
+
+                        if (DateTime.TryParse(startDateTimeStr, out DateTime startDateTime))
+                        {
+                            if (DateTime.Now >= startDateTime)
+                            {
+                                return (false, "諮詢已開始，無法修改預約目標");
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // 若解析失敗，保守起見允許更新或報錯
+                }
+            }
+
+            order.Target = newTarget;
+            await _db.SaveChangesAsync();
+            return (true, "備註更新成功");
         }
 
         public async Task<(bool Success, string Message)> CancelAsync(int memberId, int reservationId)
