@@ -88,6 +88,7 @@ namespace MyFitnessCoach_Server.Controllers
                         {
                             // 呼叫 ReservationService 的完整補完邏輯 (包含發信 + 同步)
                             // 內部會自動檢查是否重複發信或同步
+                            // 這裡不再設定 ignoreEmail = true，因為之前的預約當下若未授權會跳過發信，現在需要補寄
                             await _reservationService.CompleteReservationAsync(res.Id);
                         }
                     }

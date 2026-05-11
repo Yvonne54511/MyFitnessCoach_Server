@@ -93,12 +93,11 @@ namespace MyFitnessCoach_Server.Controllers
             var member = await GetCurrentMemberAsync();
             if (member == null) return Unauthorized();
 
-            var order = await _context.ReserveOrders.FirstOrDefaultAsync(ro => ro.Id == id && ro.MemberId == member.Id);
-            if (order == null) return NotFound(new { message = "找不到該預約紀錄" });
+            var result = await _service.UpdateTargetAsync(member.Id, id, dto.Target);
+            if (result.Success)
+                return Ok(new { message = result.Message });
 
-            order.Target = dto.Target;
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "備註更新成功" });
+            return BadRequest(new { message = result.Message });
         }
     }
 

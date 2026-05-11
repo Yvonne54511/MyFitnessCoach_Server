@@ -133,22 +133,34 @@ namespace MyFitnessCoach_Server.Repositories
         {
             if (shift == null) return false;
 
-            // 預設為該課程日期的 23:59:59
+            // 預設為該課程日期的 23:59:59 (備用)
             DateTime shiftEndTime = shift.ScheduleDate.ToDateTime(new TimeOnly(23, 59, 59));
 
             if (!string.IsNullOrEmpty(shift.TimeSlot))
             {
                 try
                 {
-                    // 預期格式: "09:00 - 10:00"
+                    // 1. 處理 TimeSlot，例如 "14-15(下午)" -> 先取橫線後 "15(下午)" -> 再取括號前 "15"
                     var times = shift.TimeSlot.Split('-');
-                    if (times.Length == 2)
+                    if (times.Length >= 2)
                     {
-                        var endTimePart = times[1].Trim();
-                        // 嘗試多種解析方式
-                        if (TimeOnly.TryParse(endTimePart, out var endTime))
+                        var rawEndTime = times[1].Trim();
+                        // 移除所有括號及其內容
+                        if (rawEndTime.Contains("("))
                         {
-                            shiftEndTime = shift.ScheduleDate.ToDateTime(endTime);
+                            rawEndTime = rawEndTime.Split('(')[0].Trim();
+                        }
+
+                        // 2. 補足分鐘格式
+                        string finalTimePart = rawEndTime.Contains(":") ? rawEndTime : $"{rawEndTime}:00";
+
+                        // 3. 組合日期與時間
+                        var scheduleDateStr = shift.ScheduleDate.ToString("yyyy-MM-dd");
+                        var fullDateTimeStr = $"{scheduleDateStr} {finalTimePart}";
+
+                        if (DateTime.TryParse(fullDateTimeStr, out DateTime parsedEndTime))
+                        {
+                            shiftEndTime = parsedEndTime;
                         }
                     }
                 }
