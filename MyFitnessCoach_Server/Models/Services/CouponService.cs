@@ -16,17 +16,35 @@ namespace MyFitnessCoach_Server.Models.Services
 			_db   = db;
 		}
 
-		/// <summary>取得「可領取」清單(已過濾掉該會員已領過的)。</summary>
+		/// <summary>取得「可領取」清單(已過濾掉該會員已領過的)。Recurring 券(VisibleOnlyOnDayOfMonth 有值)只看當月紀錄。</summary>
 		public async Task<List<CouponDto>> GetAvailableCouponsAsync(int memberId)
 		{
 			var actives = await _repo.GetActiveCouponsAsync();
-			var claimedIds = await _db.MemberCoupons
+			if (actives.Count == 0) return actives;
+
+			var now        = DateTime.Now;
+			var monthStart = new DateTime(now.Year, now.Month, 1);
+			var monthEnd   = monthStart.AddMonths(1);
+
+			// 一次撈全部該會員的領取紀錄(含 ClaimedAt 用來判月份)
+			var claims = await _db.MemberCoupons
 				.AsNoTracking()
 				.Where(mc => mc.MemberId == memberId)
-				.Select(mc => mc.CouponId)
+				.Select(mc => new { mc.CouponId, mc.ClaimedAt })
 				.ToListAsync();
 
-			return actives.Where(c => !claimedIds.Contains(c.Id)).ToList();
+			return actives.Where(c =>
+			{
+				if (c.VisibleOnlyOnDayOfMonth.HasValue)
+				{
+					// 每月可重領:只擋本月已領
+					return !claims.Any(x => x.CouponId == c.Id
+					                     && x.ClaimedAt >= monthStart
+					                     && x.ClaimedAt <  monthEnd);
+				}
+				// 一生一次:任何紀錄都擋
+				return !claims.Any(x => x.CouponId == c.Id);
+			}).ToList();
 		}
 
 		/// <summary>取得會員所有已領取的券。</summary>
@@ -48,8 +66,12 @@ namespace MyFitnessCoach_Server.Models.Services
 			if (now > coupon.EndAt)          throw new InvalidOperationException("優惠券已過期");
 			if (coupon.RemainingQuota == 0)  throw new InvalidOperationException("優惠券已發完");
 
-			if (await _repo.HasClaimedAsync(memberId, coupon.Id))
-				throw new InvalidOperationException("您已領取過此優惠券");
+			// 限當日券(如 DAY22)→ 每月可重領,只查當月紀錄
+			bool monthlyRecurring = coupon.VisibleOnlyOnDayOfMonth.HasValue;
+			if (await _repo.HasClaimedAsync(memberId, coupon.Id, currentMonthOnly: monthlyRecurring))
+				throw new InvalidOperationException(monthlyRecurring
+					? "您本月已領取過此優惠券"
+					: "您已領取過此優惠券");
 
 			// 個人到期日:資料驅動 — 由 Coupon.ValidDaysAfterClaim 決定
 			DateTime? expiresAt = coupon.ValidDaysAfterClaim.HasValue

@@ -527,8 +527,13 @@ public partial class MyFitnessCoachDbContext : DbContext
 
         modelBuilder.Entity<MemberCoupon>(entity =>
         {
-            entity.HasIndex(e => new { e.MemberId, e.CouponId }, "UX_MemberCoupons_Member_Coupon").IsUnique();
+            entity.HasIndex(e => new { e.MemberId, e.CouponId, e.ClaimYearMonth }, "UX_MemberCoupons_Member_Coupon_Month").IsUnique();
 
+            entity.Property(e => e.ClaimYearMonth)
+                .HasMaxLength(7)
+                .IsUnicode(false)
+                .HasComputedColumnSql("(CONVERT([char](7),[ClaimedAt],(120)))", true)
+                .IsFixedLength();
             entity.Property(e => e.ClaimedAt)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(getdate())")

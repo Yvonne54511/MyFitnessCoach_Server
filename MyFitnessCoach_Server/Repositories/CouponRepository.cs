@@ -15,8 +15,8 @@ namespace MyFitnessCoach_Server.Repositories
 		/// <summary>取得會員所有已領取的券(含已使用)。</summary>
 		Task<List<MemberCouponDto>> GetMyCouponsAsync(int memberId);
 
-		/// <summary>檢查會員是否領過該券。</summary>
-		Task<bool> HasClaimedAsync(int memberId, int couponId);
+		/// <summary>檢查會員是否領過該券。currentMonthOnly=true 時只查當月份(用於每月可重領的券)。</summary>
+		Task<bool> HasClaimedAsync(int memberId, int couponId, bool currentMonthOnly = false);
 
 		/// <summary>領取一張券:用 transaction + ExecuteUpdateAsync 原子扣 RemainingQuota,避免超發。expiresAt 為個人到期日(由 Service 依 Coupon.ValidDaysAfterClaim 計算)。</summary>
 		Task<MemberCoupon> ClaimAsync(int memberId, int couponId, DateTime? expiresAt);
@@ -73,12 +73,15 @@ namespace MyFitnessCoach_Server.Repositories
 
 		public async Task<List<MemberCouponDto>> GetMyCouponsAsync(int memberId)
 		{
-			var todayDay = (byte)DateTime.Now.Day;
+			var now = DateTime.Now;
+			var todayDay = (byte)now.Day;
+			var currentYearMonth = now.ToString("yyyy-MM");
 			return await _context.MemberCoupons
 				.AsNoTracking()
 				.Where(mc => mc.MemberId == memberId
 				          && (mc.Coupon.VisibleOnlyOnDayOfMonth == null
-				              || mc.Coupon.VisibleOnlyOnDayOfMonth == todayDay))
+				              || (mc.Coupon.VisibleOnlyOnDayOfMonth == todayDay
+				                  && mc.ClaimYearMonth == currentYearMonth)))
 				.OrderBy(mc => mc.UsedAt.HasValue)        // 未使用排前
 				.ThenByDescending(mc => mc.ClaimedAt)
 				.Select(mc => new MemberCouponDto
@@ -107,11 +110,21 @@ namespace MyFitnessCoach_Server.Repositories
 				.ToListAsync();
 		}
 
-		public async Task<bool> HasClaimedAsync(int memberId, int couponId)
+		public async Task<bool> HasClaimedAsync(int memberId, int couponId, bool currentMonthOnly = false)
 		{
-			return await _context.MemberCoupons
+			var query = _context.MemberCoupons
 				.AsNoTracking()
-				.AnyAsync(mc => mc.MemberId == memberId && mc.CouponId == couponId);
+				.Where(mc => mc.MemberId == memberId && mc.CouponId == couponId);
+
+			if (currentMonthOnly)
+			{
+				var now = DateTime.Now;
+				var monthStart = new DateTime(now.Year, now.Month, 1);
+				var monthEnd   = monthStart.AddMonths(1);
+				query = query.Where(mc => mc.ClaimedAt >= monthStart && mc.ClaimedAt < monthEnd);
+			}
+
+			return await query.AnyAsync();
 		}
 
 		public async Task<MemberCoupon> ClaimAsync(int memberId, int couponId, DateTime? expiresAt)

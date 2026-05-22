@@ -21,6 +21,8 @@ public partial class MemberCoupon
 
     public int? OrderId { get; set; }
 
+    public string ClaimYearMonth { get; set; }
+
     public virtual Coupon Coupon { get; set; }
 
     public virtual Member Member { get; set; }
